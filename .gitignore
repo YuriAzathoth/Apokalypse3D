@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+# In-source build files
+*.project
+*.workspace
+.cache
+.codelite
+.ninja_deps
+.ninja_log
+build.ninja
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+lib
