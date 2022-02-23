@@ -31,8 +31,10 @@ public:
 	bool Start(const char* title, int width, int height, int glMajor, int glMinor, bool vsync);
 	void Stop();
 
-	void BeginFrame();
-	void EndFrame();
+	void BeginFrame() noexcept;
+	void EndFrame() noexcept;
+
+	bool PollErrors() noexcept;
 
 	const char* const GetErrorString() const noexcept { return errorString_; }
 

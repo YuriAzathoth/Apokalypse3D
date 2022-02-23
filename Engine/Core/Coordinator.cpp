@@ -53,6 +53,11 @@ bool Coordinator::Start()
 			}
 		graphics_.BeginFrame();
 		graphics_.EndFrame();
+		while (graphics_.PollErrors())
+		{
+			printf("ERROR: %s\n", graphics_.GetErrorString());
+			run_ = false;
+		}
 	}
 
 	return true;
