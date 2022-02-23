@@ -25,7 +25,6 @@ class Coordinator
 {
 public:
 	Coordinator();
-	~Coordinator();
 
 	bool Start();
 	void Stop();

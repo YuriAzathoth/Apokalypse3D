@@ -26,8 +26,6 @@ Coordinator::Coordinator()
 {
 }
 
-Coordinator::~Coordinator() {}
-
 bool Coordinator::Start()
 {
 	const char* windowTitle = "Hello World!";
