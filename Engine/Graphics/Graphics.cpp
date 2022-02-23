@@ -22,6 +22,15 @@
 #include <string.h>
 #include "Graphics.h"
 
+static const char* ERROR_STRINGS[] = {"OpenGL Error: Invalid enum",
+									  "OpenGL Error: Invalid value",
+									  "OpenGL Error: Invalid operation",
+									  "OpenGL Error: Stack overflow",
+									  "OpenGL Error: Stack underflow",
+									  "OpenGL Error: Out of memory",
+									  "OpenGL Error: Invalid framebuffer operation",
+									  "OpenGL Error: Unknown error"};
+
 Graphics::Graphics()
 	: window_(nullptr)
 	, context_(nullptr)
@@ -125,6 +134,45 @@ void Graphics::Stop()
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-void Graphics::BeginFrame() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void Graphics::BeginFrame() noexcept { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void Graphics::EndFrame() { SDL_GL_SwapWindow(window_); }
+void Graphics::EndFrame() noexcept { SDL_GL_SwapWindow(window_); }
+
+bool Graphics::PollErrors() noexcept
+{
+	GLenum error = glGetError();
+	if (error == GL_NO_ERROR)
+		return false;
+	else
+	{
+		const char* message = nullptr;
+		switch (error)
+		{
+		case GL_INVALID_ENUM:
+			message = ERROR_STRINGS[0];
+			break;
+		case GL_INVALID_VALUE:
+			message = ERROR_STRINGS[1];
+			break;
+		case GL_INVALID_OPERATION:
+			message = ERROR_STRINGS[2];
+			break;
+		case GL_STACK_OVERFLOW:
+			message = ERROR_STRINGS[3];
+			break;
+		case GL_STACK_UNDERFLOW:
+			message = ERROR_STRINGS[4];
+			break;
+		case GL_OUT_OF_MEMORY:
+			message = ERROR_STRINGS[5];
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			message = ERROR_STRINGS[6];
+			break;
+		}
+		if (errorString_)
+			free(errorString_);
+		strcpy(errorString_, message);
+		return true;
+	}
+}
