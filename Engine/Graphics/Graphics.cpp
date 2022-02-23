@@ -30,8 +30,7 @@ Graphics::Graphics()
 
 bool Graphics::Start(const char* title, int width, int height, int glMajor, int glMinor, bool vsync)
 {
-	//if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
-	if (SDL_InitSubSystem(SDL_INIT_EVERYTHING) < 0)
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 	{
 		constexpr char TITLE[] = "Failed to init SDL video subsystem";
 		const char* message = SDL_GetError();
