@@ -16,163 +16,122 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <GL/glew.h>
+#include <bgfx/bgfx.h>
+#include <bgfx/platform.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
 
-static const char* ERROR_STRINGS[] = {"OpenGL Error: Invalid enum",
-									  "OpenGL Error: Invalid value",
-									  "OpenGL Error: Invalid operation",
-									  "OpenGL Error: Stack overflow",
-									  "OpenGL Error: Stack underflow",
-									  "OpenGL Error: Out of memory",
-									  "OpenGL Error: Invalid framebuffer operation",
-									  "OpenGL Error: Unknown error"};
+#if BX_PLATFORM_EMSCRIPTEN
+#include "emscripten.h"
+#endif // BX_PLATFORM_EMSCRIPTEN
 
-Graphics::Graphics()
+Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 	: window_(nullptr)
-	, context_(nullptr)
 {
-}
+	initialized = false;
 
-bool Graphics::Start(const char* title, int width, int height, int glMajor, int glMinor, bool vsync)
-{
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 	{
-		constexpr char TITLE[] = "Failed to init SDL video subsystem";
-		const char* message = SDL_GetError();
-		const size_t length = sizeof(TITLE) + strlen(message) + 4;
-		errorString_ = (char*)malloc(length);
-		sprintf(errorString_, "%s : %s", TITLE, message);
-		return false;
+		SDL_SetError("Failed to init SDL video subsystem: %s", SDL_GetError());
+		return;
 	}
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajor);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinor);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-	window_ = SDL_CreateWindow(title,
+	window_ = SDL_CreateWindow(initInfo.title,
 							   SDL_WINDOWPOS_CENTERED,
 							   SDL_WINDOWPOS_CENTERED,
-							   width,
-							   height,
-							   SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+							   initInfo.width,
+							   initInfo.height,
+							   SDL_WINDOW_SHOWN);
 	if (!window_)
 	{
-		constexpr char TITLE[] = "Failed to create SDL window";
-		const char* message = SDL_GetError();
-		const size_t length = sizeof(TITLE) + strlen(message) + 4;
-		errorString_ = (char*)malloc(length);
-		sprintf(errorString_, "%s : %s", TITLE, message);
-		return false;
+		SDL_SetError("Failed to create SDL window : %s", SDL_GetError());
+		return;
 	}
 
-	context_ = SDL_GL_CreateContext(window_);
-	if (!context_)
+#if !BX_PLATFORM_EMSCRIPTEN
+	SDL_SysWMinfo wmi;
+	SDL_VERSION(&wmi.version);
+	if (!SDL_GetWindowWMInfo(window_, &wmi))
 	{
-		constexpr char TITLE[] = "Failed to create SDL OpenGL context";
-		const char* message = SDL_GetError();
-		const size_t length = sizeof(TITLE) + strlen(message) + 4;
-		errorString_ = (char*)malloc(length);
-		sprintf(errorString_, "%s : %s", TITLE, message);
-		return false;
+		SDL_SetError("Could now get SDL SysWM info: ", SDL_GetError());
+		return;
 	}
+#endif // !BX_PLATFORM_EMSCRIPTEN
 
-	if (vsync && SDL_GL_SetSwapInterval(1) < 0)
+	bgfx::PlatformData pd;
+#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+	pd.ndt = wmi.info.x11.display;
+	pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
+#elif BX_PLATFORM_OSX
+	pd.ndt = NULL;
+	pd.nwh = wmi.info.cocoa.window;
+#elif BX_PLATFORM_WINDOWS
+	pd.ndt = NULL;
+	pd.nwh = wmi.info.win.window;
+#elif BX_PLATFORM_WINDOWS
+	pd.ndt = NULL;
+	pd.nwh = wmi.info.cocoa.window;
+#elif BX_PLATFORM_STEAMLINK
+	pd.ndt = wmi.info.vivante.display;
+	pd.nwh = wmi.info.vivante.window;
+#elif BX_PLATFORM_EMSCRIPTEN
+	pd.ndt = NULL;
+	pd.nwh = (void*)"#canvas";
+#endif
+	pd.context = NULL;
+	pd.backBuffer = NULL;
+	pd.backBufferDS = NULL;
+	bgfx::setPlatformData(pd);
+
+	bgfx::renderFrame();
+
+	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::OpenGL;
+	static constexpr unsigned short GPU_VENDOR = BGFX_PCI_ID_NONE;
+
+	unsigned resetFlags = 0;
+	if (initInfo.vsync)
+		resetFlags |= BGFX_RESET_VSYNC;
+
+	bgfx::Init bgfxInfo{};
+	bgfxInfo.type = RENDERER_TYPE;
+	bgfxInfo.vendorId = GPU_VENDOR;
+	bgfxInfo.resolution.width = initInfo.width;
+	bgfxInfo.resolution.height = initInfo.height;
+	bgfxInfo.resolution.reset = resetFlags;
+	if (!bgfx::init(bgfxInfo))
 	{
-		constexpr char TITLE[] = "Failed to set VSync";
-		const char* message = SDL_GetError();
-		const size_t length = sizeof(TITLE) + strlen(message) + 4;
-		errorString_ = (char*)malloc(length);
-		sprintf(errorString_, "%s : %s", TITLE, message);
-		return false;
+		SDL_SetError("Failed to init BGFX");
+		return;
 	}
 
-	glewExperimental = GL_TRUE;
-	GLenum status = glewInit();
-	if (status != GLEW_OK)
-	{
-		constexpr char TITLE[] = "Failed to initialize GLEW";
-		const char* message = reinterpret_cast<const char*>(glewGetErrorString(status));
-		const size_t length = sizeof(TITLE) + strlen(message) + 4;
-		errorString_ = (char*)malloc(length);
-		sprintf(errorString_, "%s : %s", TITLE, message);
-		return false;
-	}
+#ifndef NDEBUG
+	bgfx::setDebug(BGFX_DEBUG_TEXT);
+#endif // NDEBUG
 
-	SDL_StartTextInput();
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xff, 1.0f, 0);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glFrontFace(GL_CCW);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-	return true;
+	initialized = true;
 }
 
-void Graphics::Stop()
+Graphics::~Graphics()
 {
-	if (errorString_)
-	{
-		free(errorString_);
-		errorString_ = nullptr;
-	}
 	SDL_StopTextInput();
-	if (context_)
-	{
-		SDL_GL_DeleteContext(context_);
-		context_ = nullptr;
-	}
-	if (window_)
-	{
-		SDL_DestroyWindow(window_);
-		window_ = nullptr;
-	}
+	bgfx::shutdown();
+	SDL_DestroyWindow(window_);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-void Graphics::BeginFrame() noexcept { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
-
-void Graphics::EndFrame() noexcept { SDL_GL_SwapWindow(window_); }
-
-bool Graphics::PollErrors() noexcept
+void Graphics::BeginFrame() noexcept
 {
-	GLenum error = glGetError();
-	if (error == GL_NO_ERROR)
-		return false;
-	else
-	{
-		const char* message = nullptr;
-		switch (error)
-		{
-		case GL_INVALID_ENUM:
-			message = ERROR_STRINGS[0];
-			break;
-		case GL_INVALID_VALUE:
-			message = ERROR_STRINGS[1];
-			break;
-		case GL_INVALID_OPERATION:
-			message = ERROR_STRINGS[2];
-			break;
-		case GL_STACK_OVERFLOW:
-			message = ERROR_STRINGS[3];
-			break;
-		case GL_STACK_UNDERFLOW:
-			message = ERROR_STRINGS[4];
-			break;
-		case GL_OUT_OF_MEMORY:
-			message = ERROR_STRINGS[5];
-			break;
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			message = ERROR_STRINGS[6];
-			break;
-		}
-		if (errorString_)
-			free(errorString_);
-		strcpy(errorString_, message);
-		return true;
-	}
+	int width, height;
+	SDL_GetWindowSize(window_, &width, &height);
+	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::touch(0);
+
+	bgfx::renderFrame();
 }
+
+void Graphics::EndFrame() noexcept { bgfx::frame(); }

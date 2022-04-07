@@ -20,6 +20,16 @@
 
 int main()
 {
-	Coordinator coordinator;
-	return coordinator.Start() ? 0 : 1;
+	Coordinator::InitInfo initInfo;
+	initInfo.graphics.title = "Hello World";
+	initInfo.graphics.width = 800;
+	initInfo.graphics.height = 600;
+	initInfo.graphics.vsync = true;
+
+	bool initialized;
+	Coordinator coordinator(initInfo, initialized);
+	if (initialized)
+		return coordinator.Run();
+	else
+		return 1;
 }

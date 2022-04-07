@@ -1,0 +1,9 @@
+[submodule "ThirdParty/GLM"]
+	path = ThirdParty/GLM
+	url = https://github.com/g-truc/glm
+[submodule "ThirdParty/bgfx"]
+	path = ThirdParty/bgfx
+	url = https://github.com/bkaradzic/bgfx.cmake
+[submodule "ThirdParty/SDL"]
+	path = ThirdParty/SDL
+	url = https://github.com/libsdl-org/SDL

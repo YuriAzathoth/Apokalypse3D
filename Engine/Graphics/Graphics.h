@@ -19,29 +19,30 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include "Apokalypse3DAPI.h"
+
 struct SDL_Window;
 typedef void* SDL_GL_Context;
 
-class Graphics
+class APOKALYPSE3DAPI_EXPORT Graphics
 {
 public:
-	Graphics();
-	~Graphics() { Stop(); }
+	struct InitInfo
+	{
+		const char* title;
+		int width;
+		int height;
+		bool vsync;
+	};
 
-	bool Start(const char* title, int width, int height, int glMajor, int glMinor, bool vsync);
-	void Stop();
+	Graphics(const InitInfo initInfo, bool& initialized);
+	~Graphics();
 
 	void BeginFrame() noexcept;
 	void EndFrame() noexcept;
 
-	bool PollErrors() noexcept;
-
-	const char* const GetErrorString() const noexcept { return errorString_; }
-
 private:
 	SDL_Window* window_;
-	SDL_GL_Context context_;
-	char* errorString_;
 };
 
 #endif // COORDINATOR_H
