@@ -21,26 +21,23 @@
 #include <stdlib.h>
 #include "Coordinator.h"
 
-Coordinator::Coordinator()
+Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 	: run_(true)
 {
-}
+	initialized = false;
 
-bool Coordinator::Start()
-{
-	const char* windowTitle = "Hello World!";
-	const int windowWidth = 800;
-	const int windowHeight = 600;
-	const int glMajor = 3;
-	const int glMinor = 3;
-	const int vsyns = 0;
-
-	if (!graphics_.Start(windowTitle, windowWidth, windowHeight, glMajor, glMinor, vsyns))
+	graphics_.Initialize(initInfo.graphics, initialized);
+	if (!initialized)
 	{
-		printf("ERROR: %s\n", graphics_.GetErrorString());
-		return false;
+		printf("ERROR: %s\n", SDL_GetError());
+		return;
 	}
 
+	initialized = true;
+}
+
+int Coordinator::Run()
+{
 	SDL_Event event;
 	while (run_)
 	{
@@ -51,16 +48,11 @@ bool Coordinator::Start()
 				run_ = false;
 				break;
 			}
-		graphics_.BeginFrame();
-		graphics_.EndFrame();
-		while (graphics_.PollErrors())
-		{
-			printf("ERROR: %s\n", graphics_.GetErrorString());
-			run_ = false;
-		}
+		graphics_->BeginFrame();
+		graphics_->EndFrame();
 	}
 
-	return true;
+	return 0;
 }
 
-void Coordinator::Stop() { run_ = false; }
+void Coordinator::Exit() { run_ = false; }

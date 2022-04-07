@@ -19,18 +19,26 @@
 #ifndef COORDINATOR_H
 #define COORDINATOR_H
 
+#include "Apokalypse3DAPI.h"
+#include "Container/LazyInit.h"
 #include "Graphics/Graphics.h"
 
-class Coordinator
+class APOKALYPSE3DAPI_EXPORT Coordinator
 {
 public:
-	Coordinator();
+	struct InitInfo
+	{
+		Graphics::InitInfo graphics;
+	};
 
-	bool Start();
-	void Stop();
+	Coordinator(const InitInfo& initInfo, bool& initialized);
+
+	int Run();
+
+	void Exit();
 
 private:
-	Graphics graphics_;
+	LazyInit<Graphics> graphics_;
 	bool run_;
 };
 
