@@ -319,9 +319,9 @@ public:
 		size_ = other.size_;
 		other.data_ = nullptr;
 		other.size_ = 0;
-		other.capacity_ = 0;
 		hasher_ = std::move(hasher_);
 		keyEqual_ = std::move(keyEqual_);
+		return *this;
 	}
 
 	ArrayHashMap& operator=(std::initializer_list<ValueType> other)
