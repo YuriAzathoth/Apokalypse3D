@@ -10,3 +10,6 @@
 [submodule "ThirdParty/doctest"]
 	path = ThirdParty/doctest
 	url = https://github.com/doctest/doctest
+[submodule "ThirdParty/Celero"]
+	path = ThirdParty/Celero
+	url = https://github.com/DigitalInBlue/Celero
