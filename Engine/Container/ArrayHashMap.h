@@ -642,6 +642,18 @@ template <> struct EmptyKeyFunctor<unsigned>
 	void Initialize(unsigned& key) const noexcept { key = ~0u; }
 };
 
+template <> struct EmptyKeyFunctor<long long>
+{
+	bool operator()(long long key) const noexcept { return key == -1L; }
+	void Initialize(long long& key) const noexcept { key = -1L; }
+};
+
+template <> struct EmptyKeyFunctor<unsigned long long>
+{
+	bool operator()(unsigned long long key) const noexcept { return key == ~0LU; }
+	void Initialize(unsigned long long& key) const noexcept { key = ~0LU; }
+};
+
 template <> struct EmptyKeyFunctor<std::string>
 {
 	bool operator()(const std::string& key) const noexcept { return key.empty(); }
