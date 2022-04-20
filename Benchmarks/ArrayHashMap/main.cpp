@@ -68,13 +68,20 @@ BASELINE(ArrayHashMap, Iteration, 10, 1000)
 	}
 }
 
-BENCHMARK(ArrayHashMap, InsertionErasion, 10, 10)
+BENCHMARK(ArrayHashMap, Edition, 10, 10)
 {
 	ArrayHashMap<size_t, MapValue> hm;
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
 		hm.Emplace(i, MapValue((float)i, (float)i));
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
 		hm.Erase(i);
+}
+
+BENCHMARK(ArrayHashMap, RangedEdition, 10, 10)
+{
+	ArrayHashMap<size_t, MapValue> hm;
+	hm.Insert(g_hm.Begin(), g_hm.End());
+	hm.EraseKeys(g_hm.Begin(), g_hm.End());
 }
 
 BASELINE(UnorderedMap, Iteration, 10, 1000)
@@ -86,7 +93,7 @@ BASELINE(UnorderedMap, Iteration, 10, 1000)
 	}
 }
 
-BENCHMARK(UnorderedMap, InsertionErasion, 10, 10)
+BENCHMARK(UnorderedMap, Edition, 10, 10)
 {
 	std::unordered_map<size_t, MapValue> hm;
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
