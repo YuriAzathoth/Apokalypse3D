@@ -19,6 +19,7 @@
 #include <doctest/doctest.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "Container/ArrayHashMap.h"
 
 #define TEST_DATA_LIST                                                                                                 \
@@ -31,9 +32,9 @@
 		{5, 5}, {7, 7}, {8, 8}, {10, 10},                                                                              \
 	}
 
-#define TEST_DATA_LIST_STRING                                                                                                \
+#define TEST_DATA_LIST_STRING                                                                                          \
 	{                                                                                                                  \
-		{"one", 1}, {"two", 2}, {"three", 3}, {"four", 4}, { "five", 5 }                                                               \
+		{"one", 1}, {"two", 2}, {"three", 3}, {"four", 4}, { "five", 5 }                                               \
 	}
 
 static constexpr std::pair<int, int> TEST_DATA[] = TEST_DATA_LIST;
@@ -382,6 +383,29 @@ TEST_SUITE("ArrayHashMap")
 			REQUIRE(!hm.Contains(p.first));
 			REQUIRE(g_AllocCount == --allocs);
 		}
+		REQUIRE(g_AllocCount == 0);
+	}
+
+	TEST_CASE("Range key iterators erase")
+	{
+		MemoryLeakChecker checker;
+		ArrayHashMap<int, DebugObject<int>> hm(std::begin(TEST_DATA), std::end(TEST_DATA));
+		hm.Insert(std::begin(TEST_DATA_AUX), std::end(TEST_DATA_AUX));
+		REQUIRE(hm.EraseKeys(std::begin(TEST_DATA), std::end(TEST_DATA)) == std::size(TEST_DATA));
+		REQUIRE(hm.Size() == std::size(TEST_DATA_AUX));
+		REQUIRE(g_AllocCount == hm.Size());
+		for (const auto& p : TEST_DATA)
+			REQUIRE(!hm.Contains(p.first));
+		for (const auto& p : TEST_DATA_AUX)
+			REQUIRE(hm.Contains(p.first));
+		REQUIRE(hm.EraseKeys(std::begin(TEST_DATA), std::end(TEST_DATA)) == 0);
+		REQUIRE(hm.EraseKeys(std::begin(TEST_DATA_AUX), std::end(TEST_DATA_AUX)) == std::size(TEST_DATA_AUX));
+		REQUIRE(hm.Size() == 0);
+		for (const auto& p : TEST_DATA)
+			REQUIRE(!hm.Contains(p.first));
+		for (const auto& p : TEST_DATA_AUX)
+			REQUIRE(!hm.Contains(p.first));
+		REQUIRE(hm.EraseKeys(std::begin(TEST_DATA_AUX), std::end(TEST_DATA_AUX)) == 0);
 		REQUIRE(g_AllocCount == 0);
 	}
 
