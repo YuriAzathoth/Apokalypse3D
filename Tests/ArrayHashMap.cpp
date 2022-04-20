@@ -18,6 +18,7 @@
 
 #include <doctest/doctest.h>
 #include <iostream>
+#include <string>
 #include "Container/ArrayHashMap.h"
 
 #define TEST_DATA_LIST                                                                                                 \
@@ -30,8 +31,14 @@
 		{5, 5}, {7, 7}, {8, 8}, {10, 10},                                                                              \
 	}
 
+#define TEST_DATA_LIST_STRING                                                                                                \
+	{                                                                                                                  \
+		{"one", 1}, {"two", 2}, {"three", 3}, {"four", 4}, { "five", 5 }                                                               \
+	}
+
 static constexpr std::pair<int, int> TEST_DATA[] = TEST_DATA_LIST;
 static constexpr std::pair<int, int> TEST_DATA_AUX[] = TEST_DATA_LIST_AUX;
+static const std::pair<std::string, int> TEST_DATA_STRING[] = TEST_DATA_LIST_STRING;
 
 static int g_AllocCount = 0;
 
@@ -78,7 +85,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Default constructor")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		CHECK(hm.Empty());
 		CHECK(hm.Size() == 0);
 		CHECK(hm.Begin() == hm.End());
@@ -88,7 +95,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Emplace")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		for (const auto& p : TEST_DATA)
 			hm.Emplace(p.first, p.second);
 		REQUIRE(hm.Size() == std::size(TEST_DATA));
@@ -103,7 +110,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Contains")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		hm.Emplace(1, 2);
 		CHECK(!hm.Contains(0));
 		REQUIRE(hm.Contains(1));
@@ -113,7 +120,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Clear")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		for (const auto& p : TEST_DATA)
 			hm.Emplace(p.first, p.second);
 		REQUIRE(g_AllocCount == std::size(TEST_DATA));
@@ -125,11 +132,11 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Copy constructor")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> src;
+		ArrayHashMap<int, DebugObject<int>> src;
 		for (const auto& p : TEST_DATA)
 			src.Emplace(p.first, p.second);
 
-		ArrayHashMap<int, DebugObject<int>, -1> dst(src);
+		ArrayHashMap<int, DebugObject<int>> dst(src);
 		REQUIRE(src.Size() == dst.Size());
 		REQUIRE(g_AllocCount == src.Size() + dst.Size());
 		auto it1 = src.Begin();
@@ -146,12 +153,12 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Move constructor")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> src;
+		ArrayHashMap<int, DebugObject<int>> src;
 		for (const auto& p : TEST_DATA)
 			src.Emplace(p.first, p.second);
 
 		const unsigned srcsize = src.Size();
-		ArrayHashMap<int, DebugObject<int>, -1> dst(std::move(src));
+		ArrayHashMap<int, DebugObject<int>> dst(std::move(src));
 		REQUIRE(src.Size() == 0);
 		REQUIRE(dst.Size() == srcsize);
 		REQUIRE(g_AllocCount == dst.Size());
@@ -169,7 +176,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Init list constructor")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm = TEST_DATA_LIST;
+		ArrayHashMap<int, DebugObject<int>> hm = TEST_DATA_LIST;
 
 		REQUIRE(hm.Size() == std::size(TEST_DATA));
 		REQUIRE(g_AllocCount == hm.Size());
@@ -187,7 +194,7 @@ TEST_SUITE("ArrayHashMap")
 		for (unsigned i = 0; i < std::size(TEST_DATA); ++i)
 			src[i] = TEST_DATA[i];
 
-		ArrayHashMap<int, DebugObject<int>, -1> dst(std::begin(src), std::end(src));
+		ArrayHashMap<int, DebugObject<int>> dst(std::begin(src), std::end(src));
 		REQUIRE(dst.Size() == std::size(TEST_DATA));
 		REQUIRE(g_AllocCount == dst.Size());
 		for (const auto& p : TEST_DATA)
@@ -200,11 +207,11 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Copy assignment")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> src;
+		ArrayHashMap<int, DebugObject<int>> src;
 		for (const auto& p : TEST_DATA)
 			src.Emplace(p.first, p.second);
 
-		ArrayHashMap<int, DebugObject<int>, -1> dst;
+		ArrayHashMap<int, DebugObject<int>> dst;
 		dst = src;
 		REQUIRE(src.Size() == dst.Size());
 		REQUIRE(g_AllocCount == src.Size() + dst.Size());
@@ -222,12 +229,12 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Move assignment")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> src;
+		ArrayHashMap<int, DebugObject<int>> src;
 		for (const auto& p : TEST_DATA)
 			src.Emplace(p.first, p.second);
 
 		const unsigned srcsize = src.Size();
-		ArrayHashMap<int, DebugObject<int>, -1> dst(std::move(src));
+		ArrayHashMap<int, DebugObject<int>> dst(std::move(src));
 		REQUIRE(src.Size() == 0);
 		REQUIRE(dst.Size() == srcsize);
 		REQUIRE(g_AllocCount == dst.Size());
@@ -245,7 +252,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Init list assignment")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		hm = TEST_DATA_LIST;
 
 		REQUIRE(hm.Size() == std::size(TEST_DATA));
@@ -260,7 +267,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Copy insert")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		{
 			ArrayHashMapPair<int, DebugObject<int>> pair;
 			for (const auto& p : TEST_DATA)
@@ -283,7 +290,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Move insert")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		for (const auto& p : TEST_DATA)
 		{
 			ArrayHashMapPair<int, DebugObject<int>> pair{p.first, p.second};
@@ -302,8 +309,8 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Range iterators insert")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> src(std::begin(TEST_DATA), std::end(TEST_DATA));
-		ArrayHashMap<int, DebugObject<int>, -1> dst(std::begin(TEST_DATA_AUX), std::end(TEST_DATA_AUX));
+		ArrayHashMap<int, DebugObject<int>> src(std::begin(TEST_DATA), std::end(TEST_DATA));
+		ArrayHashMap<int, DebugObject<int>> dst(std::begin(TEST_DATA_AUX), std::end(TEST_DATA_AUX));
 		REQUIRE(dst.Insert(src.Begin(), src.End()) == src.Size());
 
 		REQUIRE(dst.Size() == src.Size() + std::size(TEST_DATA_AUX));
@@ -323,7 +330,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Init list insert")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm(std::begin(TEST_DATA), std::end(TEST_DATA));
+		ArrayHashMap<int, DebugObject<int>> hm(std::begin(TEST_DATA), std::end(TEST_DATA));
 		REQUIRE(hm.Insert(TEST_DATA_LIST_AUX) == std::size(TEST_DATA_AUX));
 
 		REQUIRE(hm.Size() == std::size(TEST_DATA) + std::size(TEST_DATA_AUX));
@@ -343,7 +350,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Key erase")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		for (const auto& p : TEST_DATA)
 			hm.Emplace(p.first, p.second);
 		auto it = hm.Begin();
@@ -361,7 +368,7 @@ TEST_SUITE("ArrayHashMap")
 	TEST_CASE("Iterator erase")
 	{
 		MemoryLeakChecker checker;
-		ArrayHashMap<int, DebugObject<int>, -1> hm;
+		ArrayHashMap<int, DebugObject<int>> hm;
 		for (const auto& p : TEST_DATA)
 			hm.Emplace(p.first, p.second);
 		auto it = hm.Begin();
@@ -376,5 +383,15 @@ TEST_SUITE("ArrayHashMap")
 			REQUIRE(g_AllocCount == --allocs);
 		}
 		REQUIRE(g_AllocCount == 0);
+	}
+
+	TEST_CASE("Non-POD as key")
+	{
+		MemoryLeakChecker checker;
+		ArrayHashMap<std::string, DebugObject<int>> hm;
+		for (const auto& p : TEST_DATA_STRING)
+			hm.Emplace(p.first, p.second);
+		for (const auto& p : TEST_DATA_STRING)
+			REQUIRE(hm.Contains(p.first));
 	}
 }
