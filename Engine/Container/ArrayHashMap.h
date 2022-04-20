@@ -421,6 +421,32 @@ public:
 			return 0;
 	}
 
+	template <typename IteratorsIterator> SizeType EraseKeys(IteratorsIterator first, IteratorsIterator last)
+	{
+		SizeType count = 0;
+		Pointer end;
+		Iterator curr;
+		while (first != last)
+		{
+			curr = Find(first->first);
+			if (curr != End())
+			{
+				end = LastUsed();
+				curr->first = std::move(end->first);
+				curr->second = std::move(end->second);
+				++count;
+				--size_;
+			}
+			++first;
+		}
+		if (count)
+		{
+			size_ += count;
+			Resize(size_ - count);
+		}
+		return count;
+	}
+
 	void Swap(ArrayHashMap& other) noexcept
 	{
 		ArrayHashMap temp;
