@@ -32,11 +32,15 @@ template <typename TKey, typename TValue> struct ArrayHashMapPair
 	TValue second;
 };
 
+template <typename TKey> struct EmptyKeyFunctor
+{
+};
+
 template <typename TKey,
 		  typename TValue,
-		  TKey emptyKey,
 		  typename THash = std::hash<TKey>,
 		  typename TKeyEqual = std::equal_to<TKey>,
+		  typename TKeyEmpty = EmptyKeyFunctor<TKey>,
 		  typename TAlloc = std::allocator<ArrayHashMapPair<TKey, TValue>>>
 class ArrayHashMap
 {
@@ -48,6 +52,7 @@ public:
 	using DifferenceType = int;
 	using Hasher = THash;
 	using KeyEqual = TKeyEqual;
+	using KeyEmpty = TKeyEmpty;
 	using AllocType = TAlloc;
 	using Reference = ValueType&;
 	using ConstReference = const ValueType&;
@@ -171,22 +176,26 @@ public:
 	{
 	}
 
-	explicit ArrayHashMap(const THash& hash, const TKeyEqual& equal = TKeyEqual(), const TAlloc& alloc = TAlloc())
+	explicit ArrayHashMap(const THash& hash,
+						  const TKeyEqual& equal = TKeyEqual(),
+						  const TKeyEmpty& empty = TKeyEmpty(),
+						  const TAlloc& alloc = TAlloc())
 		: data_(nullptr)
 		, hasher_(hash)
 		, keyEqual_(equal)
+		, keyEmpty_(empty)
 		, alloc_(alloc)
 		, size_(0)
 	{
 	}
 
 	ArrayHashMap(SizeType bucketCount, const TAlloc& alloc)
-		: ArrayHashMap(bucketCount, Hasher(), TKeyEqual(), alloc)
+		: ArrayHashMap(bucketCount, Hasher(), TKeyEqual(), TKeyEmpty(), alloc)
 	{
 	}
 
 	ArrayHashMap(SizeType bucketCount, const THash& hash, const TAlloc& alloc = TAlloc())
-		: ArrayHashMap(bucketCount, hash, KeyEqual(), alloc)
+		: ArrayHashMap(bucketCount, hash, KeyEqual(), TKeyEmpty(), alloc)
 	{
 	}
 
@@ -202,9 +211,11 @@ public:
 				 InputIterator last,
 				 const THash& hash = THash(),
 				 const TKeyEqual& equal = TKeyEqual(),
+				 const TKeyEmpty& empty = TKeyEmpty(),
 				 const TAlloc& alloc = TAlloc())
 		: hasher_(hash)
 		, keyEqual_(equal)
+		, keyEmpty_(empty)
 		, alloc_(alloc)
 		, size_(std::distance(first, last))
 	{
@@ -222,13 +233,13 @@ public:
 
 	template <class InputIterator>
 	ArrayHashMap(InputIterator first, InputIterator last, const TAlloc& alloc)
-		: ArrayHashMap(first, last, Hasher(), KeyEqual(), alloc)
+		: ArrayHashMap(first, last, Hasher(), KeyEqual(), KeyEmpty(), alloc)
 	{
 	}
 
 	template <class InputIterator>
 	ArrayHashMap(InputIterator first, InputIterator last, const THash& hash, const TAlloc& alloc)
-		: ArrayHashMap(first, last, hash, KeyEqual(), alloc)
+		: ArrayHashMap(first, last, hash, KeyEqual(), KeyEmpty(), alloc)
 	{
 	}
 
@@ -240,6 +251,7 @@ public:
 	ArrayHashMap(const ArrayHashMap& other, const TAlloc& alloc)
 		: hasher_(other.hasher_)
 		, keyEqual_(other.keyEqual_)
+		, keyEmpty_(other.keyEmpty_)
 		, alloc_(alloc)
 		, size_(other.size_)
 	{
@@ -257,6 +269,7 @@ public:
 		: data_(other.data_)
 		, hasher_(std::move(other.hasher_))
 		, keyEqual_(std::move(other.keyEqual_))
+		, keyEmpty_(std::move(other.keyEmpty_))
 		, alloc_(alloc)
 		, size_(other.size_)
 	{
@@ -267,18 +280,19 @@ public:
 	ArrayHashMap(std::initializer_list<ValueType>&& init,
 				 const THash& hash = THash(),
 				 const TKeyEqual& equal = TKeyEqual(),
+				 const TKeyEmpty& empty = TKeyEmpty(),
 				 const TAlloc& alloc = TAlloc())
-		: ArrayHashMap(init.begin(), init.end(), hash, equal, alloc)
+		: ArrayHashMap(init.begin(), init.end(), hash, equal, empty, alloc)
 	{
 	}
 
 	ArrayHashMap(std::initializer_list<ValueType>&& init, const TAlloc& alloc)
-		: ArrayHashMap(std::move(init), Hasher(), TKeyEqual(), alloc)
+		: ArrayHashMap(std::move(init), Hasher(), TKeyEqual(), TKeyEmpty(), alloc)
 	{
 	}
 
 	ArrayHashMap(std::initializer_list<ValueType>&& init, const THash& hash, const TAlloc& alloc)
-		: ArrayHashMap(std::move(init), hash, KeyEqual(), alloc)
+		: ArrayHashMap(std::move(init), hash, KeyEqual(), TKeyEmpty(), alloc)
 	{
 	}
 
@@ -484,7 +498,7 @@ private:
 		Pointer ptr = start;
 		do
 		{
-			if (keyEqual_(ptr->first, EMPTY_KEY) || keyEqual_(ptr->first, key))
+			if (keyEmpty_(ptr->first) || keyEqual_(ptr->first, key))
 				return ptr;
 			++ptr;
 			if (ptr == data + size)
@@ -519,7 +533,10 @@ private:
 	void Construct(ValueType* data, SizeType count) const noexcept
 	{
 		for (Pointer ptr = data; ptr < data + count; ++ptr)
-			new (&ptr->first) KeyType(EMPTY_KEY);
+		{
+			new (&ptr->first) KeyType;
+			keyEmpty_.Initialize(ptr->first);
+		}
 	}
 
 	void Destruct(ValueType* data, SizeType count) const noexcept
@@ -607,9 +624,26 @@ private:
 	AllocType alloc_;
 	Hasher hasher_;
 	KeyEqual keyEqual_;
+	KeyEmpty keyEmpty_;
 	SizeType size_;
-
-	static constexpr KeyType EMPTY_KEY = emptyKey;
 };
 
 #endif // ARRAYHASHMAP_H
+
+template <> struct EmptyKeyFunctor<int>
+{
+	bool operator()(int key) const noexcept { return key == -1; }
+	void Initialize(int& key) const noexcept { key = -1; }
+};
+
+template <> struct EmptyKeyFunctor<unsigned>
+{
+	bool operator()(unsigned key) const noexcept { return key == ~0u; }
+	void Initialize(unsigned& key) const noexcept { key = ~0u; }
+};
+
+template <> struct EmptyKeyFunctor<std::string>
+{
+	bool operator()(const std::string& key) const noexcept { return key.empty(); }
+	void Initialize(std::string&) const noexcept {}
+};
