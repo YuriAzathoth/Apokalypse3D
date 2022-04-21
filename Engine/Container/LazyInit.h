@@ -47,10 +47,10 @@ public:
 	}
 
 	T* Get() noexcept { return reinterpret_cast<T*>(memory_); }
-	T* operator*() noexcept { return Get(); }
+	T& operator*() noexcept { return *Get(); }
 	T* operator->() noexcept { return Get(); }
 	const T* Get() const noexcept { return reinterpret_cast<const T*>(memory_); }
-	const T* operator*() const noexcept { return Get(); }
+	const T& operator*() const noexcept { return *Get(); }
 	const T* operator->() const noexcept { return Get(); }
 
 	bool NotEmpty() const noexcept { return init_; }
