@@ -32,13 +32,22 @@ public:
 	};
 
 	Coordinator(const InitInfo& initInfo, bool& initialized);
+	~Coordinator();
 
 	int Run();
+	void BeginFrame();
+	void EndFrame();
+	void Draw();
 
 	void Exit();
 
+	Graphics& GetGraphics() noexcept { return *graphics_; }
+	const Graphics& GetGraphics() const noexcept { return *graphics_; }
+	bool IsRunning() const noexcept { return run_; }
+
 private:
 	LazyInit<Graphics> graphics_;
+	void* event_;
 	bool run_;
 };
 
