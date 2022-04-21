@@ -39,7 +39,9 @@ public:
 	void EndFrame();
 	void Draw();
 
-	void Exit();
+	unsigned GetTicks() const noexcept;
+
+	void Exit() noexcept { run_ = false; }
 
 	Graphics& GetGraphics() noexcept { return *graphics_; }
 	const Graphics& GetGraphics() const noexcept { return *graphics_; }
@@ -47,6 +49,7 @@ public:
 
 private:
 	LazyInit<Graphics> graphics_;
+	unsigned flags_;
 	void* event_;
 	bool run_;
 };
