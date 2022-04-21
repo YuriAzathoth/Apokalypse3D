@@ -16,10 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
+#include <bgfx/bgfx.h>
+#include <bgfx/platform.h>
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
