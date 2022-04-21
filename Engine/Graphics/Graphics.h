@@ -19,6 +19,8 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include <bgfx/bgfx.h>
+#include <glm/mat4x4.hpp>
 #include "Apokalypse3DAPI.h"
 
 struct SDL_Window;
@@ -27,6 +29,17 @@ typedef void* SDL_GL_Context;
 class APOKALYPSE3DAPI_EXPORT Graphics
 {
 public:
+	enum class RenderType : unsigned
+	{
+		AUTO,
+		OPENGL,
+		VULKAN,
+		METAL,
+		DIRECTX9,
+		DIRECTX11,
+		DIRECTX12
+	};
+
 	struct InitInfo
 	{
 		const char* title;
@@ -40,8 +53,22 @@ public:
 
 	void BeginFrame() noexcept;
 	void EndFrame() noexcept;
+	void Draw(bgfx::ProgramHandle program, bgfx::VertexBufferHandle vbo, bgfx::IndexBufferHandle ebo) noexcept;
+
+	void SetViewMatrix(const glm::mat4& view) noexcept;
+	void SetTransform(const glm::mat4& model) noexcept;
+
+	bgfx::ShaderHandle LoadShader(const char* filename) noexcept;
+	bgfx::ProgramHandle CreateProgram(bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader) noexcept;
+
+	bgfx::VertexBufferHandle CreateVertexBuffer(const void* data, unsigned size) noexcept;
+	bgfx::IndexBufferHandle CreateIndexBuffer(const unsigned short* data, unsigned size) noexcept;
+
+	static const char* GetShadersPath() noexcept;
 
 private:
+	bgfx::VertexLayout solidLayout_;
+	glm::mat4 proj_;
 	SDL_Window* window_;
 };
 

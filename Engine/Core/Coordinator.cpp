@@ -17,6 +17,7 @@
 */
 
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_timer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "Coordinator.h"
@@ -48,7 +49,7 @@ void Coordinator::BeginFrame()
 		switch (event->type)
 		{
 		case SDL_QUIT:
-			run_ = false;
+			Exit();
 			break;
 		}
 	graphics_->BeginFrame();
@@ -57,9 +58,11 @@ void Coordinator::BeginFrame()
 void Coordinator::EndFrame() { graphics_->EndFrame(); }
 void Coordinator::Draw() {}
 
+unsigned Coordinator::GetTicks() const noexcept { return SDL_GetTicks(); }
+
 int Coordinator::Run()
 {
-	while (run_)
+	while (IsRunning())
 	{
 		BeginFrame();
 		Draw();
@@ -67,5 +70,3 @@ int Coordinator::Run()
 	}
 	return 0;
 }
-
-void Coordinator::Exit() { run_ = false; }

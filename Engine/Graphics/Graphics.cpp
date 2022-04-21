@@ -16,10 +16,12 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <GLM/ext/matrix_clip_space.hpp>
+#include <GLM/gtc/type_ptr.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
@@ -47,7 +49,7 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 							   SDL_WINDOW_SHOWN);
 	if (!window_)
 	{
-		SDL_SetError("Failed to create SDL window : %s", SDL_GetError());
+		SDL_SetError("Failed to create SDL window: %s", SDL_GetError());
 		return;
 	}
 
@@ -56,7 +58,7 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window_, &wmi))
 	{
-		SDL_SetError("Could now get SDL SysWM info: ", SDL_GetError());
+		SDL_SetError("Could now get SDL SysWM info: %s", SDL_GetError());
 		return;
 	}
 #endif // !BX_PLATFORM_EMSCRIPTEN
@@ -113,6 +115,16 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 
 	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xff, 1.0f, 0);
 
+	solidLayout_.begin()
+		.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+		.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+		.end();
+
+	proj_ = glm::perspective(glm::radians(45.0f),
+							 static_cast<float>(initInfo.width) / static_cast<float>(initInfo.height),
+							 0.1f,
+							 100.0f);
+
 	initialized = true;
 }
 
@@ -130,8 +142,83 @@ void Graphics::BeginFrame() noexcept
 	SDL_GetWindowSize(window_, &width, &height);
 	bgfx::setViewRect(0, 0, 0, width, height);
 	bgfx::touch(0);
-
-	bgfx::renderFrame();
 }
 
 void Graphics::EndFrame() noexcept { bgfx::frame(); }
+
+void Graphics::Draw(bgfx::ProgramHandle program, bgfx::VertexBufferHandle vbo, bgfx::IndexBufferHandle ebo) noexcept
+{
+	bgfx::setVertexBuffer(0, vbo);
+	bgfx::setIndexBuffer(ebo);
+	bgfx::submit(0, program);
+}
+
+void Graphics::SetViewMatrix(const glm::mat4& view) noexcept
+{
+	bgfx::setViewTransform(0, glm::value_ptr(view), glm::value_ptr(proj_));
+}
+
+void Graphics::SetTransform(const glm::mat4& model) noexcept { bgfx::setTransform(glm::value_ptr(model)); }
+
+bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
+{
+	char filepath[1024];
+	sprintf(filepath, "../Data/Shaders/%s/%s", GetShadersPath(), filename);
+	FILE* file = fopen(filepath, "rb");
+	if (!file)
+	{
+		SDL_SetError("Could not create shader: file \"%s\" not found.", filename);
+		return BGFX_INVALID_HANDLE;
+	}
+
+	fseek(file, 0, SEEK_END);
+	const unsigned size = static_cast<unsigned>(ftell(file));
+	if (!size)
+	{
+		SDL_SetError("Could not create shader: file \"%s\" is empty.", filename);
+		return BGFX_INVALID_HANDLE;
+	}
+	rewind(file);
+
+	const bgfx::Memory* mem = bgfx::alloc(size + 1);
+	fread(mem->data, 1, size, file);
+	fclose(file);
+	return bgfx::createShader(mem);
+}
+
+bgfx::ProgramHandle Graphics::CreateProgram(bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader) noexcept
+{
+	return bgfx::createProgram({vertexShader}, {fragmentShader}, false);
+}
+
+bgfx::VertexBufferHandle Graphics::CreateVertexBuffer(const void* data, unsigned size) noexcept
+{
+	return bgfx::createVertexBuffer(bgfx::makeRef(data, size), solidLayout_);
+}
+
+bgfx::IndexBufferHandle Graphics::CreateIndexBuffer(const unsigned short* data, unsigned size) noexcept
+{
+	return bgfx::createIndexBuffer(bgfx::makeRef(data, size));
+}
+
+const char* Graphics::GetShadersPath() noexcept
+{
+	switch (bgfx::getRendererType())
+	{
+	case bgfx::RendererType::Direct3D9:
+		return "dx9";
+	case bgfx::RendererType::Direct3D11:
+	case bgfx::RendererType::Direct3D12:
+		return "dx11";
+	case bgfx::RendererType::Metal:
+		return "msl";
+	case bgfx::RendererType::OpenGLES:
+		return "essl";
+	case bgfx::RendererType::OpenGL:
+		return "glsl";
+	case bgfx::RendererType::Vulkan:
+		return "spirv";
+	default:
+		return nullptr;
+	}
+}
