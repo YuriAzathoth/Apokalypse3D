@@ -22,11 +22,13 @@
 #include <new>
 #include <utility>
 
-template <typename T>
-class LazyInit
+template <typename T> class LazyInit
 {
 public:
-	LazyInit() : init_(false) {}
+	LazyInit()
+		: init_(false)
+	{
+	}
 	~LazyInit() { Destroy(); }
 
 	template <typename... TArgs> void Initialize(TArgs&&... args)
@@ -55,24 +57,15 @@ public:
 	bool Empty() const noexcept { return !NotEmpty(); }
 	operator bool() const noexcept { return NotEmpty(); }
 
-	LazyInit(const LazyInit& src)
-	{
-		Initialize(*src.Get());
-	}
+	LazyInit(const LazyInit& src) { Initialize(*src.Get()); }
 	LazyInit(LazyInit&& src) noexcept
 	{
 		Initialize(std::move(*src.Get()));
 		src.Destroy();
 		src.init_ = false;
 	}
-	void operator=(const LazyInit& src)
-	{
-		Initialize(*src.Get());
-	}
-	void operator=(LazyInit&& src) noexcept
-	{
-		Initialize(std::move(*src.Get()));
-	}
+	void operator=(const LazyInit& src) { Initialize(*src.Get()); }
+	void operator=(LazyInit&& src) noexcept { Initialize(std::move(*src.Get())); }
 
 private:
 	char memory_[sizeof(T)];
