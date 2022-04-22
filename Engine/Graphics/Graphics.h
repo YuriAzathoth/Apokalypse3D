@@ -72,4 +72,4 @@ private:
 	SDL_Window* window_;
 };
 
-#endif // COORDINATOR_H
+#endif // GRAPHICS_H
