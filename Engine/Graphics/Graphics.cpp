@@ -88,8 +88,6 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 	pd.backBufferDS = NULL;
 	bgfx::setPlatformData(pd);
 
-	bgfx::renderFrame();
-
 	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::OpenGL;
 	static constexpr unsigned short GPU_VENDOR = BGFX_PCI_ID_NONE;
 
