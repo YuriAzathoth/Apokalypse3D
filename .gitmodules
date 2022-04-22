@@ -13,3 +13,9 @@
 [submodule "ThirdParty/Celero"]
 	path = ThirdParty/Celero
 	url = https://github.com/DigitalInBlue/Celero
+[submodule "ThirdParty/EASTL"]
+	path = ThirdParty/EASTL
+	url = https://github.com/electronicarts/EASTL
+[submodule "ThirdParty/flecs"]
+	path = ThirdParty/flecs
+	url = https://github.com/SanderMertens/flecs
