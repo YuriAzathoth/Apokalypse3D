@@ -32,7 +32,6 @@ public:
 	};
 
 	Coordinator(const InitInfo& initInfo, bool& initialized);
-	~Coordinator();
 
 	int Run();
 	void BeginFrame();
@@ -49,8 +48,6 @@ public:
 
 private:
 	LazyInit<Graphics> graphics_;
-	unsigned flags_;
-	void* event_;
 	bool run_;
 };
 

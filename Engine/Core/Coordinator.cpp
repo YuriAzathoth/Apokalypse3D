@@ -23,8 +23,7 @@
 #include "Coordinator.h"
 
 Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
-	: event_(nullptr)
-	, run_(true)
+	: run_(true)
 {
 	initialized = false;
 
@@ -35,18 +34,14 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 		return;
 	}
 
-	event_ = new SDL_Event;
-
 	initialized = true;
 }
 
-Coordinator::~Coordinator() { delete reinterpret_cast<SDL_Event*>(event_); }
-
 void Coordinator::BeginFrame()
 {
-	SDL_Event* event = reinterpret_cast<SDL_Event*>(event_);
-	while (SDL_PollEvent(event))
-		switch (event->type)
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+		switch (event.type)
 		{
 		case SDL_QUIT:
 			Exit();
