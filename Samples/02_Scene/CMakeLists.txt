@@ -16,7 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-SET (TARGET_NAME 01_HelloWorld)
+SET (TARGET_NAME 02_Scene)
 
 FILE (GLOB SOURCE_FILES *.cpp)
 FILE (GLOB HEADER_FILES *.h)

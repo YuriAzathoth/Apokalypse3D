@@ -19,6 +19,7 @@
 #ifndef COORDINATOR_H
 #define COORDINATOR_H
 
+#include <memory>
 #include "Apokalypse3DAPI.h"
 #include "Container/LazyInit.h"
 #include "Graphics/Graphics.h"
@@ -32,22 +33,28 @@ public:
 	};
 
 	Coordinator(const InitInfo& initInfo, bool& initialized);
+	~Coordinator();
 
 	int Run();
 	void BeginFrame();
 	void EndFrame();
-	void Draw();
-
-	unsigned GetTicks() const noexcept;
+	void Frame();
 
 	void Exit() noexcept { run_ = false; }
 
 	Graphics& GetGraphics() noexcept { return *graphics_; }
 	const Graphics& GetGraphics() const noexcept { return *graphics_; }
+	flecs::world& GetWorld() noexcept { return *world_; }
+	const flecs::world& GetWorld() const noexcept { return *world_; }
+	flecs::entity& GetScene() noexcept { return scene_; }
+	const flecs::entity& GetScene() const noexcept { return scene_; }
 	bool IsRunning() const noexcept { return run_; }
 
 private:
 	LazyInit<Graphics> graphics_;
+	LazyInit<flecs::world> world_;
+	flecs::entity scene_;
+	float ticks_;
 	bool run_;
 };
 

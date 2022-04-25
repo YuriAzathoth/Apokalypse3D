@@ -18,14 +18,24 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_timer.h>
+#include <flecs.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <thread>
 #include "Coordinator.h"
+#include "Scene/SceneComponents.h"
+#include "Scene/SceneSystems.h"
 
 Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
-	: run_(true)
+	: ticks_(0.0f)
+	, run_(true)
 {
 	initialized = false;
+
+	world_.Initialize();
+	RegisterSceneSystems(*world_);
+	world_->set_threads(std::thread::hardware_concurrency());
+	scene_ = world_->entity<Scene>().add<Node>().add<Translation>();
 
 	graphics_.Initialize(initInfo.graphics, initialized);
 	if (!initialized)
@@ -36,6 +46,8 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 
 	initialized = true;
 }
+
+Coordinator::~Coordinator() {}
 
 void Coordinator::BeginFrame()
 {
@@ -51,16 +63,22 @@ void Coordinator::BeginFrame()
 }
 
 void Coordinator::EndFrame() { graphics_->EndFrame(); }
-void Coordinator::Draw() {}
 
-unsigned Coordinator::GetTicks() const noexcept { return SDL_GetTicks(); }
+void Coordinator::Frame()
+{
+	const float ticks = static_cast<float>(SDL_GetTicks()) * 0.001f;
+	world_->progress(ticks - ticks_);
+	ticks_ = ticks;
+	UpdateScene(scene_);
+	graphics_->DrawScene(scene_);
+}
 
 int Coordinator::Run()
 {
 	while (IsRunning())
 	{
 		BeginFrame();
-		Draw();
+		Frame();
 		EndFrame();
 	}
 	return 0;

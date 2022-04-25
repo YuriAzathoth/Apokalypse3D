@@ -20,6 +20,7 @@
 #define GRAPHICS_H
 
 #include <bgfx/bgfx.h>
+#include <flecs.h>
 #include <glm/mat4x4.hpp>
 #include "Apokalypse3DAPI.h"
 
@@ -53,7 +54,12 @@ public:
 
 	void BeginFrame() noexcept;
 	void EndFrame() noexcept;
-	void Draw(bgfx::ProgramHandle program, bgfx::VertexBufferHandle vbo, bgfx::IndexBufferHandle ebo) noexcept;
+
+	void DrawModel(bgfx::ProgramHandle program,
+				   bgfx::VertexBufferHandle vbo,
+				   bgfx::IndexBufferHandle ebo,
+				   const glm::mat4& model) const noexcept;
+	void DrawScene(flecs::entity node) const noexcept;
 
 	void SetViewMatrix(const glm::mat4& view) noexcept;
 	void SetTransform(const glm::mat4& model) noexcept;
