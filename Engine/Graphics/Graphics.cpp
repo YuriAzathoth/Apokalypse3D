@@ -9,7 +9,7 @@
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSnode.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
+#include "Scene/SceneComponents.h"
 
 #if BX_PLATFORM_EMSCRIPTEN
 #include "emscripten.h"
@@ -77,8 +78,8 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 	pd.ndt = NULL;
 	pd.nwh = wmi.info.cocoa.window;
 #elif BX_PLATFORM_STEAMLINK
-	pd.ndt = wmi.info.vivante.display;
-	pd.nwh = wmi.info.vivante.window;
+	pd.ndt = wmi.info.vivantnode.display;
+	pd.nwh = wmi.info.vivantnode.window;
 #elif BX_PLATFORM_EMSCRIPTEN
 	pd.ndt = NULL;
 	pd.nwh = (void*)"#canvas";
@@ -88,7 +89,7 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 	pd.backBufferDS = NULL;
 	bgfx::setPlatformData(pd);
 
-	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::OpenGL;
+	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::Count;
 	static constexpr unsigned short GPU_VENDOR = BGFX_PCI_ID_NONE;
 
 	unsigned resetFlags = 0;
@@ -144,11 +145,29 @@ void Graphics::BeginFrame() noexcept
 
 void Graphics::EndFrame() noexcept { bgfx::frame(); }
 
-void Graphics::Draw(bgfx::ProgramHandle program, bgfx::VertexBufferHandle vbo, bgfx::IndexBufferHandle ebo) noexcept
+void Graphics::DrawModel(bgfx::ProgramHandle program,
+						 bgfx::VertexBufferHandle vbo,
+						 bgfx::IndexBufferHandle ebo,
+						 const glm::mat4& model) const noexcept
 {
+	bgfx::setTransform(glm::value_ptr(model));
 	bgfx::setVertexBuffer(0, vbo);
 	bgfx::setIndexBuffer(ebo);
 	bgfx::submit(0, program);
+}
+
+void Graphics::DrawScene(flecs::entity node) const noexcept
+{
+	const Model* model = node.get<Model>();
+	const Node* cnode = node.get<Node>();
+	if (model && cnode)
+	{
+		bgfx::setTransform(glm::value_ptr(cnode->model_));
+		bgfx::setVertexBuffer(0, model->vbo_);
+		bgfx::setIndexBuffer(model->ebo_);
+		bgfx::submit(0, model->program_);
+	}
+	node.children([this](flecs::entity child) { DrawScene(child); });
 }
 
 void Graphics::SetViewMatrix(const glm::mat4& view) noexcept
@@ -186,7 +205,7 @@ bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
 
 bgfx::ProgramHandle Graphics::CreateProgram(bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader) noexcept
 {
-	return bgfx::createProgram({vertexShader}, {fragmentShader}, false);
+	return bgfx::createProgram(vertexShader, fragmentShader, true);
 }
 
 bgfx::VertexBufferHandle Graphics::CreateVertexBuffer(const void* data, unsigned size) noexcept
