@@ -90,12 +90,13 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 
 	bgfx::renderFrame();
 
-	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::Count;
+	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::Vulkan;
 	static constexpr unsigned short GPU_VENDOR = BGFX_PCI_ID_NONE;
 
 	unsigned resetFlags = 0;
 	if (initInfo.vsync)
 		resetFlags |= BGFX_RESET_VSYNC;
+	resetFlags |= BGFX_RESET_MSAA_X16;
 
 	bgfx::Init bgfxInfo{};
 	bgfxInfo.type = RENDERER_TYPE;
