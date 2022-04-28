@@ -24,6 +24,29 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
+// =========================================
+// Transformations
+// =========================================
+
+struct Look
+{
+	glm::vec3 move_;
+};
+
+struct Move
+{
+	glm::vec3 move_;
+};
+
+struct Rotate
+{
+	glm::vec3 rot_;
+};
+
+// =========================================
+// Scene
+// =========================================
+
 struct Node
 {
 	Node()
@@ -50,10 +73,9 @@ struct Translation
 	glm::mat4 model_;
 };
 
-struct Flags
-{
-	bool update_;
-};
+// =========================================
+// Camera
+// =========================================
 
 struct Camera
 {
@@ -75,26 +97,16 @@ struct Ray
 	glm::vec3 end_;
 };
 
+// =========================================
+// Model
+// =========================================
+
 struct Model
 {
 	bgfx::VertexBufferHandle vbo_;
 	bgfx::IndexBufferHandle ebo_;
 	bgfx::ProgramHandle program_;
-};
-
-struct Look
-{
-	glm::vec3 move_;
-};
-
-struct Move
-{
-	glm::vec3 move_;
-};
-
-struct Rotate
-{
-	glm::vec3 rot_;
+	bgfx::TextureHandle texture_;
 };
 
 #endif // SCENECOMPONENTS_H

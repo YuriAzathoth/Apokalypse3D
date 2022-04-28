@@ -19,7 +19,12 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#define EASTL_DLL 1
+
+#include <EASTL/string.h>
+#include <EASTL/unordered_map.h>
 #include <bgfx/bgfx.h>
+#include <bx/allocator.h>
 #include <flecs.h>
 #include <glm/mat4x4.hpp>
 #include "Apokalypse3DAPI.h"
@@ -61,8 +66,7 @@ public:
 				   const glm::mat4& model) const noexcept;
 	void DrawScene(flecs::entity node) const noexcept;
 
-	void SetViewMatrix(const glm::mat4& view) noexcept;
-	void SetTransform(const glm::mat4& model) noexcept;
+	void SetTexture(bgfx::TextureHandle texture, unsigned short slot) const noexcept;
 
 	bgfx::ShaderHandle LoadShader(const char* filename) noexcept;
 	bgfx::ProgramHandle CreateProgram(bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader) noexcept;
@@ -70,11 +74,20 @@ public:
 	bgfx::VertexBufferHandle CreateVertexBuffer(const void* data, unsigned size) noexcept;
 	bgfx::IndexBufferHandle CreateIndexBuffer(const unsigned short* data, unsigned size) noexcept;
 
+	bgfx::TextureHandle LoadTexture(const char* filename) noexcept;
+
+	bgfx::UniformHandle GetUniformHandle(const char* name) const noexcept
+	{
+		const auto it = uniforms_.find(name);
+		return it != uniforms_.end() ? it->second : bgfx::UniformHandle BGFX_INVALID_HANDLE;
+	}
+
 	static const char* GetShadersPath() noexcept;
 
 private:
 	bgfx::VertexLayout solidLayout_;
-	glm::mat4 proj_;
+	bx::DefaultAllocator allocator_;
+	eastl::unordered_map<eastl::string, bgfx::UniformHandle> uniforms_;
 	SDL_Window* window_;
 };
 

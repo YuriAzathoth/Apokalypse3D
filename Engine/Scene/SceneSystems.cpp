@@ -16,6 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#define GLM_FORCE_LEFT_HANDED
+
 #include <flecs.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -26,22 +28,24 @@
 
 void RegisterSceneSystems(flecs::world& world)
 {
-	world.system<Translation, Rotate>().each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
+	world.system<Translation, const Rotate>().each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
 											 { tr.model_ *= glm::toMat4(glm::quat(rotate.rot_ * it.delta_time())); });
 
-	world.system<Translation, Move>().each([](flecs::iter& it, size_t, Translation& tr, const Move& move)
-										   { glm::translate(tr.model_, move.move_) * it.delta_time(); });
+	world.system<Translation, const Move>().each([](flecs::iter& it, size_t, Translation& tr, const Move& move)
+										   { tr.model_ = glm::translate(tr.model_, move.move_ * it.delta_time()); });
 
-	world.system<Camera>().each(
+	world.system<const Camera>().each(
 		[](const Camera& camera)
 		{ bgfx::setViewTransform(0, glm::value_ptr(camera.view_), glm::value_ptr(camera.proj_)); });
 
-	world.system<Camera, Ray>().each(
+	world.system<Camera, const Ray>().kind(flecs::PreUpdate).each(
 		[](Camera& camera, const Ray& ray) {
-			camera.view_ = glm::lookAt(ray.begin_, ray.end_, {0.0f, 1.0f, 0.0f});
+			const glm::vec3 forward = glm::normalize(ray.end_ - ray.begin_);
+			const glm::vec3 up = glm::angleAxis(glm::radians(-90.0f), glm::vec3{1.0f, 0.0f, 0.0f}) * forward;
+			camera.view_ = glm::lookAt(ray.begin_, ray.end_, up);
 		});
 
-	world.system<Camera, Perspective>().each(
+	world.system<Camera, const Perspective>().kind(flecs::PreUpdate).each(
 		[](Camera& camera, const Perspective& perspective) {
 			camera.proj_ = glm::perspective(perspective.fov_, perspective.aspect_, perspective.near_, perspective.far_);
 		});
