@@ -45,6 +45,53 @@ static constexpr uint16_t INDICES[] = {
 	0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 0, 2, 4, 4, 2, 6, 1, 5, 3, 5, 7, 3, 0, 4, 1, 4, 5, 1, 2, 3, 6, 6, 3, 7,
 };
 
+void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, float scale, unsigned levels)
+{
+	glm::mat4 identity(1.0f);
+	const glm::vec3 dist(5.0f, 0.0f, 0.0f);
+	const glm::vec3 size(scale, scale, scale);
+	glm::mat4 tr = glm::scale(glm::translate(identity, dist), size);
+	flecs::entity box = world.entity("Model1")
+							  .child_of(parent)
+							  .add<Node>()
+							  .set<Translation>({tr})
+							  .set<Model>(model)
+							  .set<Rotate>({{glm::radians(90.0f), glm::radians(90.0f), 0.0f}});
+
+	glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3{0.0f, 0.0f, 1.0f});
+	tr = glm::scale(glm::translate(identity, rot * dist), size);
+	box = world.entity("Model2")
+				.child_of(parent)
+				.add<Node>()
+				.set<Translation>({tr})
+				.set<Model>(model)
+				.set<Rotate>({{glm::radians(90.0f), 0.0f, glm::radians(90.0f)}});
+
+	rot = glm::angleAxis(glm::radians(180.0f), glm::vec3{0.0f, 0.0f, 1.0f});
+	tr = glm::scale(glm::translate(identity, rot * dist), size);
+	box = world.entity("Model3")
+				.child_of(parent)
+				.add<Node>()
+				.set<Translation>({tr})
+				.set<Model>(model)
+				.set<Rotate>({{glm::radians(-90.0f), glm::radians(-90.0f), 0.0f}});
+
+	rot = glm::angleAxis(glm::radians(270.0f), glm::vec3{0.0f, 0.0f, 1.0f});
+	tr = glm::scale(glm::translate(identity, rot * dist), size);
+	box = world.entity("Model4")
+				.child_of(parent)
+				.add<Node>()
+				.set<Translation>({tr})
+				.set<Model>(model)
+				.set<Rotate>({{glm::radians(-90.0f), 0.0f, glm::radians(-90.0f)}});
+
+	if (levels)
+		parent.children([&world, &model, levels](flecs::entity child)
+		{
+			CreateBoxes(world, child, model, 0.75f, levels - 1);
+		});
+}
+
 int main()
 {
 	Coordinator::InitInfo initInfo;
@@ -65,6 +112,7 @@ int main()
 	bgfx::ShaderHandle fragment = graphics.LoadShader("01_hello_world.frag.shader");
 	bgfx::ProgramHandle program = graphics.CreateProgram(vertex, fragment);
 	bgfx::TextureHandle texture = graphics.LoadTexture("SampleCrate.ktx");
+	const Model model = {vbo, ebo, program, texture};
 
 	if (!(bgfx::isValid(vbo) &&
 		  bgfx::isValid(ebo) &&
@@ -88,49 +136,10 @@ int main()
 								.child_of(scene)
 								.add<Node>()
 								.add<Translation>()
-								.set<Model>({vbo, ebo, program, texture})
+								.set<Model>(model)
 								.set<Rotate>({{0.0f, 0.0f, glm::radians(45.0f)}});
 
-	glm::mat4 identity(1.0f);
-	glm::vec3 dist(5.0f, 0.0f, 0.0f);
-	glm::mat4 tr = glm::translate(identity, dist);
-	flecs::entity model = world.entity("Model1")
-							  .child_of(origin)
-							  .add<Node>()
-							  .set<Translation>({tr})
-							  .set<Model>({vbo, ebo, program, texture})
-							  .set<Rotate>({{glm::radians(90.0f), glm::radians(90.0f), 0.0f}});
-
-	glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3{0.0f, 0.0f, 1.0f});
-	tr = glm::translate(identity, rot * dist);
-	model = world.entity("Model2")
-				.child_of(origin)
-				.add<Node>()
-				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program, texture})
-				.set<Rotate>({{glm::radians(90.0f), 0.0f, glm::radians(90.0f)}});
-
-	rot = glm::angleAxis(glm::radians(180.0f), glm::vec3{0.0f, 0.0f, 1.0f});
-	tr = glm::translate(identity, rot * dist);
-	model = world.entity("Model3")
-				.child_of(origin)
-				.add<Node>()
-				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program, texture})
-				.set<Rotate>({{glm::radians(-90.0f), glm::radians(-90.0f), 0.0f}});
-
-	rot = glm::angleAxis(glm::radians(270.0f), glm::vec3{0.0f, 0.0f, 1.0f});
-	tr = glm::translate(identity, rot * dist);
-	model = world.entity("Model4")
-				.child_of(origin)
-				.add<Node>()
-				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program, texture})
-				.set<Rotate>({{glm::radians(-90.0f), 0.0f, glm::radians(-90.0f)}});
-
-	dist = glm::vec3(2.0f, 0.0f, 0.0f);
-	tr = glm::scale(glm::translate(identity, dist), {0.2f, 0.2f, 0.2f});
-	model = world.entity("Model5").child_of(model).add<Node>().set<Translation>({tr}).set<Model>({vbo, ebo, program, texture});
+	CreateBoxes(world, origin, model, 0.75f, 5);
 
 	return coordinator.Run();
 }
