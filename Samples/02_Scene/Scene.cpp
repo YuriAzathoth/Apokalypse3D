@@ -21,23 +21,24 @@
 #include "Core/Coordinator.h"
 #include "Scene/SceneComponents.h"
 
-struct PosColorVertex
+struct Vertex
 {
 	float x;
 	float y;
 	float z;
-	uint32_t abgr;
+	float u;
+	float v;
 };
 
-static constexpr PosColorVertex VERTICES[] = {
-	{-1.0f, 1.0f, 1.0f, 0xff000000},
-	{1.0f, 1.0f, 1.0f, 0xff0000ff},
-	{-1.0f, -1.0f, 1.0f, 0xff00ff00},
-	{1.0f, -1.0f, 1.0f, 0xff00ffff},
-	{-1.0f, 1.0f, -1.0f, 0xffff0000},
-	{1.0f, 1.0f, -1.0f, 0xffff00ff},
-	{-1.0f, -1.0f, -1.0f, 0xffffff00},
-	{1.0f, -1.0f, -1.0f, 0xffffffff},
+static constexpr Vertex VERTICES[] = {
+	{-1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+	{1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
+	{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f},
+	{1.0f, -1.0f, 1.0f, 1.0f, 1.0f},
+	{-1.0f, 1.0f, -1.0f, 0.0f, 0.0f},
+	{1.0f, 1.0f, -1.0f, 1.0f, 0.0f},
+	{-1.0f, -1.0f, -1.0f, 0.0f, 1.0f},
+	{1.0f, -1.0f, -1.0f, 1.0f, 1.0f},
 };
 
 static constexpr uint16_t INDICES[] = {
@@ -63,6 +64,15 @@ int main()
 	bgfx::ShaderHandle vertex = graphics.LoadShader("01_hello_world.vert.shader");
 	bgfx::ShaderHandle fragment = graphics.LoadShader("01_hello_world.frag.shader");
 	bgfx::ProgramHandle program = graphics.CreateProgram(vertex, fragment);
+	bgfx::TextureHandle texture = graphics.LoadTexture("SampleCrate.ktx");
+
+	if (!(bgfx::isValid(vbo) &&
+		  bgfx::isValid(ebo) &&
+		  bgfx::isValid(vertex) &&
+		  bgfx::isValid(fragment) &&
+		  bgfx::isValid(program) &&
+		  bgfx::isValid(texture)))
+		return 1;
 
 	flecs::world& world = coordinator.GetWorld();
 	flecs::entity& scene = coordinator.GetScene();
@@ -71,11 +81,15 @@ int main()
 							   .child_of(scene)
 							   .add<Node>()
 							   .add<Camera>()
-							   .set<Ray>({{0.0f, 0.0f, -20.0f}, {0.0f, 0.0f, 0.0f}})
+							   .set<Ray>({{0.0f, 0.0f, 20.0f}, {0.0f, 0.0f, 0.0f}})
 							   .set<Perspective>({glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f});
 
-	flecs::entity origin = world.entity("Origin").child_of(scene).add<Node>().add<Translation>().set<Rotate>(
-		{{0.0f, 0.0f, glm::radians(45.0f)}});
+	flecs::entity origin = world.entity("Origin")
+								.child_of(scene)
+								.add<Node>()
+								.add<Translation>()
+								.set<Model>({vbo, ebo, program, texture})
+								.set<Rotate>({{0.0f, 0.0f, glm::radians(45.0f)}});
 
 	glm::mat4 identity(1.0f);
 	glm::vec3 dist(5.0f, 0.0f, 0.0f);
@@ -84,7 +98,7 @@ int main()
 							  .child_of(origin)
 							  .add<Node>()
 							  .set<Translation>({tr})
-							  .set<Model>({vbo, ebo, program})
+							  .set<Model>({vbo, ebo, program, texture})
 							  .set<Rotate>({{glm::radians(90.0f), glm::radians(90.0f), 0.0f}});
 
 	glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -93,7 +107,7 @@ int main()
 				.child_of(origin)
 				.add<Node>()
 				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program})
+				.set<Model>({vbo, ebo, program, texture})
 				.set<Rotate>({{glm::radians(90.0f), 0.0f, glm::radians(90.0f)}});
 
 	rot = glm::angleAxis(glm::radians(180.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -102,7 +116,7 @@ int main()
 				.child_of(origin)
 				.add<Node>()
 				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program})
+				.set<Model>({vbo, ebo, program, texture})
 				.set<Rotate>({{glm::radians(-90.0f), glm::radians(-90.0f), 0.0f}});
 
 	rot = glm::angleAxis(glm::radians(270.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -111,12 +125,12 @@ int main()
 				.child_of(origin)
 				.add<Node>()
 				.set<Translation>({tr})
-				.set<Model>({vbo, ebo, program})
+				.set<Model>({vbo, ebo, program, texture})
 				.set<Rotate>({{glm::radians(-90.0f), 0.0f, glm::radians(-90.0f)}});
 
 	dist = glm::vec3(2.0f, 0.0f, 0.0f);
 	tr = glm::scale(glm::translate(identity, dist), {0.2f, 0.2f, 0.2f});
-	model = world.entity("Model5").child_of(model).add<Node>().set<Translation>({tr}).set<Model>({vbo, ebo, program});
+	model = world.entity("Model5").child_of(model).add<Node>().set<Translation>({tr}).set<Model>({vbo, ebo, program, texture});
 
 	return coordinator.Run();
 }

@@ -36,6 +36,7 @@ public:
 	~Coordinator();
 
 	int Run();
+	bool CheckErrors();
 	void BeginFrame();
 	void EndFrame();
 	void Frame();
@@ -44,10 +45,10 @@ public:
 
 	Graphics& GetGraphics() noexcept { return *graphics_; }
 	const Graphics& GetGraphics() const noexcept { return *graphics_; }
-	flecs::world& GetWorld() noexcept { return *world_; }
-	const flecs::world& GetWorld() const noexcept { return *world_; }
 	flecs::entity& GetScene() noexcept { return scene_; }
 	const flecs::entity& GetScene() const noexcept { return scene_; }
+	flecs::world& GetWorld() noexcept { return *world_; }
+	const flecs::world& GetWorld() const noexcept { return *world_; }
 	bool IsRunning() const noexcept { return run_; }
 
 private:

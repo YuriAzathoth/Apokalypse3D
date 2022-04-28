@@ -49,6 +49,17 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 
 Coordinator::~Coordinator() {}
 
+bool Coordinator::CheckErrors()
+{
+	const char* error = SDL_GetError();
+	if (error[0])
+	{
+		printf(error);
+		printf("\n");
+	}
+	return error[0] == '\0';
+}
+
 void Coordinator::BeginFrame()
 {
 	SDL_Event event;
@@ -75,7 +86,7 @@ void Coordinator::Frame()
 
 int Coordinator::Run()
 {
-	while (IsRunning())
+	while (IsRunning() && CheckErrors())
 	{
 		BeginFrame();
 		Frame();
