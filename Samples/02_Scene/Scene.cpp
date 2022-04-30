@@ -31,18 +31,27 @@ struct Vertex
 };
 
 static constexpr Vertex VERTICES[] = {
-	{-1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-	{1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
-	{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f},
-	{1.0f, -1.0f, 1.0f, 1.0f, 1.0f},
-	{-1.0f, 1.0f, -1.0f, 0.0f, 0.0f},
-	{1.0f, 1.0f, -1.0f, 1.0f, 0.0f},
-	{-1.0f, -1.0f, -1.0f, 0.0f, 1.0f},
-	{1.0f, -1.0f, -1.0f, 1.0f, 1.0f},
+	{-1.0f, 1.0f, 1.0f, 0.0f, 0.0f},	// LUF
+	{1.0f, 1.0f, 1.0f, 1.0f, 0.0f},		// RUF
+	{-1.0f, -1.0f, 1.0f, 0.0f, 1.0f},	// LDF
+	{1.0f, -1.0f, 1.0f, 1.0f, 1.0f},	// RDF
+	{-1.0f, 1.0f, -1.0f, 1.0f, 0.0f},	// LUB
+	{1.0f, 1.0f, -1.0f, 0.0f, 0.0f},	// RUB
+	{-1.0f, -1.0f, -1.0f, 1.0f, 1.0f},	// LDB
+	{1.0f, -1.0f, -1.0f, 0.0f, 1.0f},	// RDB
+	{-1.0f, 1.0f, -1.0f, 0.0f, 1.0f},	// LUB
+	{1.0f, 1.0f, -1.0f, 1.0f, 1.0f},	// RUB
+	{-1.0f, -1.0f, -1.0f, 0.0f, 0.0f},	// LDB
+	{1.0f, -1.0f, -1.0f, 1.0f, 0.0f},	// RDB
 };
 
 static constexpr uint16_t INDICES[] = {
-	0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 0, 2, 4, 4, 2, 6, 1, 5, 3, 5, 7, 3, 0, 4, 1, 4, 5, 1, 2, 3, 6, 6, 3, 7,
+	0, 1, 2, 1, 3, 2, // Front
+	4, 6, 5, 5, 6, 7, // Back
+	0, 2, 4, 4, 2, 6, // Left
+	1, 5, 3, 5, 7, 3, // Right
+	0, 8, 1, 8, 9, 1, // Top
+	2, 3, 10, 10, 3, 11, // Bottom
 };
 
 void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, float scale, unsigned levels)
@@ -96,8 +105,14 @@ int main()
 {
 	Coordinator::InitInfo initInfo;
 	initInfo.graphics.title = "Hello World";
-	initInfo.graphics.width = 800;
-	initInfo.graphics.height = 600;
+	initInfo.graphics.render = Graphics::RenderType::Vulkan;
+	//initInfo.graphics.render = Graphics::RenderType::OpenGL;
+	initInfo.graphics.msaa = Graphics::MSAA::NONE;
+	initInfo.graphics.display = 0;
+	initInfo.graphics.width = 0;
+	initInfo.graphics.height = 0;
+	initInfo.graphics.fullscreen = true;
+	initInfo.graphics.highDpi = true;
 	initInfo.graphics.vsync = true;
 
 	bool initialized;
@@ -129,8 +144,9 @@ int main()
 							   .child_of(scene)
 							   .add<Node>()
 							   .add<Camera>()
+							   .set<Perspective>({glm::radians(45.0f), 0.0f, 0.1f, 100.0f})
 							   .set<Ray>({{0.0f, 0.0f, 20.0f}, {0.0f, 0.0f, 0.0f}})
-							   .set<Perspective>({glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f});
+							   .add<WindowAspect>();
 
 	flecs::entity origin = world.entity("Origin")
 								.child_of(scene)
@@ -139,7 +155,16 @@ int main()
 								.set<Model>(model)
 								.set<Rotate>({{0.0f, 0.0f, glm::radians(45.0f)}});
 
-	CreateBoxes(world, origin, model, 0.75f, 5);
+	CreateBoxes(world, origin, model, 0.75f, 4);
 
-	return coordinator.Run();
+	coordinator.Run();
+
+	bgfx::destroy(vertex);
+	bgfx::destroy(fragment);
+	bgfx::destroy(program);
+	bgfx::destroy(vbo);
+	bgfx::destroy(ebo);
+	bgfx::destroy(texture);
+
+	return 0;
 }

@@ -23,6 +23,7 @@
 
 #include <EASTL/string.h>
 #include <EASTL/unordered_map.h>
+#include <EASTL/vector.h>
 #include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <flecs.h>
@@ -37,24 +38,51 @@ class APOKALYPSE3DAPI_EXPORT Graphics
 public:
 	enum class RenderType : unsigned
 	{
-		AUTO,
-		OPENGL,
-		VULKAN,
-		METAL,
-		DIRECTX9,
-		DIRECTX11,
-		DIRECTX12
+		None,
+		Agc,
+		Direct3D9,
+		Direct3D11,
+		Direct3D12,
+		Gnm,
+		Metal,
+		Nvn,
+		OpenGLES,
+		OpenGL,
+		Vulkan,
+		WebGPU,
+		Auto
+	};
+
+	enum class MSAA
+	{
+		NONE,
+		X2,
+		X4,
+		X8,
+		X16
 	};
 
 	struct InitInfo
 	{
 		const char* title;
+		RenderType render;
+		MSAA msaa;
+		int display;
 		int width;
 		int height;
+		bool fullscreen;
+		bool highDpi;
 		bool vsync;
 	};
 
-	Graphics(const InitInfo initInfo, bool& initialized);
+	struct WindowMode
+	{
+		int width;
+		int height;
+		int refreshRate;
+	};
+
+	Graphics(const InitInfo& initInfo, bool& initialized);
 	~Graphics();
 
 	void BeginFrame() noexcept;
@@ -82,13 +110,20 @@ public:
 		return it != uniforms_.end() ? it->second : bgfx::UniformHandle BGFX_INVALID_HANDLE;
 	}
 
-	static const char* GetShadersPath() noexcept;
+	float GetWindowAspect() const noexcept { return aspectRatio_; }
+
+	eastl::vector<WindowMode> GetWindowResolutions() const noexcept;
 
 private:
 	bgfx::VertexLayout solidLayout_;
 	bx::DefaultAllocator allocator_;
 	eastl::unordered_map<eastl::string, bgfx::UniformHandle> uniforms_;
 	SDL_Window* window_;
+	unsigned windowWidth_;
+	unsigned windowHeight_;
+	unsigned renderWidth_;
+	unsigned renderHeight_;
+	float aspectRatio_;
 };
 
 #endif // GRAPHICS_H

@@ -18,15 +18,17 @@
 
 #define GLM_FORCE_LEFT_HANDED
 
+#include <SDL2/SDL.h>
 #include <flecs.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
+#include "Core/Coordinator.h"
 #include "SceneSystems.h"
 
-void RegisterSceneSystems(flecs::world& world)
+void RegisterSceneSystems(flecs::world& world, Coordinator& core)
 {
 	world.system<Translation, const Rotate>().each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
 											 { tr.model_ *= glm::toMat4(glm::quat(rotate.rot_ * it.delta_time())); });
@@ -38,16 +40,24 @@ void RegisterSceneSystems(flecs::world& world)
 		[](const Camera& camera)
 		{ bgfx::setViewTransform(0, glm::value_ptr(camera.view_), glm::value_ptr(camera.proj_)); });
 
+	world.system<Perspective, const WindowAspect>().kind(flecs::PreUpdate).each(
+		[&core](Perspective& perspective, const WindowAspect&) {
+			perspective.aspect_ = core.GetGraphics().GetWindowAspect();
+		});
+
+	world.system<Camera, const Perspective>().kind(flecs::PreUpdate).each(
+		[&core](Camera& camera, const Perspective& perspective) {
+			camera.proj_ = glm::perspective(perspective.fov_,
+											perspective.aspect_,
+											perspective.near_,
+											perspective.far_);
+		});
+
 	world.system<Camera, const Ray>().kind(flecs::PreUpdate).each(
 		[](Camera& camera, const Ray& ray) {
 			const glm::vec3 forward = glm::normalize(ray.end_ - ray.begin_);
 			const glm::vec3 up = glm::angleAxis(glm::radians(-90.0f), glm::vec3{1.0f, 0.0f, 0.0f}) * forward;
 			camera.view_ = glm::lookAt(ray.begin_, ray.end_, up);
-		});
-
-	world.system<Camera, const Perspective>().kind(flecs::PreUpdate).each(
-		[](Camera& camera, const Perspective& perspective) {
-			camera.proj_ = glm::perspective(perspective.fov_, perspective.aspect_, perspective.near_, perspective.far_);
 		});
 }
 

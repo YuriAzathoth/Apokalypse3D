@@ -33,7 +33,7 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 	initialized = false;
 
 	world_.Initialize();
-	RegisterSceneSystems(*world_);
+	RegisterSceneSystems(*world_, *this);
 	world_->set_threads(std::thread::hardware_concurrency());
 	scene_ = world_->entity<Scene>().add<Node>().add<Translation>();
 
