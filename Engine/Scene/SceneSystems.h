@@ -23,12 +23,13 @@
 #include <flecs.h>
 #include <glm/mat4x4.hpp>
 
+class Coordinator;
 namespace flecs
 {
 struct world;
 }
 
-void RegisterSceneSystems(flecs::world& world);
+void RegisterSceneSystems(flecs::world& world, Coordinator& core);
 
 void UpdateScene(flecs::entity node, const Node& parent = Node()) noexcept;
 

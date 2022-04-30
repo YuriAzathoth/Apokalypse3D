@@ -16,6 +16,9 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#define EASTL_DLL 1
+
+#include <EASTL/set.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 #include <bimg/decode.h>
@@ -32,12 +35,7 @@
 #include "emscripten.h"
 #endif // BX_PLATFORM_EMSCRIPTEN
 
-static void ReleaseImage([[maybe_unused]]void* ptr, void* data)
-{
-	bimg::imageFree(reinterpret_cast<bimg::ImageContainer*>(data));
-}
-
-Graphics::Graphics(const InitInfo initInfo, bool& initialized)
+Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	: window_(nullptr)
 {
 	initialized = false;
@@ -48,12 +46,62 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 		return;
 	}
 
+	windowWidth_ = initInfo.width;
+	windowHeight_ = initInfo.height;
+	if (!initInfo.width || !initInfo.height)
+	{
+		const int modes = SDL_GetNumDisplayModes(initInfo.display);
+		SDL_DisplayMode mode;
+		for (int i = 0; i < modes; ++i)
+		{
+			SDL_GetDisplayMode(initInfo.display, i, &mode);
+			if (windowWidth_ < mode.w || windowHeight_ < mode.h)
+			{
+				windowWidth_ = mode.w;
+				windowHeight_ = mode.h;
+			}
+		}
+	}
+	renderWidth_ = windowWidth_;
+	renderHeight_ = windowHeight_;
+
+	unsigned sdlFlags = 0;
+	unsigned bgfxFlags = 0;
+	if (initInfo.fullscreen)
+	{
+		bgfxFlags |= BGFX_RESET_FULLSCREEN;
+		sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	}
+	if (initInfo.highDpi)
+	{
+		bgfxFlags |= BGFX_RESET_HIDPI;
+		sdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+		constexpr float DEFAULT_DPI = 120.0f;
+		float hdpi;
+		float vdpi;
+		SDL_GetDisplayDPI(initInfo.display, nullptr, &hdpi, &vdpi);
+		windowWidth_ *= hdpi / DEFAULT_DPI;
+		windowHeight_ *= vdpi / DEFAULT_DPI;
+	}
+	if (initInfo.vsync)
+		bgfxFlags |= BGFX_RESET_VSYNC;
+
+	constexpr unsigned MSAA_FLAGS[] =
+	{
+		0,
+		BGFX_RESET_MSAA_X2,
+		BGFX_RESET_MSAA_X4,
+		BGFX_RESET_MSAA_X8,
+		BGFX_RESET_MSAA_X16,
+	};
+	bgfxFlags |= MSAA_FLAGS[static_cast<unsigned>(initInfo.msaa)];
+
 	window_ = SDL_CreateWindow(initInfo.title,
 							   SDL_WINDOWPOS_CENTERED,
 							   SDL_WINDOWPOS_CENTERED,
-							   initInfo.width,
-							   initInfo.height,
-							   SDL_WINDOW_SHOWN);
+							   windowWidth_,
+							   windowHeight_,
+							   SDL_WINDOW_SHOWN | sdlFlags);
 	if (!window_)
 	{
 		SDL_SetError("Failed to create SDL window: %s", SDL_GetError());
@@ -90,25 +138,47 @@ Graphics::Graphics(const InitInfo initInfo, bool& initialized)
 
 	bgfx::renderFrame();
 
-	static constexpr bgfx::RendererType::Enum RENDERER_TYPE = bgfx::RendererType::Vulkan;
-	static constexpr unsigned short GPU_VENDOR = BGFX_PCI_ID_NONE;
-
-	unsigned resetFlags = 0;
-	if (initInfo.vsync)
-		resetFlags |= BGFX_RESET_VSYNC;
-	resetFlags |= BGFX_RESET_MSAA_X16;
+	/*unsigned short gpuVendor;
+	{
+		struct GpuComparator
+		{
+			inline unsigned GetWeight(const bgfx::Caps::GPU* gpu) const noexcept
+			{
+				switch (gpu->vendorId)
+				{
+				case BGFX_PCI_ID_NVIDIA:
+					return 2;
+				case BGFX_PCI_ID_AMD:
+					return 1;
+				default:
+					return 0;
+				}
+			}
+			inline bool operator()(const bgfx::Caps::GPU* lhs, const bgfx::Caps::GPU* rhs) const noexcept
+			{
+				return GetWeight(lhs) < GetWeight(rhs);
+			}
+		};
+		eastl::multiset<const bgfx::Caps::GPU*, GpuComparator> gpus;
+		for (const bgfx::Caps::GPU* gpuptr = bgfx::getCaps()->gpu;
+			 gpuptr < bgfx::getCaps()->gpu + bgfx::getCaps()->numGPUs;
+			 ++gpuptr)
+			gpus.insert(gpuptr);
+		gpuVendor = (*gpus.begin())->vendorId;
+	}*/
 
 	bgfx::Init bgfxInfo{};
-	bgfxInfo.type = RENDERER_TYPE;
-	bgfxInfo.vendorId = GPU_VENDOR;
-	bgfxInfo.resolution.width = initInfo.width;
-	bgfxInfo.resolution.height = initInfo.height;
-	bgfxInfo.resolution.reset = resetFlags;
+	bgfxInfo.type = static_cast<bgfx::RendererType::Enum>(initInfo.render);
+	bgfxInfo.vendorId = BGFX_PCI_ID_NVIDIA; //gpuVendor;
+	bgfxInfo.resolution.width = renderWidth_;
+	bgfxInfo.resolution.height = renderHeight_;
+	bgfxInfo.resolution.reset = bgfxFlags;
 	if (!bgfx::init(bgfxInfo))
 	{
 		SDL_SetError("Failed to init BGFX");
 		return;
 	}
+	aspectRatio_ = static_cast<float>(windowWidth_) / static_cast<float>(windowHeight_);
 
 #ifndef NDEBUG
 	bgfx::setDebug(BGFX_DEBUG_TEXT);
@@ -131,6 +201,8 @@ Graphics::~Graphics()
 	for (auto& handler : uniforms_)
 		bgfx::destroy(handler.second);
 	SDL_StopTextInput();
+	while (bgfx::RenderFrame::NoContext != bgfx::renderFrame())
+		;
 	bgfx::shutdown();
 	SDL_DestroyWindow(window_);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -138,10 +210,9 @@ Graphics::~Graphics()
 
 void Graphics::BeginFrame() noexcept
 {
-	int width, height;
-	SDL_GetWindowSize(window_, &width, &height);
-	bgfx::setViewRect(0, 0, 0, width, height);
-	bgfx::touch(0);
+	bgfx::renderFrame();
+	bgfx::setViewRect(0, 0, 0, windowWidth_, windowHeight_);
+	//bgfx::touch(0);
 }
 
 void Graphics::EndFrame() noexcept { bgfx::frame(); }
@@ -180,8 +251,34 @@ void Graphics::SetTexture(bgfx::TextureHandle texture, unsigned short slot) cons
 
 bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
 {
+	const char* subpath;
+	switch (bgfx::getRendererType())
+	{
+	case bgfx::RendererType::Direct3D9:
+		subpath = "dx9";
+		break;
+	case bgfx::RendererType::Direct3D11:
+	case bgfx::RendererType::Direct3D12:
+		subpath = "dx11";
+		break;
+	case bgfx::RendererType::Metal:
+		subpath = "msl";
+		break;
+	case bgfx::RendererType::OpenGLES:
+		subpath = "essl";
+		break;
+	case bgfx::RendererType::OpenGL:
+		subpath = "glsl";
+		break;
+	case bgfx::RendererType::Vulkan:
+		subpath = "spirv";
+		break;
+	default:
+		return BGFX_INVALID_HANDLE;
+	}
+
 	char filepath[256];
-	sprintf(filepath, "../Data/Shaders/%s/%s", GetShadersPath(), filename);
+	sprintf(filepath, "../Data/Shaders/%s/%s", subpath, filename);
 	FILE* file = fopen(filepath, "rb");
 	if (!file)
 	{
@@ -207,7 +304,7 @@ bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
 
 bgfx::ProgramHandle Graphics::CreateProgram(bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader) noexcept
 {
-	return bgfx::createProgram(vertexShader, fragmentShader, true);
+	return bgfx::createProgram(vertexShader, fragmentShader, false);
 }
 
 bgfx::VertexBufferHandle Graphics::CreateVertexBuffer(const void* data, unsigned size) noexcept
@@ -229,7 +326,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	FILE* file = fopen(buffer, "rb");
 	if (!file)
 	{
-		SDL_SetError("Could not load texture: file \"%s\" not found.", filename);
+		SDL_SetError("Could not load texture \"%s\": file not found.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 
@@ -238,7 +335,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	if (!size)
 	{
 		fclose(file);
-		SDL_SetError("Could not load texture: file \"%s\" is empty.", filename);
+		SDL_SetError("Could not load texture \"%s\": file is empty.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 	rewind(file);
@@ -251,11 +348,14 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	if (!image)
 	{
 		free(data);
-		SDL_SetError("Could not load texture: failed to parse image \"%s\".", filename);
+		SDL_SetError("Could not load texture \"%s\": failed to parse image.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 
-	const bgfx::Memory* mem = bgfx::makeRef(image->m_data, image->m_size, ReleaseImage, image);
+	const bgfx::Memory* mem = bgfx::makeRef(image->m_data, image->m_size, [](void*, void* data)
+	{
+		bimg::imageFree(reinterpret_cast<bimg::ImageContainer*>(data));
+	}, image);
 	BX_FREE(&allocator_, data);
 
 	if (image->m_cubeMap)
@@ -282,27 +382,21 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 									 flags,
 									 mem);
 
+	SDL_SetError("Could not load texture \"%s\": unknown texture type.", filename);
 	return BGFX_INVALID_HANDLE;
 }
 
-const char* Graphics::GetShadersPath() noexcept
+eastl::vector<Graphics::WindowMode> Graphics::GetWindowResolutions() const noexcept
 {
-	switch (bgfx::getRendererType())
+	const int display = SDL_GetWindowDisplayIndex(window_);
+	const int modes = SDL_GetNumDisplayModes(display);
+	eastl::vector<Graphics::WindowMode> ret;
+	ret.reserve(modes);
+	SDL_DisplayMode mode;
+	for (int i = 0; i < modes; ++i)
 	{
-	case bgfx::RendererType::Direct3D9:
-		return "dx9";
-	case bgfx::RendererType::Direct3D11:
-	case bgfx::RendererType::Direct3D12:
-		return "dx11";
-	case bgfx::RendererType::Metal:
-		return "msl";
-	case bgfx::RendererType::OpenGLES:
-		return "essl";
-	case bgfx::RendererType::OpenGL:
-		return "glsl";
-	case bgfx::RendererType::Vulkan:
-		return "spirv";
-	default:
-		return nullptr;
+		SDL_GetDisplayMode(display, i, &mode);
+		ret.push_back({mode.w, mode.h, mode.refresh_rate});
 	}
+	return ret;
 }
