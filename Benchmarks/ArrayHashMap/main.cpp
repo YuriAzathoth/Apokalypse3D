@@ -17,7 +17,12 @@
 */
 
 #define CELERO_STATIC
+#define EASTL_DLL 1
+
+#include <EASTL/unordered_map.h>
+#include <EASTL/vector_map.h>
 #include <celero/Celero.h>
+#include <array>
 #include <string>
 #include <unordered_map>
 #include "Container/ArrayHashMap.h"
@@ -28,6 +33,7 @@ CELERO_MAIN
 
 struct MapValue
 {
+	MapValue() = default;
 	MapValue(float _a, float _b)
 		: a(_a)
 		, b(_b)
@@ -39,9 +45,20 @@ struct MapValue
 	float x;
 };
 
+std::array<MapValue, ITERATION_MAP_SIZE> g_data;
 ArrayHashMap<size_t, MapValue> g_hm;
 std::unordered_map<size_t, MapValue> g_um;
+eastl::vector_map<size_t, MapValue> g_em;
+eastl::unordered_map<size_t, MapValue> g_ym;
 
+struct AI0
+{
+	AI0()
+	{
+		for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+			g_data[i] = MapValue((float)i, (float)i);
+	}
+} AI0;
 struct AI1
 {
 	AI1()
@@ -49,17 +66,21 @@ struct AI1
 		for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
 			g_hm.Emplace(i, MapValue((float)i, (float)i));
 	}
-} ai1;
+} AI1;
+template <typename T>
 struct AI2
 {
-	AI2()
+	AI2(T& container)
 	{
 		for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
-			g_um.emplace(i, MapValue((float)i, (float)i));
+			container.emplace(i, MapValue((float)i, (float)i));
 	}
-} ai2;
+};
+static AI2<decltype(g_um)> g_initializer1(g_um);
+static AI2<decltype(g_em)> g_initializer2(g_em);
+static AI2<decltype(g_ym)> g_initializer3(g_ym);
 
-BASELINE(ArrayHashMap, Iteration, 10, 1000)
+BASELINE(Iteration, ArrayHashMap, 0, 0)
 {
 	for (auto it = g_hm.Begin(); it != g_hm.End(); ++it)
 	{
@@ -68,7 +89,20 @@ BASELINE(ArrayHashMap, Iteration, 10, 1000)
 	}
 }
 
-BENCHMARK(ArrayHashMap, Edition, 10, 10)
+BASELINE(Finding, ArrayHashMap, 0, 0)
+{
+	float a = 0.0f, b = 0.0f, x = 0.0f;
+	decltype(g_hm)::ConstIterator it;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+	{
+		it = g_hm.Find(i);
+		a += it->second.a;
+		b += it->second.b;
+		x += it->second.x;
+	}
+}
+
+BASELINE(Edition, ArrayHashMap, 0, 0)
 {
 	ArrayHashMap<size_t, MapValue> hm;
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
@@ -77,14 +111,7 @@ BENCHMARK(ArrayHashMap, Edition, 10, 10)
 		hm.Erase(i);
 }
 
-BENCHMARK(ArrayHashMap, RangedEdition, 10, 10)
-{
-	ArrayHashMap<size_t, MapValue> hm;
-	hm.Insert(g_hm.Begin(), g_hm.End());
-	hm.EraseKeys(g_hm.Begin(), g_hm.End());
-}
-
-BASELINE(UnorderedMap, Iteration, 10, 1000)
+BENCHMARK(Iteration, UnorderedMap, 0, 0)
 {
 	for (auto it = g_um.begin(); it != g_um.end(); ++it)
 	{
@@ -93,9 +120,84 @@ BASELINE(UnorderedMap, Iteration, 10, 1000)
 	}
 }
 
-BENCHMARK(UnorderedMap, Edition, 10, 10)
+BENCHMARK(Finding, UnorderedMap, 0, 0)
+{
+	float a = 0.0f, b = 0.0f, x = 0.0f;
+	decltype(g_um)::const_iterator it;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+	{
+		it = g_um.find(i);
+		a += it->second.a;
+		b += it->second.b;
+		x += it->second.x;
+	}
+}
+
+BENCHMARK(Edition, UnorderedMap, 0, 0)
 {
 	std::unordered_map<size_t, MapValue> hm;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+		hm.emplace(i, MapValue((float)i, (float)i));
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+		hm.erase(i);
+}
+
+BENCHMARK(Iteration, EastlVectorMap, 0, 0)
+{
+	for (auto it = g_em.begin(); it != g_em.end(); ++it)
+	{
+		it->second.b += it->second.a;
+		it->second.x = it->second.a + it->second.b;
+	}
+}
+
+BENCHMARK(Finding, EastlVectorMap, 0, 0)
+{
+	float a = 0.0f, b = 0.0f, x = 0.0f;
+	decltype(g_em)::const_iterator it;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+	{
+		it = g_em.find(i);
+		a += it->second.a;
+		b += it->second.b;
+		x += it->second.x;
+	}
+}
+
+BENCHMARK(Edition, EastlVectorMap, 0, 0)
+{
+	eastl::vector_map<size_t, MapValue> hm;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+		hm.emplace(i, MapValue((float)i, (float)i));
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+		hm.erase(i);
+}
+
+BENCHMARK(Iteration, EastlUnorderedMap, 0, 0)
+{
+	for (auto it = g_ym.begin(); it != g_ym.end(); ++it)
+	{
+		it->second.b += it->second.a;
+		it->second.x = it->second.a + it->second.b;
+	}
+}
+
+BENCHMARK(Finding, EastlUnorderedMap, 0, 0)
+{
+	float a = 0.0f, b = 0.0f, x = 0.0f;
+	decltype(g_ym)::const_iterator it;
+	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
+	{
+		it = g_ym.find(i);
+		a += it->second.a;
+		b += it->second.b;
+		x += it->second.x;
+	}
+}
+
+BENCHMARK(Edition, EastlUnorderedMap, 0, 0)
+{
+	eastl::unordered_map<size_t, MapValue> hm;
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
 		hm.emplace(i, MapValue((float)i, (float)i));
 	for (size_t i = 0; i < ITERATION_MAP_SIZE; ++i)
