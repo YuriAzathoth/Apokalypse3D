@@ -106,7 +106,6 @@ int main()
 	Coordinator::InitInfo initInfo;
 	initInfo.graphics.title = "Hello World";
 	initInfo.graphics.render = Graphics::RenderType::Vulkan;
-	//initInfo.graphics.render = Graphics::RenderType::OpenGL;
 	initInfo.graphics.msaa = Graphics::MSAA::NONE;
 	initInfo.graphics.display = 0;
 	initInfo.graphics.width = 0;
@@ -138,7 +137,7 @@ int main()
 		return 1;
 
 	flecs::world& world = coordinator.GetWorld();
-	flecs::entity& scene = coordinator.GetScene();
+	flecs::entity scene = coordinator.GetScene().GetRoot();
 
 	flecs::entity camera = world.entity("Camera")
 							   .child_of(scene)

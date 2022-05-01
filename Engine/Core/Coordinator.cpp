@@ -18,7 +18,6 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_timer.h>
-#include <flecs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <thread>
@@ -32,17 +31,18 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 {
 	initialized = false;
 
-	world_.Initialize();
-	RegisterSceneSystems(*world_, *this);
-	world_->set_threads(std::thread::hardware_concurrency());
-	scene_ = world_->entity<Scene>().add<Node>().add<Translation>();
-
 	graphics_.Initialize(initInfo.graphics, initialized);
 	if (!initialized)
 	{
 		printf("ERROR: %s\n", SDL_GetError());
 		return;
 	}
+
+	world_.Initialize();
+	RegisterSceneSystems(*world_, *this);
+	world_->set_threads(std::thread::hardware_concurrency());
+
+	scene_.Initialize(*world_, "Scene");
 
 	initialized = true;
 }
@@ -80,8 +80,8 @@ void Coordinator::Frame()
 	const float ticks = static_cast<float>(SDL_GetTicks()) * 0.001f;
 	world_->progress(ticks - ticks_);
 	ticks_ = ticks;
-	UpdateScene(scene_);
-	graphics_->DrawScene(scene_);
+	UpdateScene(scene_->GetRoot());
+	graphics_->DrawScene(scene_->GetRoot());
 }
 
 int Coordinator::Run()
