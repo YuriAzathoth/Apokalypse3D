@@ -210,9 +210,8 @@ Graphics::~Graphics()
 
 void Graphics::BeginFrame() noexcept
 {
-	bgfx::renderFrame();
 	bgfx::setViewRect(0, 0, 0, windowWidth_, windowHeight_);
-	//bgfx::touch(0);
+	bgfx::touch(0);
 }
 
 void Graphics::EndFrame() noexcept { bgfx::frame(); }
