@@ -225,10 +225,7 @@ void Graphics::BeginFrame() noexcept
 	bgfx::touch(0);
 }
 
-void Graphics::EndFrame() noexcept
-{
-	bgfx::frame();
-}
+void Graphics::EndFrame() noexcept { bgfx::frame(); }
 
 void Graphics::DrawModel(bgfx::ProgramHandle program,
 						 bgfx::VertexBufferHandle vbo,
