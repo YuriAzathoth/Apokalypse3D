@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <thread>
 #include "Coordinator.h"
+#include "IO/Log.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
 
@@ -31,12 +32,13 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 {
 	initialized = false;
 
+	if (!LogInit("../Logs", LogLevel::LOG_LEVEL_TRACE))
+		return;
+
 	graphics_.Initialize(initInfo.graphics, initialized);
 	if (!initialized)
-	{
-		printf("ERROR: %s\n", SDL_GetError());
 		return;
-	}
+	initialized = false;
 
 	world_.Initialize();
 	RegisterSceneSystems(*world_, *this);
@@ -47,7 +49,7 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 	initialized = true;
 }
 
-Coordinator::~Coordinator() {}
+Coordinator::~Coordinator() { LogDestroy(); }
 
 bool Coordinator::CheckErrors()
 {

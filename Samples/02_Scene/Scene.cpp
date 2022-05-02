@@ -105,12 +105,12 @@ int main()
 {
 	Coordinator::InitInfo initInfo;
 	initInfo.graphics.title = "Hello World";
-	initInfo.graphics.render = Graphics::RenderType::Vulkan;
+	initInfo.graphics.render = Graphics::RenderType::OpenGL;
 	initInfo.graphics.msaa = Graphics::MSAA::NONE;
 	initInfo.graphics.display = 0;
-	initInfo.graphics.width = 0;
-	initInfo.graphics.height = 0;
-	initInfo.graphics.fullscreen = true;
+	initInfo.graphics.width = 1024;
+	initInfo.graphics.height = 768;
+	initInfo.graphics.fullscreen = false;
 	initInfo.graphics.highDpi = true;
 	initInfo.graphics.vsync = true;
 
@@ -158,12 +158,12 @@ int main()
 
 	coordinator.Run();
 
-	bgfx::destroy(vertex);
+	/*bgfx::destroy(vertex);
 	bgfx::destroy(fragment);
 	bgfx::destroy(program);
 	bgfx::destroy(vbo);
 	bgfx::destroy(ebo);
-	bgfx::destroy(texture);
+	bgfx::destroy(texture);*/
 
 	return 0;
 }

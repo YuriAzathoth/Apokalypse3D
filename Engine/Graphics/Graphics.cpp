@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
+#include "IO/Log.h"
 #include "Scene/SceneComponents.h"
 
 #if BX_PLATFORM_EMSCRIPTEN
@@ -42,7 +43,7 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 	{
-		SDL_SetError("Failed to init SDL video subsystem: %s", SDL_GetError());
+		LogError("Failed to init SDL video subsystem: %s", SDL_GetError());
 		return;
 	}
 
@@ -86,6 +87,12 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	if (initInfo.vsync)
 		bgfxFlags |= BGFX_RESET_VSYNC;
 
+	LogDebug("Window width:  %d", windowWidth_);
+	LogDebug("Window height: %d", windowHeight_);
+	LogDebug("Render width:  %d", renderWidth_);
+	LogDebug("Render height: %d", renderHeight_);
+	LogDebug("DPI scale:     %f", (float)renderWidth_ / (float)windowWidth_);
+
 	constexpr unsigned MSAA_FLAGS[] =
 	{
 		0,
@@ -96,6 +103,9 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	};
 	bgfxFlags |= MSAA_FLAGS[static_cast<unsigned>(initInfo.msaa)];
 
+	LogDebug("Vertical sync: %s", initInfo.vsync ? "true" : "false");
+	LogDebug("MSAA level:    %u", (unsigned)initInfo.msaa);
+
 	window_ = SDL_CreateWindow(initInfo.title,
 							   SDL_WINDOWPOS_CENTERED,
 							   SDL_WINDOWPOS_CENTERED,
@@ -104,7 +114,7 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 							   SDL_WINDOW_SHOWN | sdlFlags);
 	if (!window_)
 	{
-		SDL_SetError("Failed to create SDL window: %s", SDL_GetError());
+		LogError("Failed to create SDL window: %s", SDL_GetError());
 		return;
 	}
 
@@ -113,7 +123,7 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window_, &wmi))
 	{
-		SDL_SetError("Could now get SDL SysWM info: %s", SDL_GetError());
+		LogError("Could now get SDL SysWM info: %s", SDL_GetError());
 		return;
 	}
 #endif // !BX_PLATFORM_EMSCRIPTEN
@@ -175,10 +185,11 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	bgfxInfo.resolution.reset = bgfxFlags;
 	if (!bgfx::init(bgfxInfo))
 	{
-		SDL_SetError("Failed to init BGFX");
+		LogError("Failed to init BGFX");
 		return;
 	}
-	aspectRatio_ = static_cast<float>(windowWidth_) / static_cast<float>(windowHeight_);
+	aspectRatio_ = static_cast<float>(renderWidth_) / static_cast<float>(renderHeight_);
+	LogDebug("Aspect ratio:  %f", aspectRatio_);
 
 #ifndef NDEBUG
 	bgfx::setDebug(BGFX_DEBUG_TEXT);
@@ -214,7 +225,10 @@ void Graphics::BeginFrame() noexcept
 	bgfx::touch(0);
 }
 
-void Graphics::EndFrame() noexcept { bgfx::frame(); }
+void Graphics::EndFrame() noexcept
+{
+	bgfx::frame();
+}
 
 void Graphics::DrawModel(bgfx::ProgramHandle program,
 						 bgfx::VertexBufferHandle vbo,
@@ -281,7 +295,7 @@ bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
 	FILE* file = fopen(filepath, "rb");
 	if (!file)
 	{
-		SDL_SetError("Could not create shader: file \"%s\" not found.", filename);
+		LogError("Could not create shader: file \"%s\" not found.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 
@@ -290,7 +304,7 @@ bgfx::ShaderHandle Graphics::LoadShader(const char* filename) noexcept
 	if (!size)
 	{
 		fclose(file);
-		SDL_SetError("Could not create shader: file \"%s\" is empty.", filename);
+		LogError("Could not create shader: file \"%s\" is empty.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 	rewind(file);
@@ -325,7 +339,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	FILE* file = fopen(buffer, "rb");
 	if (!file)
 	{
-		SDL_SetError("Could not load texture \"%s\": file not found.", filename);
+		LogError("Could not load texture \"%s\": file not found.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 
@@ -334,7 +348,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	if (!size)
 	{
 		fclose(file);
-		SDL_SetError("Could not load texture \"%s\": file is empty.", filename);
+		LogError("Could not load texture \"%s\": file is empty.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 	rewind(file);
@@ -347,7 +361,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	if (!image)
 	{
 		free(data);
-		SDL_SetError("Could not load texture \"%s\": failed to parse image.", filename);
+		LogError("Could not load texture \"%s\": failed to parse image.", filename);
 		return BGFX_INVALID_HANDLE;
 	}
 
@@ -381,7 +395,7 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 									 flags,
 									 mem);
 
-	SDL_SetError("Could not load texture \"%s\": unknown texture type.", filename);
+	LogError("Could not load texture \"%s\": unknown texture type.", filename);
 	return BGFX_INVALID_HANDLE;
 }
 
