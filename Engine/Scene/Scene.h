@@ -20,6 +20,7 @@
 #define SCENE_H
 
 #include <flecs.h>
+#include <glm/mat4x4.hpp>
 
 class Coordinator;
 
@@ -28,6 +29,10 @@ class Scene
 public:
 	explicit Scene(flecs::world& world, const char* sceneName);
 	~Scene();
+
+	void InitSystems(flecs::world& world);
+	void Update(flecs::entity& node, const glm::mat4& parent) noexcept;
+	void Update() noexcept { Update(root_, glm::mat4{1.0f}); }
 
 	flecs::entity GetRoot() noexcept { return root_; }
 	const flecs::entity GetRoot() const noexcept { return root_; }
