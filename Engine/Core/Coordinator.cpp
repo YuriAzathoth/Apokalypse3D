@@ -24,7 +24,6 @@
 #include "Coordinator.h"
 #include "IO/Log.h"
 #include "Scene/SceneComponents.h"
-#include "Scene/SceneSystems.h"
 
 Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 	: ticks_(0.0f)
@@ -36,10 +35,10 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 		return;
 
 	world_.Initialize();
-	RegisterSceneSystems(*world_, *this);
 	world_->set_threads(std::thread::hardware_concurrency());
 
 	scene_.Initialize(*world_, "Scene");
+	scene_->InitSystems(*world_);
 
 	graphics_.Initialize(initInfo.graphics, initialized);
 	if (!initialized)
@@ -82,7 +81,7 @@ void Coordinator::Frame()
 	const float ticks = static_cast<float>(SDL_GetTicks()) * 0.001f;
 	world_->progress(ticks - ticks_);
 	ticks_ = ticks;
-	UpdateScene(scene_->GetRoot());
+	scene_->Update();
 	graphics_->DrawScene(scene_->GetRoot());
 }
 

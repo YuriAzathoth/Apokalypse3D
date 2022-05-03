@@ -17,6 +17,7 @@
 */
 
 #define EASTL_DLL 1
+#define GLM_FORCE_LEFT_HANDED
 
 #include <EASTL/set.h>
 #include <SDL2/SDL.h>

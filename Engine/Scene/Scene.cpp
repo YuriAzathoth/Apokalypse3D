@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <glm/gtx/quaternion.hpp>
 #include "Scene.h"
 #include "SceneComponents.h"
 
@@ -29,3 +30,22 @@ Scene::~Scene()
 	root_.destruct();
 }
 
+void Scene::InitSystems(flecs::world& world)
+{
+	world.system<Translation, const Rotate>().each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
+											 { tr.model *= glm::toMat4(glm::quat(rotate.rot * it.delta_time())); });
+
+	world.system<Translation, const Move>().each([](flecs::iter& it, size_t, Translation& tr, const Move& move)
+										   { tr.model = glm::translate(tr.model, move.move * it.delta_time()); });
+}
+
+void Scene::Update(flecs::entity& node, const glm::mat4& parent) noexcept
+{
+	Node* cnode = node.get_mut<Node>();
+	const Translation* tr = node.get<Translation>();
+	if (cnode && tr)
+	{
+		cnode->model = parent * tr->model;
+		node.children([this, cnode](flecs::entity child) { Update(child, cnode->model); });
+	}
+}
