@@ -19,6 +19,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/trigonometric.hpp>
 #include "Core/Coordinator.h"
+#include "Graphics/GraphicsComponents.h"
 #include "Scene/SceneComponents.h"
 
 struct Vertex
@@ -54,7 +55,12 @@ static constexpr uint16_t INDICES[] = {
 	2, 3, 10, 10, 3, 11, // Bottom
 };
 
-void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, float scale, unsigned levels)
+void CreateBoxes(flecs::world& world,
+				 flecs::entity parent,
+				 const Model& model,
+				 const MaterialBasic& material,
+				 float scale,
+				 unsigned levels)
 {
 	glm::mat4 identity(1.0f);
 	const glm::vec3 dist(5.0f, 0.0f, 0.0f);
@@ -65,6 +71,7 @@ void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, 
 							  .add<Node>()
 							  .set<Translation>({tr})
 							  .set<Model>(model)
+							  .set<MaterialBasic>(material)
 							  .set<Rotate>({{glm::radians(90.0f), glm::radians(90.0f), 0.0f}});
 
 	glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -74,6 +81,7 @@ void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, 
 				.add<Node>()
 				.set<Translation>({tr})
 				.set<Model>(model)
+				.set<MaterialBasic>(material)
 				.set<Rotate>({{glm::radians(90.0f), 0.0f, glm::radians(90.0f)}});
 
 	rot = glm::angleAxis(glm::radians(180.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -83,6 +91,7 @@ void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, 
 				.add<Node>()
 				.set<Translation>({tr})
 				.set<Model>(model)
+				.set<MaterialBasic>(material)
 				.set<Rotate>({{glm::radians(-90.0f), glm::radians(-90.0f), 0.0f}});
 
 	rot = glm::angleAxis(glm::radians(270.0f), glm::vec3{0.0f, 0.0f, 1.0f});
@@ -92,12 +101,13 @@ void CreateBoxes(flecs::world& world, flecs::entity parent, const Model& model, 
 				.add<Node>()
 				.set<Translation>({tr})
 				.set<Model>(model)
+				.set<MaterialBasic>(material)
 				.set<Rotate>({{glm::radians(-90.0f), 0.0f, glm::radians(-90.0f)}});
 
 	if (levels)
-		parent.children([&world, &model, levels](flecs::entity child)
+		parent.children([&world, &model, material, levels](flecs::entity child)
 		{
-			CreateBoxes(world, child, model, 0.75f, levels - 1);
+			CreateBoxes(world, child, model, material, 0.75f, levels - 1);
 		});
 }
 
@@ -126,7 +136,8 @@ int main()
 	bgfx::ShaderHandle fragment = graphics.LoadShader("01_hello_world.frag.shader");
 	bgfx::ProgramHandle program = graphics.CreateProgram(vertex, fragment);
 	bgfx::TextureHandle texture = graphics.LoadTexture("SampleCrate.ktx");
-	const Model model = {vbo, ebo, program, texture};
+	const Model model = {vbo, ebo};
+	const MaterialBasic material = { program, texture };
 
 	if (!(bgfx::isValid(vbo) &&
 		  bgfx::isValid(ebo) &&
@@ -152,9 +163,10 @@ int main()
 								.add<Node>()
 								.add<Translation>()
 								.set<Model>(model)
+								.set<MaterialBasic>(material)
 								.set<Rotate>({{0.0f, 0.0f, glm::radians(45.0f)}});
 
-	CreateBoxes(world, origin, model, 0.75f, 4);
+	CreateBoxes(world, origin, model, material, 0.75f, 4);
 
 	coordinator.Run();
 

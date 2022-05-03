@@ -32,6 +32,7 @@
 
 struct SDL_Window;
 typedef void* SDL_GL_Context;
+namespace flecs { struct world; }
 
 class APOKALYPSE3DAPI_EXPORT Graphics
 {
@@ -85,13 +86,11 @@ public:
 	Graphics(const InitInfo& initInfo, bool& initialized);
 	~Graphics();
 
+	void InitSystems(flecs::world& world);
+
 	void BeginFrame() noexcept;
 	void EndFrame() noexcept;
 
-	void DrawModel(bgfx::ProgramHandle program,
-				   bgfx::VertexBufferHandle vbo,
-				   bgfx::IndexBufferHandle ebo,
-				   const glm::mat4& model) const noexcept;
 	void DrawScene(flecs::entity node) const noexcept;
 
 	void SetTexture(bgfx::TextureHandle texture, unsigned short slot) const noexcept;

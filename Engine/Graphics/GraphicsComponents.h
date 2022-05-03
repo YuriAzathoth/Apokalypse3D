@@ -16,56 +16,46 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENECOMPONENTS_H
-#define SCENECOMPONENTS_H
+#ifndef GRAPHICSCOMPONENTS_H
+#define GRAPHICSCOMPONENTS_H
 
 #include <bgfx/bgfx.h>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 
-// =========================================
-// Transformations
-// =========================================
-
-struct Look
+struct Camera
 {
-	glm::vec3 move;
+	glm::mat4 view;
+	glm::mat4 proj;
 };
 
-struct Move
+struct MaterialBasic
 {
-	glm::vec3 move;
+	bgfx::ProgramHandle program;
+	bgfx::TextureHandle diffuse;
 };
 
-struct Rotate
+struct Model
 {
-	glm::vec3 rot;
+	bgfx::VertexBufferHandle vbo;
+	bgfx::IndexBufferHandle ebo;
 };
 
-// =========================================
-// Scene
-// =========================================
-
-struct Node
+struct Perspective
 {
-	Node()
-		: model(1.0f)
-	{
-	}
-	glm::mat4 model;
+	float fov;
+	float aspect;
+	float nearest;
+	float farthest;
 };
 
-struct Translation
+struct Ray
 {
-	Translation()
-		: model(1.0f)
-	{
-	}
-	Translation(const glm::mat4& _model)
-		: model(_model)
-	{
-	}
-	glm::mat4 model;
+	glm::vec3 begin;
+	glm::vec3 end;
 };
 
-#endif // SCENECOMPONENTS_H
+struct WindowAspect
+{
+};
+
+#endif // GRAPHICSCOMPONENTS_H
