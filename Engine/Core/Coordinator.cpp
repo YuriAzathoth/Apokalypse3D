@@ -35,16 +35,16 @@ Coordinator::Coordinator(const InitInfo& initInfo, bool& initialized)
 	if (!LogInit("../Logs", LogLevel::LOG_LEVEL_TRACE))
 		return;
 
-	graphics_.Initialize(initInfo.graphics, initialized);
-	if (!initialized)
-		return;
-	initialized = false;
-
 	world_.Initialize();
 	RegisterSceneSystems(*world_, *this);
 	world_->set_threads(std::thread::hardware_concurrency());
 
 	scene_.Initialize(*world_, "Scene");
+
+	graphics_.Initialize(initInfo.graphics, initialized);
+	if (!initialized)
+		return;
+	graphics_->InitSystems(*world_);
 
 	initialized = true;
 }

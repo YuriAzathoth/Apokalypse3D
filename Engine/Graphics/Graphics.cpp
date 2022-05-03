@@ -23,12 +23,14 @@
 #include <SDL2/SDL_syswm.h>
 #include <bimg/decode.h>
 #include <bgfx/platform.h>
+#include <flecs.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include "Graphics.h"
+#include "GraphicsComponents.h"
 #include "IO/Log.h"
 #include "Scene/SceneComponents.h"
 
@@ -219,6 +221,33 @@ Graphics::~Graphics()
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
+void Graphics::InitSystems(flecs::world& world)
+{
+	world.system<const Camera>().each(
+		[](const Camera& camera)
+		{ bgfx::setViewTransform(0, glm::value_ptr(camera.view), glm::value_ptr(camera.proj)); });
+
+	world.system<Perspective, const WindowAspect>().kind(flecs::PreUpdate).each(
+		[this](Perspective& perspective, const WindowAspect&) {
+			perspective.aspect = GetWindowAspect();
+		});
+
+	world.system<Camera, const Perspective>().kind(flecs::PreUpdate).each(
+		[](Camera& camera, const Perspective& perspective) {
+			camera.proj = glm::perspective(perspective.fov,
+										   perspective.aspect,
+										   perspective.nearest,
+										   perspective.farthest);
+		});
+
+	world.system<Camera, const Ray>().kind(flecs::PreUpdate).each(
+		[](Camera& camera, const Ray& ray) {
+			const glm::vec3 forward = glm::normalize(ray.end - ray.begin);
+			const glm::vec3 up = glm::angleAxis(glm::radians(-90.0f), glm::vec3{1.0f, 0.0f, 0.0f}) * forward;
+			camera.view = glm::lookAt(ray.begin, ray.end, up);
+		});
+}
+
 void Graphics::BeginFrame() noexcept
 {
 	bgfx::setViewRect(0, 0, 0, windowWidth_, windowHeight_);
@@ -227,29 +256,19 @@ void Graphics::BeginFrame() noexcept
 
 void Graphics::EndFrame() noexcept { bgfx::frame(); }
 
-void Graphics::DrawModel(bgfx::ProgramHandle program,
-						 bgfx::VertexBufferHandle vbo,
-						 bgfx::IndexBufferHandle ebo,
-						 const glm::mat4& model) const noexcept
-{
-	bgfx::setTransform(glm::value_ptr(model));
-	bgfx::setVertexBuffer(0, vbo);
-	bgfx::setIndexBuffer(ebo);
-	bgfx::submit(0, program);
-}
-
 void Graphics::DrawScene(flecs::entity node) const noexcept
 {
 	const Model* model = node.get<Model>();
+	const MaterialBasic* material = node.get<MaterialBasic>();
 	const Node* cnode = node.get<Node>();
-	if (model && cnode)
+	if (model && material && cnode)
 	{
-		bgfx::setTexture(0, GetUniformHandle("s_texColor"), model->texture_);
-		bgfx::setTransform(glm::value_ptr(cnode->model_));
-		bgfx::setVertexBuffer(0, model->vbo_);
-		bgfx::setIndexBuffer(model->ebo_);
+		bgfx::setTransform(glm::value_ptr(cnode->model));
+		bgfx::setVertexBuffer(0, model->vbo);
+		bgfx::setIndexBuffer(model->ebo);
 		bgfx::setState(BGFX_STATE_DEFAULT);
-		bgfx::submit(0, model->program_);
+		bgfx::setTexture(0, GetUniformHandle("s_texColor"), material->diffuse);
+		bgfx::submit(0, material->program);
 	}
 	node.children([this](flecs::entity child) { DrawScene(child); });
 }

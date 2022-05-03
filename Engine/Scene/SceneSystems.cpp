@@ -31,34 +31,10 @@
 void RegisterSceneSystems(flecs::world& world, Coordinator& core)
 {
 	world.system<Translation, const Rotate>().each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
-											 { tr.model_ *= glm::toMat4(glm::quat(rotate.rot_ * it.delta_time())); });
+											 { tr.model *= glm::toMat4(glm::quat(rotate.rot * it.delta_time())); });
 
 	world.system<Translation, const Move>().each([](flecs::iter& it, size_t, Translation& tr, const Move& move)
-										   { tr.model_ = glm::translate(tr.model_, move.move_ * it.delta_time()); });
-
-	world.system<const Camera>().each(
-		[](const Camera& camera)
-		{ bgfx::setViewTransform(0, glm::value_ptr(camera.view_), glm::value_ptr(camera.proj_)); });
-
-	world.system<Perspective, const WindowAspect>().kind(flecs::PreUpdate).each(
-		[&core](Perspective& perspective, const WindowAspect&) {
-			perspective.aspect_ = core.GetGraphics().GetWindowAspect();
-		});
-
-	world.system<Camera, const Perspective>().kind(flecs::PreUpdate).each(
-		[&core](Camera& camera, const Perspective& perspective) {
-			camera.proj_ = glm::perspective(perspective.fov_,
-											perspective.aspect_,
-											perspective.near_,
-											perspective.far_);
-		});
-
-	world.system<Camera, const Ray>().kind(flecs::PreUpdate).each(
-		[](Camera& camera, const Ray& ray) {
-			const glm::vec3 forward = glm::normalize(ray.end_ - ray.begin_);
-			const glm::vec3 up = glm::angleAxis(glm::radians(-90.0f), glm::vec3{1.0f, 0.0f, 0.0f}) * forward;
-			camera.view_ = glm::lookAt(ray.begin_, ray.end_, up);
-		});
+										   { tr.model = glm::translate(tr.model, move.move * it.delta_time()); });
 }
 
 void UpdateScene(flecs::entity node, const Node& parent) noexcept
@@ -67,7 +43,7 @@ void UpdateScene(flecs::entity node, const Node& parent) noexcept
 	const Translation* tr = node.get<Translation>();
 	if (cnode && tr)
 	{
-		cnode->model_ = parent.model_ * tr->model_;
+		cnode->model = parent.model * tr->model;
 		node.children([cnode](flecs::entity child) { UpdateScene(child, *cnode); });
 	}
 }
