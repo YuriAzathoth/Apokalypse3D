@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include "Core/Platform.h"
 #include "Graphics.h"
 #include "GraphicsComponents.h"
 #include "IO/Log.h"
@@ -65,8 +66,6 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 			}
 		}
 	}
-	renderWidth_ = windowWidth_;
-	renderHeight_ = windowHeight_;
 
 	unsigned sdlFlags = 0;
 	unsigned bgfxFlags = 0;
@@ -79,21 +78,10 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	{
 		bgfxFlags |= BGFX_RESET_HIDPI;
 		sdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
-		constexpr float DEFAULT_DPI = 120.0f;
-		float hdpi;
-		float vdpi;
-		SDL_GetDisplayDPI(initInfo.display, nullptr, &hdpi, &vdpi);
-		windowWidth_ *= hdpi / DEFAULT_DPI;
-		windowHeight_ *= vdpi / DEFAULT_DPI;
+		DisableHighDpi();
 	}
 	if (initInfo.vsync)
 		bgfxFlags |= BGFX_RESET_VSYNC;
-
-	LogDebug("Window width:  %d", windowWidth_);
-	LogDebug("Window height: %d", windowHeight_);
-	LogDebug("Render width:  %d", renderWidth_);
-	LogDebug("Render height: %d", renderHeight_);
-	LogDebug("DPI scale:     %f", (float)renderWidth_ / (float)windowWidth_);
 
 	constexpr unsigned MSAA_FLAGS[] =
 	{
@@ -104,9 +92,6 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 		BGFX_RESET_MSAA_X16,
 	};
 	bgfxFlags |= MSAA_FLAGS[static_cast<unsigned>(initInfo.msaa)];
-
-	LogDebug("Vertical sync: %s", initInfo.vsync ? "true" : "false");
-	LogDebug("MSAA level:    %u", (unsigned)initInfo.msaa);
 
 	window_ = SDL_CreateWindow(initInfo.title,
 							   SDL_WINDOWPOS_CENTERED,
@@ -182,16 +167,15 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 	bgfx::Init bgfxInfo{};
 	bgfxInfo.type = static_cast<bgfx::RendererType::Enum>(initInfo.render);
 	bgfxInfo.vendorId = BGFX_PCI_ID_NVIDIA; //gpuVendor;
-	bgfxInfo.resolution.width = renderWidth_;
-	bgfxInfo.resolution.height = renderHeight_;
+	bgfxInfo.resolution.width = windowWidth_;
+	bgfxInfo.resolution.height = windowHeight_;
 	bgfxInfo.resolution.reset = bgfxFlags;
 	if (!bgfx::init(bgfxInfo))
 	{
 		LogError("Failed to init BGFX");
 		return;
 	}
-	aspectRatio_ = static_cast<float>(renderWidth_) / static_cast<float>(renderHeight_);
-	LogDebug("Aspect ratio:  %f", aspectRatio_);
+	aspectRatio_ = static_cast<float>(windowWidth_) / static_cast<float>(windowHeight_);
 
 #ifndef NDEBUG
 	bgfx::setDebug(BGFX_DEBUG_TEXT);
