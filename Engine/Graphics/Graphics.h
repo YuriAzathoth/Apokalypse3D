@@ -120,8 +120,6 @@ private:
 	SDL_Window* window_;
 	unsigned windowWidth_;
 	unsigned windowHeight_;
-	unsigned renderWidth_;
-	unsigned renderHeight_;
 	float aspectRatio_;
 };
 
