@@ -19,15 +19,13 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#define EASTL_DLL 1
-
-#include <EASTL/string.h>
-#include <EASTL/unordered_map.h>
-#include <EASTL/vector.h>
 #include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <flecs.h>
 #include <glm/mat4x4.hpp>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "Apokalypse3DAPI.h"
 
 struct SDL_Window;
@@ -111,12 +109,12 @@ public:
 
 	float GetWindowAspect() const noexcept { return aspectRatio_; }
 
-	eastl::vector<WindowMode> GetWindowResolutions() const noexcept;
+	std::vector<WindowMode> GetWindowResolutions() const noexcept;
 
 private:
 	bgfx::VertexLayout solidLayout_;
 	bx::DefaultAllocator allocator_;
-	eastl::unordered_map<eastl::string, bgfx::UniformHandle> uniforms_;
+	std::unordered_map<std::string, bgfx::UniformHandle> uniforms_;
 	SDL_Window* window_;
 	unsigned windowWidth_;
 	unsigned windowHeight_;
