@@ -16,10 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define EASTL_DLL 1
 #define GLM_FORCE_LEFT_HANDED
 
-#include <EASTL/set.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 #include <bimg/decode.h>
@@ -400,11 +398,11 @@ bgfx::TextureHandle Graphics::LoadTexture(const char* filename) noexcept
 	return BGFX_INVALID_HANDLE;
 }
 
-eastl::vector<Graphics::WindowMode> Graphics::GetWindowResolutions() const noexcept
+std::vector<Graphics::WindowMode> Graphics::GetWindowResolutions() const noexcept
 {
 	const int display = SDL_GetWindowDisplayIndex(window_);
 	const int modes = SDL_GetNumDisplayModes(display);
-	eastl::vector<Graphics::WindowMode> ret;
+	std::vector<Graphics::WindowMode> ret;
 	ret.reserve(modes);
 	SDL_DisplayMode mode;
 	for (int i = 0; i < modes; ++i)
