@@ -16,35 +16,40 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef MAINTHREADSYSTEM_H
+#define MAINTHREADSYSTEM_H
 
+#include <flecs.h>
+#include <utility>
 #include "Apokalypse3DAPI.h"
 
-namespace flecs { struct world; }
-
-APOKALYPSE3DAPI_EXPORT void RegisterScene(flecs::world& world);
-
-/*#include <flecs.h>
-#include <glm/mat4x4.hpp>
-
-class Coordinator;
-
-class Scene
+struct MainThreadSystem
 {
-public:
-	explicit Scene(flecs::world& world, const char* sceneName);
-	~Scene();
+	flecs::system system;
+};
 
-	void InitSystems(flecs::world& world);
-	void Update(flecs::entity& node, const glm::mat4& parent) noexcept;
-	void Update() noexcept { Update(root_, glm::mat4{1.0f}); }
+struct MainPreUpdate{};
+struct MainPostUpdate{};
 
-	flecs::entity GetRoot() noexcept { return root_; }
-	const flecs::entity GetRoot() const noexcept { return root_; }
+using MainThreadQuery = flecs::query<MainThreadSystem>;
 
-private:
-	flecs::entity root_;
-};*/
+static inline void RegisterMainThreadSystem(flecs::world& world)
+{
+	world.component<MainPreUpdate>();
+	world.component<MainPostUpdate>();
+}
 
-#endif // SCENE_H
+static inline MainThreadQuery CreateMainThreadQuery(flecs::world& world)
+{
+	return world.query<MainThreadSystem>();
+}
+
+static inline void ProgressMainThread(MainThreadQuery& query, float deltaTime = 0.0f)
+{
+	query.each([deltaTime](MainThreadSystem& sys)
+	{
+		sys.system.run_worker(0, 1, deltaTime);
+	});
+}
+
+#endif // MAINTHREADSYSTEM_H

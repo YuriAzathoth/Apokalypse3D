@@ -16,35 +16,37 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENE_H
-#define SCENE_H
+#include "Octree.h"
 
-#include "Apokalypse3DAPI.h"
+#define MAX_PER_OCTANT 8
 
-namespace flecs { struct world; }
-
-APOKALYPSE3DAPI_EXPORT void RegisterScene(flecs::world& world);
-
-/*#include <flecs.h>
-#include <glm/mat4x4.hpp>
-
-class Coordinator;
-
-class Scene
+Octree::Octree(flecs::world& world, const glm::vec3& center, float size)
+	: center_(center)
+	, size_(size)
 {
-public:
-	explicit Scene(flecs::world& world, const char* sceneName);
-	~Scene();
+	root_ = world.entity("Octree");
+}
 
-	void InitSystems(flecs::world& world);
-	void Update(flecs::entity& node, const glm::mat4& parent) noexcept;
-	void Update() noexcept { Update(root_, glm::mat4{1.0f}); }
+void Octree::Insert(flecs::entity entity, const glm::vec3& pos, const glm::vec3& size)
+{
+	Entity ent;
+	ent.entity = entity;
+	ent.pos = pos;
+	ent.size = size;
+}
 
-	flecs::entity GetRoot() noexcept { return root_; }
-	const flecs::entity GetRoot() const noexcept { return root_; }
+void Octree::Clear()
+{
+}
 
-private:
-	flecs::entity root_;
-};*/
+void Octree::Find(flecs::vector<flecs::entity>& result, const glm::vec3& pos, float range)
+{
+}
 
-#endif // SCENE_H
+Octree::Node* Octree::AddNode(Node* parent)
+{
+	/*Node* ret;
+	if (!freeNodes_.empty())
+	{
+	}*/
+}

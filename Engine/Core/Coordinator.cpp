@@ -16,7 +16,29 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL_events.h>
+#include <flecs.h>
+#include "Coordinator.h"
+#include "Core/MainThreadSystem.h"
+#include "Graphics/Graphics.h"
+
+void Run(flecs::world& world)
+{
+	auto mainThread = CreateMainThreadQuery(world);
+
+	world.add<Engine>();
+	while (world.has<Engine>())
+	{
+		ProgressMainThread(mainThread);
+		world.progress();
+	}
+}
+
+void Shutdown(flecs::world& world)
+{
+	world.singleton<Engine>().destruct();
+}
+
+/*#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_timer.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,4 +116,4 @@ int Coordinator::Run()
 		EndFrame();
 	}
 	return 0;
-}
+}*/

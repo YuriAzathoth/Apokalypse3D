@@ -55,6 +55,10 @@ struct Node
 	glm::mat4 model;
 };
 
+struct Scene
+{
+};
+
 struct Translation
 {
 	Translation()

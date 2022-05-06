@@ -19,7 +19,19 @@
 #ifndef COORDINATOR_H
 #define COORDINATOR_H
 
-#include <memory>
+#include "Apokalypse3DAPI.h"
+
+namespace flecs { struct world; };
+
+struct Engine
+{
+	bool run;
+};
+
+APOKALYPSE3DAPI_EXPORT void Run(flecs::world& world);
+APOKALYPSE3DAPI_EXPORT void Shutdown(flecs::world& world);
+
+/*#include <memory>
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 #include "Container/LazyInit.h"
@@ -59,6 +71,6 @@ private:
 	LazyInit<flecs::world> world_;
 	float ticks_;
 	bool run_;
-};
+};*/
 
 #endif // COORDINATOR_H
