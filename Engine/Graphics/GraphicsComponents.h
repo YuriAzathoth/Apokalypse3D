@@ -22,6 +22,66 @@
 #include <bgfx/bgfx.h>
 #include <glm/mat4x4.hpp>
 
+enum class RenderType : unsigned char
+{
+	None,
+	Agc,
+	Direct3D9,
+	Direct3D11,
+	Direct3D12,
+	Gnm,
+	Metal,
+	Nvn,
+	OpenGLES,
+	OpenGL,
+	Vulkan,
+	WebGPU,
+	Auto
+};
+
+enum class MSAA : unsigned char
+{
+	NONE,
+	X2,
+	X4,
+	X8,
+	X16
+};
+
+struct GraphicsMsaa
+{
+	MSAA msaa;
+};
+
+struct GraphicsRenderer
+{
+	RenderType type;
+};
+
+struct WindowCreate
+{
+	const char* title;
+};
+
+struct WindowDisplay
+{
+	int display;
+};
+
+struct WindowFullscreen
+{
+};
+
+struct WindowSize
+{
+	int width;
+	int height;
+};
+
+struct WindowVSync
+{
+};
+
 struct Camera
 {
 	glm::mat4 view;
@@ -48,11 +108,11 @@ struct Perspective
 	float farthest;
 };
 
-struct Ray
+/*struct Ray
 {
 	glm::vec3 begin;
 	glm::vec3 end;
-};
+};*/
 
 struct WindowAspect
 {

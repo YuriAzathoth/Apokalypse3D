@@ -20,6 +20,254 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
+#include <bgfx/bgfx.h>
+#include <bgfx/platform.h>
+#include <flecs.h>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include "Core/MainThreadSystem.h"
+#include "Core/Platform.h"
+#include "Graphics.h"
+#include "GraphicsComponents.h"
+#include "IO/Log.h"
+#include "Scene/SceneComponents.h"
+
+#include <thread>
+
+#if BX_PLATFORM_EMSCRIPTEN
+#include "emscripten.h"
+#endif // BX_PLATFORM_EMSCRIPTEN
+
+struct Graphics
+{
+	SDL_Window* window;
+	float width;
+	float height;
+};
+
+void RegisterGraphics(flecs::world& world)
+{
+	world.component<GraphicsMsaa>();
+	world.component<GraphicsRenderer>();
+	world.component<WindowDisplay>();
+	world.component<WindowFullscreen>();
+	world.component<WindowSize>();
+	world.component<WindowVSync>();
+
+	world.observer<Graphics>()
+		.event(flecs::UnSet)
+		.each([](Graphics& window)
+		{
+			SDL_DestroyWindow(window.window);
+			bgfx::shutdown();
+			SDL_QuitSubSystem(SDL_INIT_VIDEO);
+		});
+
+	world.observer<const WindowCreate>()
+		.event(flecs::OnSet)
+		.each([](flecs::iter& it, size_t index, const WindowCreate& init)
+		{
+			flecs::entity e = it.entity(index);
+			const GraphicsMsaa* msaa = e.get<GraphicsMsaa>();
+			const GraphicsRenderer* renderer = e.get<GraphicsRenderer>();
+			const WindowDisplay* display = e.get<WindowDisplay>();
+			const WindowSize* size = e.get<WindowSize>();
+			const bool fullscreen = e.has<WindowFullscreen>();
+			const bool vsync = e.has<WindowVSync>();
+
+			if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
+			{
+				LogError("Failed to init SDL video subsystem: %s", SDL_GetError());
+				return;
+			}
+
+			WindowSize windowSize;
+			if (size)
+			{
+				windowSize.width = size->width;
+				windowSize.height = size->height;
+			}
+			else
+			{
+				windowSize.width = 0;
+				windowSize.height = 0;
+				const int displayId = display ? display->display : 0;
+				const int modes = SDL_GetNumDisplayModes(displayId);
+				SDL_DisplayMode mode;
+				for (int i = 0; i < modes; ++i)
+				{
+					SDL_GetDisplayMode(displayId, i, &mode);
+					if (windowSize.width < mode.w || windowSize.height < mode.h)
+					{
+						windowSize.width = mode.w;
+						windowSize.height = mode.h;
+					}
+				}
+			}
+
+			static constexpr const unsigned MSAA_FLAGS[] =
+			{
+				0,
+				BGFX_RESET_MSAA_X2,
+				BGFX_RESET_MSAA_X4,
+				BGFX_RESET_MSAA_X8,
+				BGFX_RESET_MSAA_X16,
+			};
+
+			unsigned sdlFlags = 0;
+			unsigned bgfxFlags = 0;
+			if (fullscreen)
+			{
+				bgfxFlags |= BGFX_RESET_FULLSCREEN;
+				sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+			}
+			if (vsync)
+				bgfxFlags |= BGFX_RESET_VSYNC;
+			if (msaa)
+				bgfxFlags |= MSAA_FLAGS[static_cast<unsigned>(msaa->msaa)];
+			bgfxFlags |= BGFX_RESET_HIDPI;
+			sdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+			DisableHighDpi();
+
+			Graphics graphics;
+			graphics.window = SDL_CreateWindow(init.title,
+												SDL_WINDOWPOS_CENTERED,
+												SDL_WINDOWPOS_CENTERED,
+												windowSize.width,
+												windowSize.height,
+												SDL_WINDOW_SHOWN | sdlFlags);
+			if (!graphics.window)
+			{
+				LogError("Failed to create SDL window: %s", SDL_GetError());
+				return;
+			}
+			graphics.width = static_cast<float>(windowSize.width);
+			graphics.height = static_cast<float>(windowSize.height);
+
+#if !BX_PLATFORM_EMSCRIPTEN
+			SDL_SysWMinfo wmi;
+			SDL_VERSION(&wmi.version);
+			if (!SDL_GetWindowWMInfo(graphics.window, &wmi))
+			{
+				LogError("Could now get SDL SysWM info: %s", SDL_GetError());
+				return;
+			}
+#endif // !BX_PLATFORM_EMSCRIPTEN
+
+			bgfx::PlatformData pd{};
+#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+			pd.ndt = wmi.info.x11.display;
+			pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
+#elif BX_PLATFORM_OSX
+			pd.nwh = wmi.info.cocoa.window;
+#elif BX_PLATFORM_WINDOWS
+			pd.nwh = wmi.info.win.window;
+#elif BX_PLATFORM_WINDOWS
+			pd.nwh = wmi.info.cocoa.window;
+#elif BX_PLATFORM_STEAMLINK
+			pd.ndt = wmi.info.vivantnode.display;
+			pd.nwh = wmi.info.vivantnode.window;
+#elif BX_PLATFORM_EMSCRIPTEN
+			pd.nwh = (void*)"#canvas";
+#endif // BX_PLATFORM_
+			bgfx::setPlatformData(pd);
+
+			bgfx::renderFrame();
+
+			bgfx::Init bgfxInfo{};
+			bgfxInfo.type = renderer ? static_cast<bgfx::RendererType::Enum>(renderer->type) : bgfx::RendererType::Count;
+			bgfxInfo.vendorId = BGFX_PCI_ID_NVIDIA; //gpuVendor;
+			bgfxInfo.resolution.width = windowSize.width;
+			bgfxInfo.resolution.height = windowSize.height;
+			bgfxInfo.resolution.reset = bgfxFlags;
+			if (!bgfx::init(bgfxInfo))
+			{
+				LogError("Failed to init BGFX");
+				return;
+			}
+
+		#ifndef NDEBUG
+			bgfx::setDebug(BGFX_DEBUG_TEXT);
+		#endif // NDEBUG
+
+			bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xff, 1.0f, 0);
+
+			/*solidLayout_.begin()
+				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+				.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+				.end();
+
+			uniforms_["s_texColor"] = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);*/
+
+			e.set<Graphics>(graphics);
+		});
+
+	auto frameBeginSys = world.system<const Graphics>()
+		.kind(flecs::type_id<MainPreUpdate>())
+		.interval(-1.0f)
+		.each([](const Graphics& graphics)
+		{
+			bgfx::renderFrame();
+			bgfx::setViewRect(0, 0, 0, graphics.width, graphics.height);
+			bgfx::touch(0);
+		});
+
+	auto frameEndSys = world.system<const Graphics>()
+		.kind(flecs::type_id<MainPostUpdate>())
+		.each([](const Graphics& graphics) { bgfx::frame(); });
+
+	world.entity("GraphicsBegin").set<MainThreadSystem>({frameBeginSys});
+	world.entity("GraphicsEnd").set<MainThreadSystem>({frameEndSys});
+
+	// TODO: Camera
+	world.system<Camera, const Perspective>()
+		 .kind(flecs::PreUpdate)
+		 .each([](flecs::iter& it, size_t, Camera& camera, const Perspective& perspective)
+		{
+			const Graphics* graphics = it.world().get<Graphics>();
+			camera.proj = glm::perspective(perspective.fov,
+										   graphics->width / graphics->height,
+										   perspective.nearest,
+										   perspective.farthest);
+		});
+
+	const glm::vec3 FRONT(0.0f, 0.0f, -1.0f);
+	const glm::quat FRONT_TO_UP = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	world.system<Camera, const Node>()
+		 .kind(flecs::PreUpdate)
+		 .each([FRONT, FRONT_TO_UP](Camera& camera, const Node& node)
+		{
+			glm::vec3 scale;
+			glm::quat rotation;
+			glm::vec3 position;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(node.model,
+						   scale,
+						   rotation,
+						   position,
+						   skew,
+						   perspective);
+			const glm::vec3 front = position + (rotation * FRONT);
+			const glm::vec3 up = FRONT_TO_UP * front;
+			camera.view = glm::lookAt(front, position, up);
+		});
+
+	world.system<const Camera>()
+		 .each([](const Camera& camera)
+		{
+			bgfx::setViewTransform(0, glm::value_ptr(camera.view), glm::value_ptr(camera.proj));
+		});
+
+	// TODO: Replace to octree
+}
+
+/*#define GLM_FORCE_LEFT_HANDED
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 #include <bimg/decode.h>
 #include <bgfx/platform.h>
 #include <flecs.h>
@@ -134,7 +382,7 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 
 	bgfx::renderFrame();
 
-	/*unsigned short gpuVendor;
+	unsigned short gpuVendor;
 	{
 		struct GpuComparator
 		{
@@ -161,7 +409,7 @@ Graphics::Graphics(const InitInfo& initInfo, bool& initialized)
 			 ++gpuptr)
 			gpus.insert(gpuptr);
 		gpuVendor = (*gpus.begin())->vendorId;
-	}*/
+	}
 
 	bgfx::Init bgfxInfo{};
 	bgfxInfo.type = static_cast<bgfx::RendererType::Enum>(initInfo.render);
@@ -411,4 +659,4 @@ std::vector<Graphics::WindowMode> Graphics::GetWindowResolutions() const noexcep
 		ret.push_back({mode.w, mode.h, mode.refresh_rate});
 	}
 	return ret;
-}
+}*/

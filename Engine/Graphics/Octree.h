@@ -16,35 +16,47 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef OCTREE_H
+#define OCTREE_H
 
+#include <flecs.h>
+#include <glm/vec3.hpp>
 #include "Apokalypse3DAPI.h"
 
-namespace flecs { struct world; }
-
-APOKALYPSE3DAPI_EXPORT void RegisterScene(flecs::world& world);
-
-/*#include <flecs.h>
-#include <glm/mat4x4.hpp>
-
-class Coordinator;
-
-class Scene
+class APOKALYPSE3DAPI_EXPORT Octree
 {
 public:
-	explicit Scene(flecs::world& world, const char* sceneName);
-	~Scene();
+	explicit Octree(flecs::world& world, const glm::vec3& center, float size);
 
-	void InitSystems(flecs::world& world);
-	void Update(flecs::entity& node, const glm::mat4& parent) noexcept;
-	void Update() noexcept { Update(root_, glm::mat4{1.0f}); }
-
-	flecs::entity GetRoot() noexcept { return root_; }
-	const flecs::entity GetRoot() const noexcept { return root_; }
+	void Insert(flecs::entity entity, const glm::vec3& pos, const glm::vec3& size);
+	void Clear();
+	void Find(flecs::vector<flecs::entity>& result, const glm::vec3& pos, float range);
 
 private:
-	flecs::entity root_;
-};*/
+	struct Entity
+	{
+		flecs::entity entity;
+		glm::vec3 pos;
+		glm::vec3 size;
+	};
 
-#endif // SCENE_H
+	struct Node
+	{
+		flecs::vector<flecs::entity> entities;
+		Node* children[8];
+		Node* parent;
+		int id_;
+		bool isLeaf_;
+	};
+
+	Node* AddNode(Node* parent);
+
+	flecs::vector<flecs::entity> nodes_;
+	flecs::vector<flecs::entity> freeNodes_;
+	flecs::entity root_;
+	glm::vec3 center_;
+	float size_;
+	unsigned count_;
+};
+
+#endif // OCTREE_H

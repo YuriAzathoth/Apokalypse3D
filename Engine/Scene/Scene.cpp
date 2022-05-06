@@ -16,13 +16,42 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <glm/gtx/quaternion.hpp>
+#include <flecs.h>
+#include "Scene.h"
+#include "SceneComponents.h"
+
+static void UpdateNode(flecs::entity e, const glm::mat4& parent)
+{
+	Node* node = e.get_mut<Node>();
+	const Translation* trans = e.get<Translation>();
+	if (node && trans)
+	{
+		node->model = parent * trans->model;
+		e.children([node](flecs::entity e) { UpdateNode(e, node->model); });
+	}
+}
+
+void RegisterScene(flecs::world& world)
+{
+	world.component<Node>();
+	world.component<Scene>();
+	world.component<Translation>();
+
+	world.component<Look>();
+	world.component<Move>();
+	world.component<Rotate>();
+
+	const glm::mat4 identity(1.0f);
+	world.system<Scene>().each([identity](flecs::entity e, Scene) { UpdateNode(e, identity); });
+}
+
+/*#include <glm/gtx/quaternion.hpp>
 #include "Scene.h"
 #include "SceneComponents.h"
 
 Scene::Scene(flecs::world& world, const char* sceneName)
 {
-	root_ = world.entity(sceneName).add<Node>().add<Translation>();
+	root_ = world.entity<Node>().add<Node>().add<Translation>();
 }
 
 Scene::~Scene()
@@ -48,4 +77,4 @@ void Scene::Update(flecs::entity& node, const glm::mat4& parent) noexcept
 		cnode->model = parent * tr->model;
 		node.children([this, cnode](flecs::entity child) { Update(child, cnode->model); });
 	}
-}
+}*/

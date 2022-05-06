@@ -16,10 +16,14 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <flecs.h>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/trigonometric.hpp>
 #include "Core/Coordinator.h"
+#include "Core/MainThreadSystem.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/GraphicsComponents.h"
+#include "Scene/Scene.h"
 #include "Scene/SceneComponents.h"
 
 struct Vertex
@@ -113,7 +117,16 @@ void CreateBoxes(flecs::world& world,
 
 int main()
 {
-	Coordinator::InitInfo initInfo;
+	flecs::world world;
+	world.set_threads(4);
+	RegisterGraphics(world);
+	RegisterMainThreadSystem(world);
+	RegisterScene(world);
+
+	world.set<WindowCreate>({"02_Scene"});
+	Run(world);
+
+	/*Coordinator::InitInfo initInfo;
 	initInfo.graphics.title = "Hello World";
 	initInfo.graphics.render = Graphics::RenderType::OpenGL;
 	initInfo.graphics.msaa = Graphics::MSAA::NONE;
@@ -166,9 +179,9 @@ int main()
 								.set<MaterialBasic>(material)
 								.set<Rotate>({{0.0f, 0.0f, glm::radians(45.0f)}});
 
-	CreateBoxes(world, origin, model, material, 0.75f, 4);
+	CreateBoxes(world, origin, model, material, 0.75f, 4);*/
 
-	coordinator.Run();
+	//coordinator.Run();
 
 	/*bgfx::destroy(vertex);
 	bgfx::destroy(fragment);

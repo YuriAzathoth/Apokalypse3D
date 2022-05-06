@@ -19,7 +19,13 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include <bgfx/bgfx.h>
+#include "Apokalypse3DAPI.h"
+
+namespace flecs { struct world; }
+
+APOKALYPSE3DAPI_EXPORT void RegisterGraphics(flecs::world& world);
+
+/*#include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <flecs.h>
 #include <glm/mat4x4.hpp>
@@ -119,6 +125,6 @@ private:
 	unsigned windowWidth_;
 	unsigned windowHeight_;
 	float aspectRatio_;
-};
+};*/
 
 #endif // GRAPHICS_H
