@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# Assets projects temporary files
+*.blend1
+
 # In-source build files
 *.project
 *.workspace
