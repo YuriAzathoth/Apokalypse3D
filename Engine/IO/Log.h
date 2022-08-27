@@ -21,17 +21,27 @@
 
 #include "Apokalypse3DAPI.h"
 
+//#define LOG_LEVEL_TRACE_ENABLED
+
 #define LogError(FORMAT, ...) LogWrite(LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__)
 #define LogWarning(FORMAT, ...) LogWrite(LOG_LEVEL_WARNING, FORMAT, ##__VA_ARGS__)
 #define LogInfo(FORMAT, ...) LogWrite(LOG_LEVEL_INFO, FORMAT, ##__VA_ARGS__)
 
 #ifndef NDEBUG
 #define LogDebug(FORMAT, ...) LogWrite(LOG_LEVEL_DEBUG, FORMAT, ##__VA_ARGS__)
-#define LogTrace(FORMAT, ...) LogWrite(LOG_LEVEL_TRACE, FORMAT, ##__VA_ARGS__)
+#define DebugFor(EXPR, BODY) for EXPR BODY
+#define DebugIf(EXPR, BODY) if (EXPR) BODY
 #else // NDEBUG
 #define LogDebug(FORMAT, ...)
-#define LogTrace(FORMAT, ...)
+#define DebugFor(EXPR, BODY)
+#define DebugIf(EXPR, BODY)
 #endif // NDEBUG
+
+#if !defined(NDEBUG) && defined(LOG_LEVEL_TRACE_ENABLED)
+#define LogTrace(FORMAT, ...) LogWrite(LOG_LEVEL_TRACE, FORMAT, ##__VA_ARGS__)
+#else // !defined(NDEBUG) && defined(LOG_LEVEL_TRACE_ENABLED)
+#define LogTrace(FORMAT, ...)
+#endif // !defined(NDEBUG) && defined(LOG_LEVEL_TRACE_ENABLED)
 
 enum LogLevel
 {

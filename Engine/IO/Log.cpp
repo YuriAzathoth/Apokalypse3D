@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <mutex>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +27,14 @@
 
 #define BUFFER_SIZE 1024
 
+static std::mutex g_mutex;
+
 static char* g_filename = nullptr;
+#ifdef NDEBUG
 static enum LogLevel g_level = LogLevel::LOG_LEVEL_ERROR;
+#else // NDEBUG
+static enum LogLevel g_level = LogLevel::LOG_LEVEL_TRACE;
+#endif // NDEBUG
 
 inline static const char* GetDate() noexcept
 {
@@ -52,46 +59,50 @@ bool LogInit(const char* filepath, LogLevel logLevel) noexcept
 	return true;
 }
 
-void LogDestroy() noexcept { free(g_filename); }
+void LogDestroy() noexcept
+{
+	free(g_filename);
+}
 
 void LogWrite(LogLevel level, const char* format, ...) noexcept
 {
-	if (level >= g_level)
+	if (level < g_level)
+		return;
+
+	const char* type;
+	switch (level)
 	{
-		const char* type;
-		switch (level)
-		{
-		case LOG_LEVEL_TRACE:
-			type = "TRACE";
-			break;
-		case LOG_LEVEL_DEBUG:
-			type = "DEBUG";
-			break;
-		case LOG_LEVEL_INFO:
-			type = "INFO";
-			break;
-		case LOG_LEVEL_WARNING:
-			type = "WARNING";
-			break;
-		case LOG_LEVEL_ERROR:
-			type = "ERROR";
-			break;
-		default:
-			type = nullptr;
-		}
-		char message[BUFFER_SIZE];
-		char* messagetop = message + sprintf(message, "%s: %s: ", GetDate(), type);
-		va_list args;
-		va_start(args, format);
-		messagetop += vsprintf(messagetop, format, args);
-		va_end(args);
-		sprintf(messagetop, "\n", GetDate(), type);
-		printf(message);
-		if (g_filename)
-		{
-			FILE* file = fopen(g_filename, "a");
-			fprintf(file, message);
-			fclose(file);
-		}
+	case LOG_LEVEL_TRACE:
+		type = "TRACE";
+		break;
+	case LOG_LEVEL_DEBUG:
+		type = "DEBUG";
+		break;
+	case LOG_LEVEL_INFO:
+		type = "INFO";
+		break;
+	case LOG_LEVEL_WARNING:
+		type = "WARNING";
+		break;
+	case LOG_LEVEL_ERROR:
+		type = "ERROR";
+		break;
+	default:
+		type = nullptr;
+	}
+	char message[BUFFER_SIZE];
+	char* messagetop = message + sprintf(message, "%s: %s: ", GetDate(), type);
+	va_list args;
+	va_start(args, format);
+	messagetop += vsprintf(messagetop, format, args);
+	va_end(args);
+	sprintf(messagetop, "\n", GetDate(), type);
+	std::lock_guard mutex(g_mutex);
+	printf(message);
+	if (g_filename)
+	{
+		FILE* file = fopen(g_filename, "a");
+		fprintf(file, message);
+		fclose(file);
 	}
 }
