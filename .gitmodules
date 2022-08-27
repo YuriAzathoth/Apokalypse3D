@@ -18,4 +18,13 @@
 	url = https://github.com/SanderMertens/flecs
 [submodule "ThirdParty/rapidxml"]
 	path = ThirdParty/rapidxml
-	url = https://github.com/dwd/rapidxml
+	url = https://github.com/CodeFinder2/rapidxml
+[submodule "ThirdParty/Nuklear"]
+	path = ThirdParty/Nuklear
+	url = https://github.com/Immediate-Mode-UI/Nuklear
+[submodule "ThirdParty/SDL_net"]
+	path = ThirdParty/SDL_net
+	url = https://github.com/libsdl-org/SDL_net
+[submodule "ThirdParty/SDL_mixer"]
+	path = ThirdParty/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer
