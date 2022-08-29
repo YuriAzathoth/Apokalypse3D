@@ -22,7 +22,7 @@
 
 static constexpr unsigned TEST_ITEMS_COUNT = 256;
 
-TEST_SUITE("Queue")
+TEST_SUITE("Circular Queue")
 {
 	TEST_CASE("Create")
 	{
