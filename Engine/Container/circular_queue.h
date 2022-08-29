@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define a3d_circular_queue_INITIAL_CAPACITY 8
-#define a3d_circular_queue_GROW_FACTOR 2
+#define A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY 8
+#define A3D_CIRCULAR_QUEUE_GROW_FACTOR 2
 
 typedef struct a3d_circular_queue
 {
@@ -41,10 +41,10 @@ extern "C" {
 
 inline static void a3d_circular_queue_new(a3d_circular_queue_t* queue, unsigned item_size)
 {
-	queue->data = malloc(item_size * a3d_circular_queue_INITIAL_CAPACITY);
+	queue->data = malloc(item_size * A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY);
 	queue->head = queue->data;
 	queue->tail = queue->data;
-	queue->capacity = a3d_circular_queue_INITIAL_CAPACITY;
+	queue->capacity = A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY;
 	queue->item_size = item_size;
 }
 
@@ -53,63 +53,65 @@ inline static void a3d_circular_queue_free(a3d_circular_queue_t* queue)
 	free(queue->data);
 }
 
-inline static void* a3d_circular_queue_buffer_first(a3d_circular_queue_t* queue)
+inline static int a3d_circular_queue_empty(a3d_circular_queue_t* queue)
 {
-	return queue->data;
-}
-
-inline static void* a3d_circular_queue_buffer_last(a3d_circular_queue_t* queue)
-{
-	return (uint8_t*)queue->data + (queue->capacity - 1) * queue->item_size;
+	return queue->head == queue->tail;
 }
 
 inline static void a3d_circular_queue_reserve(a3d_circular_queue_t* queue, unsigned count)
 {
 	unsigned size = 0;
-	void* new_data = malloc(count * queue->item_size);
+	uint8_t* new_data = (uint8_t*)malloc(count * queue->item_size);
 	if (queue->head != queue->tail)
 	{
-		void* first = queue->tail;
-		void* last = (queue->head != NULL) ?
-			(queue->head != queue->data ?
-				(uint8_t*)queue->head - queue->item_size :
-				a3d_circular_queue_buffer_last(queue)) :
-			queue->tail;
-		if (last >= first && queue->head != NULL)
+		const int full = queue->head == NULL;
+		uint8_t* buffer_begin = (uint8_t*)queue->data;
+		uint8_t* buffer_end = (uint8_t*)queue->data + queue->capacity * queue->item_size;
+		uint8_t* buffer_last = buffer_end - queue->item_size;
+		uint8_t* data_first = (uint8_t*)queue->tail;
+//		uint8_t* data_last = (full != 0) ?
+//			(queue->head > buffer_begin ? (uint8_t*)queue->head - queue->item_size : buffer_last) :
+//			(uint8_t*)queue->tail + queue->item_size;
+		uint8_t* data_last;
+		if (!full)
 		{
-			size = queue->head ?
-				(unsigned)((uint8_t*)queue->head - (uint8_t*)queue->tail) :
-				queue->capacity * queue->item_size;
-			memcpy(new_data, first, size);
+			if (queue->head > buffer_begin)
+				data_last = (uint8_t*)queue->head - queue->item_size;
+			else
+				data_last = buffer_last;
+		}
+		else
+			data_last = (uint8_t*)queue->tail - queue->item_size;
+		if (data_last > data_first)
+		{
+			size = (unsigned)((uint8_t*)data_last - (uint8_t*)data_first) + queue->item_size;
+			memcpy(new_data, data_first, size);
 		}
 		else
 		{
-			const unsigned tail_to_end = (uint8_t*)queue->data +
-				queue->capacity * queue->item_size -
-				(uint8_t*)queue->tail;
-			const unsigned begin_to_head = (queue->head ?
-				(uint8_t*)queue->head - (uint8_t*)queue->data :
-				queue->capacity - tail_to_end / queue->item_size);
+			const unsigned tail_to_end = buffer_end - data_first;
+			const unsigned begin_to_head = data_last - buffer_begin + queue->item_size;
 			size = tail_to_end + begin_to_head;
-			memcpy(new_data, first, tail_to_end);
-			memcpy((uint8_t*)new_data + tail_to_end, queue->data, begin_to_head);
+			memcpy(new_data, data_first, tail_to_end);
+			memcpy(new_data + tail_to_end, queue->data, begin_to_head);
 		}
 		free(queue->data);
 	}
 	queue->data = new_data;
-	queue->tail = queue->data;
-	queue->head = (uint8_t*)queue->data + size;
+	queue->tail = new_data;
+	queue->head = (uint8_t*)new_data + size;
 	queue->capacity = count;
 }
 
 inline static void* a3d_circular_queue_push(a3d_circular_queue_t* queue)
 {
 	if (queue->head == NULL)
-		a3d_circular_queue_reserve(queue, queue->capacity * a3d_circular_queue_GROW_FACTOR);
+		a3d_circular_queue_reserve(queue, queue->capacity * A3D_CIRCULAR_QUEUE_GROW_FACTOR);
 	void* ptr = queue->head;
-	queue->head = (queue->head < a3d_circular_queue_buffer_last(queue)) ?
-		(uint8_t*)queue->head + queue->item_size:
-		a3d_circular_queue_buffer_first(queue);
+	queue->head = (queue->head <
+		(uint8_t*)queue->data + (queue->capacity - 1) * queue->item_size) ?
+		(uint8_t*)queue->head + queue->item_size :
+		queue->data;
 	if (queue->head == queue->tail)
 		queue->head = NULL;
 	return ptr;
@@ -117,12 +119,13 @@ inline static void* a3d_circular_queue_push(a3d_circular_queue_t* queue)
 
 inline static void* a3d_circular_queue_pop(a3d_circular_queue_t* queue)
 {
-	void* ptr = queue->tail;
 	if (queue->head == NULL)
 		queue->head = queue->tail;
-	queue->tail = (queue->tail < a3d_circular_queue_buffer_last(queue)) ?
+	void* ptr = queue->tail;
+	queue->tail = (queue->tail <
+		(uint8_t*)queue->data + (queue->capacity - 1) * queue->item_size) ?
 		(uint8_t*)queue->tail + queue->item_size :
-		a3d_circular_queue_buffer_first(queue);
+		queue->data;
 	return ptr;
 }
 
