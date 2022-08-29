@@ -17,10 +17,10 @@
 */
 
 #include <doctest/doctest.h>
-#include <utility>
 #include "Container/circular_queue.h"
 
 static constexpr unsigned TEST_ITEMS_COUNT = 256;
+static constexpr unsigned TEST_RANDOM_COUNT = 2048;
 
 TEST_SUITE("Circular Queue")
 {
@@ -56,40 +56,69 @@ TEST_SUITE("Circular Queue")
 		*(unsigned*)a3d_circular_queue_push(&queue) = 20;
 		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 20);
 		REQUIRE(queue.data != nullptr);
-		REQUIRE(queue.head > queue.data);
+		REQUIRE(queue.head == (unsigned*)queue.data + 1);
 		REQUIRE(queue.tail == queue.head);
 		REQUIRE(queue.capacity != 0);
 		REQUIRE(queue.item_size == sizeof(unsigned));
 		a3d_circular_queue_free(&queue);
 	}
 
-	TEST_CASE("Push multiple no reserve")
+	TEST_CASE("Empty")
 	{
 		a3d_circular_queue_t queue;
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
-			*(unsigned*)a3d_circular_queue_push(&queue) = i;
-		REQUIRE(queue.data != nullptr);
-		REQUIRE(queue.head == nullptr);
-		REQUIRE(queue.tail == queue.data);
-		REQUIRE(queue.capacity != 0);
-		REQUIRE(queue.item_size == sizeof(unsigned));
+		*(unsigned*)a3d_circular_queue_push(&queue) = 1;
+		REQUIRE(a3d_circular_queue_empty(&queue) == 0);
+		a3d_circular_queue_pop(&queue);
+		REQUIRE(a3d_circular_queue_empty(&queue) != 0);
 		a3d_circular_queue_free(&queue);
 	}
 
-	TEST_CASE("Pop multiple no reserve")
+	TEST_CASE("Push multiple no full no reserve")
 	{
 		a3d_circular_queue_t queue;
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2; ++i)
 			*(unsigned*)a3d_circular_queue_push(&queue) = i;
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
-			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i);
-		REQUIRE(queue.data != nullptr);
-		REQUIRE(queue.head == queue.data);
+		REQUIRE(queue.head == (unsigned*)queue.data + A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2);
 		REQUIRE(queue.tail == queue.data);
-		REQUIRE(queue.capacity != 0);
-		REQUIRE(queue.item_size == sizeof(unsigned));
+		a3d_circular_queue_free(&queue);
+	}
+
+	TEST_CASE("Push multiple full no reserve")
+	{
+		a3d_circular_queue_t queue;
+		a3d_circular_queue_new(&queue, sizeof(unsigned));
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
+			*(unsigned*)a3d_circular_queue_push(&queue) = i;
+		REQUIRE(queue.head == nullptr);
+		REQUIRE(queue.tail == queue.data);
+		a3d_circular_queue_free(&queue);
+	}
+
+	TEST_CASE("Pop multiple no full no reserve")
+	{
+		a3d_circular_queue_t queue;
+		a3d_circular_queue_new(&queue, sizeof(unsigned));
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2; ++i)
+			*(unsigned*)a3d_circular_queue_push(&queue) = i;
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2; ++i)
+			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i);
+		REQUIRE(queue.head == (unsigned*)queue.data + A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2);
+		REQUIRE(queue.tail == queue.head);
+		a3d_circular_queue_free(&queue);
+	}
+
+	TEST_CASE("Pop multiple full no reserve")
+	{
+		a3d_circular_queue_t queue;
+		a3d_circular_queue_new(&queue, sizeof(unsigned));
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
+			*(unsigned*)a3d_circular_queue_push(&queue) = i;
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
+			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i);
+		REQUIRE(queue.head == queue.data);
+		REQUIRE(queue.tail == queue.head);
 		a3d_circular_queue_free(&queue);
 	}
 
@@ -100,30 +129,30 @@ TEST_SUITE("Circular Queue")
 		for (unsigned i = 0; i < 4; ++i)
 			*(unsigned*)a3d_circular_queue_push(&queue) = i * 2;
 		a3d_circular_queue_reserve(&queue, 16);
-		REQUIRE(queue.data != nullptr);
+		REQUIRE(queue.tail == queue.data);
 		REQUIRE(queue.capacity == 16);
-		REQUIRE(queue.item_size == sizeof(unsigned));
 		for (unsigned i = 0; i < 4; ++i)
 			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i * 2);
+		REQUIRE(queue.capacity == 16);
 		a3d_circular_queue_free(&queue);
 	}
 
-	TEST_CASE("Reserve contiguous full")
+	TEST_CASE("Reserve segmented full")
 	{
 		a3d_circular_queue_t queue;
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
 			*(unsigned*)a3d_circular_queue_push(&queue) = i * 2;
 		a3d_circular_queue_reserve(&queue, 16);
-		REQUIRE(queue.data != nullptr);
+		REQUIRE(queue.tail == queue.data);
 		REQUIRE(queue.capacity == 16);
-		REQUIRE(queue.item_size == sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
 			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i * 2);
+		REQUIRE(queue.capacity == 16);
 		a3d_circular_queue_free(&queue);
 	}
 
-	TEST_CASE("Reserve partial non-full")
+	TEST_CASE("Reserve segmented non-full")
 	{
 		a3d_circular_queue_t queue;
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
@@ -131,14 +160,14 @@ TEST_SUITE("Circular Queue")
 			a3d_circular_queue_push(&queue);
 		for (unsigned i = 0; i < 6; ++i)
 			a3d_circular_queue_pop(&queue);
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY / 2; ++i)
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2; ++i)
 			*(unsigned*)a3d_circular_queue_push(&queue) = i * 4;
 		a3d_circular_queue_reserve(&queue, 16);
-		REQUIRE(queue.data != nullptr);
+		REQUIRE(queue.tail == queue.data);
 		REQUIRE(queue.capacity == 16);
-		REQUIRE(queue.item_size == sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY / 2; ++i)
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY / 2; ++i)
 			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i * 4);
+		REQUIRE(queue.capacity == 16);
 		a3d_circular_queue_free(&queue);
 	}
 
@@ -148,14 +177,14 @@ TEST_SUITE("Circular Queue")
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
 		a3d_circular_queue_push(&queue);
 		a3d_circular_queue_pop(&queue);
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
-			*(unsigned*)a3d_circular_queue_push(&queue) = i * 4;
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
+			*(unsigned*)a3d_circular_queue_push(&queue) = i;
 		a3d_circular_queue_reserve(&queue, 16);
-		REQUIRE(queue.data != nullptr);
+		REQUIRE(queue.tail == queue.data);
 		REQUIRE(queue.capacity == 16);
-		REQUIRE(queue.item_size == sizeof(unsigned));
-		for (unsigned i = 0; i < a3d_circular_queue_INITIAL_CAPACITY; ++i)
-			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i * 4);
+		for (unsigned i = 0; i < A3D_CIRCULAR_QUEUE_INITIAL_CAPACITY; ++i)
+			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i);
+		REQUIRE(queue.capacity == 16);
 		a3d_circular_queue_free(&queue);
 	}
 
@@ -165,9 +194,6 @@ TEST_SUITE("Circular Queue")
 		a3d_circular_queue_new(&queue, sizeof(unsigned));
 		for (unsigned i = 0; i < TEST_ITEMS_COUNT; ++i)
 			*(unsigned*)a3d_circular_queue_push(&queue) = i;
-		REQUIRE(queue.data != nullptr);
-		REQUIRE(queue.capacity == TEST_ITEMS_COUNT);
-		REQUIRE(queue.item_size == sizeof(unsigned));
 		a3d_circular_queue_free(&queue);
 	}
 
@@ -179,48 +205,6 @@ TEST_SUITE("Circular Queue")
 			*(unsigned*)a3d_circular_queue_push(&queue) = i;
 		for (unsigned i = 0; i < TEST_ITEMS_COUNT; ++i)
 			REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == i);
-		REQUIRE(queue.data != nullptr);
-		REQUIRE(queue.capacity == TEST_ITEMS_COUNT);
-		REQUIRE(queue.item_size == sizeof(unsigned));
-		a3d_circular_queue_free(&queue);
-	}
-
-	TEST_CASE("Push and pop")
-	{
-		a3d_circular_queue_t queue;
-		a3d_circular_queue_new(&queue, sizeof(unsigned));
-		*(unsigned*)a3d_circular_queue_push(&queue) = 1;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 2;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 3;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 4;
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 1);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 2);
-		*(unsigned*)a3d_circular_queue_push(&queue) = 5;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 6;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 7;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 8;
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 3);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 4);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 5);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 6);
-		*(unsigned*)a3d_circular_queue_push(&queue) = 10;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 20;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 30;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 40;
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 7);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 8);
-		*(unsigned*)a3d_circular_queue_push(&queue) = 50;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 60;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 70;
-		*(unsigned*)a3d_circular_queue_push(&queue) = 80;
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 10);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 20);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 30);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 40);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 50);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 60);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 70);
-		REQUIRE(*(unsigned*)a3d_circular_queue_pop(&queue) == 80);
 		a3d_circular_queue_free(&queue);
 	}
 }
