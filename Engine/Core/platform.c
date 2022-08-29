@@ -16,22 +16,21 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Platform.h"
+#include "platform.h"
 
-#if _WIN32
+#if __WIN32__
 #include <windows.h>
-#endif // _WIN32
+#endif // __WIN32__
 
-void DisableHighDpi() noexcept
+#if __WIN32__
+void a3d_disable_high_dpi()
 {
-#if _WIN32
-
 	typedef enum D3_PROCESS_DPI_AWARENESS {
 		D3_PROCESS_DPI_UNAWARE = 0,
 		D3_PROCESS_SYSTEM_DPI_AWARE = 1,
 		D3_PROCESS_PER_MONITOR_DPI_AWARE = 2
 	} YQ2_PROCESS_DPI_AWARENESS;
-	HRESULT(WINAPI *SetProcessDpiAwareness)(D3_PROCESS_DPI_AWARENESS dpiAwareness) = NULL;
+	HRESULT(WINAPI *SetProcessDpiAwareness)(YQ2_PROCESS_DPI_AWARENESS dpiAwareness) = NULL;
 	HINSTANCE shcoreDll = LoadLibrary("SHCORE.DLL");
 	if (shcoreDll)
 	{
@@ -53,5 +52,5 @@ void DisableHighDpi() noexcept
 			SetProcessDPIAware();
 		FreeLibrary(userDll);
 	}
-#endif // _WIN32
 }
+#endif // __WIN32__
