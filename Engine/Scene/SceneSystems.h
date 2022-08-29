@@ -16,61 +16,19 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENECOMPONENTS_H
-#define SCENECOMPONENTS_H
+#ifndef SCENESYSTEMS_H
+#define SCENESYSTEMS_H
 
-#include <bgfx/bgfx.h>
 #include <flecs.h>
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
 #include "Apokalypse3DAPI.h"
 
-namespace Components
+struct APOKALYPSE3DAPI_EXPORT SceneSystems
 {
-namespace Scene
-{
-struct Look
-{
-	glm::vec3 move;
-};
+	SceneSystems(flecs::world& world);
 
-struct Move
-{
-	glm::vec3 move;
-};
-
-struct Node
-{
-	glm::mat4 model;
-	Node() : model(1.0f) {}
-};
-
-struct Rotate
-{
-	glm::vec3 rot;
-};
-
-struct Translation
-{
-	glm::mat4 model;
-	Translation() : model(1.0f) {}
-	Translation(const glm::mat4& _model) : model(_model) {}
-};
-
-struct Root {};
-} // namespace Scene
-} // namespace Components
-
-struct APOKALYPSE3DAPI_EXPORT SceneComponents
-{
-	SceneComponents(flecs::world& world);
-
-	flecs::entity look_;
 	flecs::entity move_;
-	flecs::entity node_;
-	flecs::entity root_;
 	flecs::entity rotate_;
-	flecs::entity translation_;
+	flecs::entity updateScene_;
 };
 
-#endif // SCENECOMPONENTS_H
+#endif // SCENESYSTEMS_H
