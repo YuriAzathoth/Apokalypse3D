@@ -15,3 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
+SET (TARGET_NAME Tests)
+
+FILE (GLOB SOURCE_FILES *.cpp)
+FILE (GLOB HEADER_FILES *.h)
+
+ADD_TEST (NAME ${TARGET_NAME} COMMAND ${TARGET_NAME})
+ADD_EXECUTABLE (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+TARGET_LINK_LIBRARIES (${TARGET_NAME} PRIVATE doctest::doctest Apokalypse3D)
