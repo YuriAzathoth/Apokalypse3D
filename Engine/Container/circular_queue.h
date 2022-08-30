@@ -69,19 +69,11 @@ inline static void a3d_circular_queue_reserve(a3d_circular_queue_t* queue, unsig
 		uint8_t* buffer_end = (uint8_t*)queue->data + queue->capacity * queue->item_size;
 		uint8_t* buffer_last = buffer_end - queue->item_size;
 		uint8_t* data_first = (uint8_t*)queue->tail;
-//		uint8_t* data_last = (full != 0) ?
-//			(queue->head > buffer_begin ? (uint8_t*)queue->head - queue->item_size : buffer_last) :
-//			(uint8_t*)queue->tail + queue->item_size;
-		uint8_t* data_last;
-		if (!full)
-		{
-			if (queue->head > buffer_begin)
-				data_last = (uint8_t*)queue->head - queue->item_size;
-			else
-				data_last = buffer_last;
-		}
-		else
-			data_last = (uint8_t*)queue->tail - queue->item_size;
+		uint8_t* data_last = !full ?
+			((queue->head > buffer_begin) ?
+				(uint8_t*)queue->head - queue->item_size :
+				buffer_last) :
+			(uint8_t*)queue->tail - queue->item_size;
 		if (data_last > data_first)
 		{
 			size = (unsigned)((uint8_t*)data_last - (uint8_t*)data_first) + queue->item_size;
