@@ -22,6 +22,8 @@
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
+namespace A3D
+{
 struct APOKALYPSE3DAPI_EXPORT SceneSystems
 {
 	SceneSystems(flecs::world& world);
@@ -30,5 +32,6 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 	flecs::entity rotate_;
 	flecs::entity updateScene_;
 };
+} // namespace A3D
 
 #endif // SCENESYSTEMS_H

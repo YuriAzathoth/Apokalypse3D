@@ -18,18 +18,20 @@
 
 #include "SceneComponents.h"
 
-using namespace Components::Scene;
+using namespace A3D::Components::Scene;
 
+namespace A3D
+{
 SceneComponents::SceneComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<SceneComponents>::id_explicit(world);
-	world.module<SceneComponents>("Components::Scene");
-
-	translation_ = world.component<Translation>();
+	flecs::_::cpp_type<SceneComponents>::id_explicit(world, 0, false);
+	world.module<SceneComponents>("A3D::Components::Scene");
 
 	look_ = world.component<Look>();
 	move_ = world.component<Move>();
 	node_ = world.component<Node>();
 	root_ = world.component<Root>().add(flecs::Tag);
 	rotate_ = world.component<Rotate>();
+	translation_ = world.component<Translation>();
 }
+} // namespace A3D
