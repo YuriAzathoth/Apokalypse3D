@@ -98,6 +98,7 @@ ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 		if (!data)
 		{
 			LogError("Could not load texture \"%s\": out of memory.", filename);
+			bx::close(&filereader);
 			e.destruct();
 			return;
 		}
