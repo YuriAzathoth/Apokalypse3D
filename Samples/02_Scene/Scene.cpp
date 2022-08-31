@@ -25,20 +25,27 @@
 #include "Debug/DebugModelRendererSystems.h"
 #include "Graphics/CameraComponents.h"
 #include "Graphics/CameraSystems.h"
-#include "Graphics/GraphicsResourceComponents.h"
-#include "Graphics/GraphicsResourceSystems.h"
+#include "Graphics/GpuProgramCacheComponents.h"
+#include "Graphics/GpuProgramCacheSystems.h"
+#include "Graphics/GpuProgramComponents.h"
+#include "Graphics/ImageCacheComponents.h"
+#include "Graphics/ImageCacheSystems.h"
+#include "Graphics/ImageComponents.h"
+#include "Graphics/MeshCacheComponents.h"
+#include "Graphics/MeshCacheSystems.h"
+#include "Graphics/MeshComponents.h"
 #include "Graphics/RendererComponents.h"
 #include "Graphics/RendererSystems.h"
 #include "Graphics/WindowComponents.h"
 #include "Graphics/WindowSystems.h"
 #include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
+#include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
 
 using namespace A3D;
 using namespace A3D::Components;
-using namespace ::Components;
 
 void CreateBoxes(flecs::entity parent,
 				 const char* model,
@@ -53,8 +60,8 @@ void CreateBoxes(flecs::entity parent,
 		.add<Scene::Node>()
 		.set<Scene::Translation>({transform})
 		.set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
-		.set<Resource::Graphics::GetModelFile>({model})
-		.set<Resource::Graphics::GetGpuProgram>({vertex, fragment});
+		.set<Mesh::GetModelFile>({model})
+		.set<GpuProgram::GetProgram>({vertex, fragment});
 
 	if (levels > 1)
 	{
@@ -76,15 +83,23 @@ int main()
 {
 	Engine engine;
 	flecs::world& world = engine.get_world();
+	world.import<AsyncLoaderComponents>();
 	world.import<CameraComponents>();
 	world.import<EventComponents>();
-	world.import<GraphicsResourceComponents>();
+	world.import<GpuProgramComponents>();
+	world.import<GpuProgramCacheComponents>();
+	world.import<ImageComponents>();
+	world.import<ImageCacheComponents>();
+	world.import<MeshComponents>();
+	world.import<MeshCacheComponents>();
 	world.import<SceneComponents>();
 	world.import<RendererComponents>();
 	world.import<WindowComponents>();
 	world.import<CameraSystems>();
 	world.import<EventSystems>();
-	world.import<GraphicsResourceSystems>();
+	world.import<GpuProgramCacheSystems>();
+	world.import<ImageCacheSystems>();
+	world.import<MeshCacheSystems>();
 	world.import<RendererSystems>();
 	world.import<WindowSystems>();
 	world.import<SceneSystems>();
