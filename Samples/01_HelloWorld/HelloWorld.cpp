@@ -37,14 +37,8 @@ int main()
 	world.import<EventSystems>();
 	world.import<RendererSystems>();
 	world.import<WindowSystems>();
-
-	Renderer::RendererConfig renderer;
-	renderer.multi_threaded = true;
-	world.set<Renderer::RendererConfig>(renderer);
+	world.add<Renderer::RendererConfig>();
 	world.add<Window::WindowConfig>();
-
-//	world.add<Renderer::RendererConfig>();
-//	world.add<Window::WindowConfig>();
 	create_video(world);
 	create_window(world);
 	create_renderer(world);
