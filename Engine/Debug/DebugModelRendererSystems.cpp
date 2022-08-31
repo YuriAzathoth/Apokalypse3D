@@ -21,19 +21,21 @@
 #include <thread>
 #include "DebugModelRendererSystems.h"
 #include "Graphics/GeometryComponents.h"
-#include "Graphics/GraphicsResourceComponents.h"
+#include "Graphics/GpuProgramComponents.h"
+#include "Graphics/MeshComponents.h"
 #include "Graphics/RendererComponents.h"
 #include "IO/Log.h"
 #include "Scene/SceneComponents.h"
 
 using namespace A3D::Components::Geometry;
+using namespace A3D::Components::GpuProgram;
+using namespace A3D::Components::Mesh;
 using namespace A3D::Components::Renderer;
-using namespace A3D::Components::Resource::Graphics;
 using namespace A3D::Components::Scene;
 
 namespace A3D
 {
-static void draw_geometry(flecs::entity e, const Node& node, const GpuProgram& program)
+static void draw_geometry(flecs::entity e, const Node& node, const Program& program)
 {
 	LogTrace("Drawing model from thread %d...", std::this_thread::get_id());
 
@@ -73,21 +75,22 @@ static void draw_geometry(flecs::entity e, const Node& node, const GpuProgram& p
 
 DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 {
-	world.import<GraphicsResourceComponents>();
+	world.import<GpuProgramComponents>();
 	world.import<GeometryComponents>();
+	world.import<MeshComponents>();
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();
 
 	flecs::_::cpp_type<DebugModelRendererSystems>::id_explicit(world, 0, false);
 	world.module<DebugModelRendererSystems>("A3D::Systems::DebugRenderer");
 
-	drawSingleThreaded_ = world.system<const Node, const GpuProgram>("DrawSingleThread")
+	drawSingleThreaded_ = world.system<const Node, const Program>("DrawSingleThread")
 		.term<const Model>()
 		.term<const MultiThreaded>().not_().singleton()
 		.kind(flecs::PreStore)
 		.each(draw_geometry);
 
-	drawMultiThreaded_ = world.system<const Node, const GpuProgram>("DrawMultiThread")
+	drawMultiThreaded_ = world.system<const Node, const Program>("DrawMultiThread")
 		.term<const Model>()
 		.term<const MultiThreaded>().singleton()
 		.kind(flecs::PreStore)

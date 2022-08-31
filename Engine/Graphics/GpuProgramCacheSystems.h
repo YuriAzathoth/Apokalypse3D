@@ -16,46 +16,30 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICSRESOURCESYSTEMS_H
-#define GRAPHICSRESOURCESYSTEMS_H
+#ifndef GPUPROGRAMCACHESYSTEMS_H
+#define GPUPROGRAMCACHESYSTEMS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT GraphicsResourceSystems
+struct APOKALYPSE3DAPI_EXPORT GpuProgramCacheSystems
 {
-	GraphicsResourceSystems(flecs::world& world);
+	GpuProgramCacheSystems(flecs::world& world);
 
-	// Model
-	flecs::entity findModelFile_;
-	flecs::entity loadModelFile_;
-	flecs::entity setMeshAfterLoad_;
-	flecs::entity destroyMesh_;
+	flecs::query<> programs_;
+	flecs::query<> shaders_;
 
-	// Shader
-	flecs::entity findGpuProgram_;
+	flecs::entity findProgram_;
 	flecs::entity findShader_;
-	flecs::entity linkGpuProgram_;
 	flecs::entity loadShaderFile_;
-	flecs::entity compileShader_;
-	flecs::entity setGpuProgramAfterLoad_;
+	flecs::entity linkProgram_;
+	flecs::entity setProgramAfterLoad_;
 	flecs::entity setShaderAfterLoad_;
-	flecs::entity destroyGpuProgram_;
+	flecs::entity destroyProgram_;
 	flecs::entity destroyShader_;
-
-	// Texture
-	flecs::entity findTexture_;
-	flecs::entity loadTextureFile_;
-	flecs::entity setTextureAfterLoad_;
-	flecs::entity destroyTexture_;
-
-	flecs::query<> gpuProgramStorage_;
-	flecs::query<> meshStorage_;
-	flecs::query<> shaderStorage_;
-	flecs::query<> textureStorage_;
 };
 } // namespace A3D
 
-#endif // GRAPHICSRESOURCESYSTEMS_H
+#endif // GPUPROGRAMCACHESYSTEMS_H
