@@ -25,6 +25,8 @@
 #include <glm/vec3.hpp>
 #include "Apokalypse3DAPI.h"
 
+namespace A3D
+{
 namespace Components
 {
 namespace Scene
@@ -72,5 +74,6 @@ struct APOKALYPSE3DAPI_EXPORT SceneComponents
 	flecs::entity rotate_;
 	flecs::entity translation_;
 };
+} // namespace A3D
 
 #endif // SCENECOMPONENTS_H

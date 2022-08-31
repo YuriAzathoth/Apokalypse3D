@@ -22,13 +22,15 @@
 #include "SceneComponents.h"
 #include "SceneSystems.h"
 
-using namespace Components::Scene;
+using namespace A3D::Components::Scene;
 
+namespace A3D
+{
 SceneSystems::SceneSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<SceneSystems>::id_explicit(world);
+	flecs::_::cpp_type<SceneSystems>::id_explicit(world, 0, false);
 	world.import<SceneComponents>();
-	world.module<SceneSystems>("Systems::Scene");
+	world.module<SceneSystems>("A3D::Systems::Scene");
 
 	move_ = world.system<Translation, const Move>("Move")
 		.multi_threaded()
@@ -56,3 +58,4 @@ SceneSystems::SceneSystems(flecs::world& world)
 			node.model = parent.model * translation.model;
 		});
 }
+} // namespace A3D
