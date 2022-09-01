@@ -48,6 +48,20 @@ static constexpr const unsigned CHUNK_PRIMITIVE = BX_MAKEFOURCC('P', 'R', 'I', 0
 
 namespace A3D
 {
+static void destroy_mesh(MeshGroup& group)
+{
+	bgfx::destroy(group.vbo);
+	bgfx::destroy(group.ebo);
+}
+
+static void clear_meshes(flecs::entity e)
+{
+	e.world().filter_builder<MeshGroup>()
+		.term<const MeshStorage>().parent()
+		.build()
+		.each(destroy_mesh);
+}
+
 MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 {
 	world.import<AsyncLoaderComponents>();
@@ -237,14 +251,10 @@ MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 		cached.remove(pair);
 	});
 
-	destroy_ = world.observer<MeshGroup>("Destroy")
-			   .term<const MeshStorage>().parent()
+	clear_ = world.observer<>("Clear")
+			   .term<const MeshStorage>()
 			   .event(flecs::UnSet)
-			   .each([](flecs::entity e, MeshGroup& group)
-	{
-		bgfx::destroy(group.vbo);
-		bgfx::destroy(group.ebo);
-	});
+			   .each(clear_meshes);
 
 	world.entity().add<MeshStorage>();
 }

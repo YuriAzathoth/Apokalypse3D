@@ -30,10 +30,10 @@ struct APOKALYPSE3DAPI_EXPORT MeshCacheSystems
 
 	flecs::query<> meshes_;
 
+	flecs::entity clear_;
 	flecs::entity findFile_;
 	flecs::entity loadFile_;
 	flecs::entity setAfterLoad_;
-	flecs::entity destroy_;
 };
 } // namespace A3D
 

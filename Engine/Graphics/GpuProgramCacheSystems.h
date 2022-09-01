@@ -37,8 +37,8 @@ struct APOKALYPSE3DAPI_EXPORT GpuProgramCacheSystems
 	flecs::entity linkProgram_;
 	flecs::entity setProgramAfterLoad_;
 	flecs::entity setShaderAfterLoad_;
-	flecs::entity destroyProgram_;
-	flecs::entity destroyShader_;
+	flecs::entity clearPrograms_;
+	flecs::entity clearShaders_;
 };
 } // namespace A3D
 

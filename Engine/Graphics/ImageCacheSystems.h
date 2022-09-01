@@ -30,10 +30,10 @@ struct APOKALYPSE3DAPI_EXPORT ImageCacheSystems
 
 	flecs::query<> textures_;
 
+	flecs::entity clear_;
 	flecs::entity findTexture_;
 	flecs::entity loadFile_;
 	flecs::entity setAfterLoad_;
-	flecs::entity destroy_;
 };
 } // namespace A3D
 
