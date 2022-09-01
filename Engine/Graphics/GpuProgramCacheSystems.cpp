@@ -69,6 +69,32 @@ inline static const char* get_shader_path()
 	}
 }
 
+static void destroy_program(Program& program)
+{
+	bgfx::destroy(program.handle);
+}
+
+static void destroy_shader(Shader& shader)
+{
+	bgfx::destroy(shader.handle);
+}
+
+static void clear_programs(flecs::entity e)
+{
+	e.world().filter_builder<Program>()
+		.term<const ProgramStorage>().parent()
+		.build()
+		.each(destroy_program);
+}
+
+static void clear_shaders(flecs::entity e)
+{
+	e.world().filter_builder<Shader>()
+		.term<const ShaderStorage>().parent()
+		.build()
+		.each(destroy_shader);
+}
+
 GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 {
 	world.import<AsyncLoaderComponents>();
@@ -230,11 +256,11 @@ GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 	});
 
 	setProgramAfterLoad_ = world.system<const Program>("SetProgramAfterLoad")
-						.term<const SetAfterLoad>(flecs::Wildcard)
-						.term<const LinkProgram>().not_()
-						.kind(flecs::OnStore)
-						.multi_threaded()
-						.each([](flecs::iter& it, size_t i, const Program& program)
+						   .term<const SetAfterLoad>(flecs::Wildcard)
+						   .term<const LinkProgram>().not_()
+						   .kind(flecs::OnStore)
+						   .multi_threaded()
+						   .each([](flecs::iter& it, size_t i, const Program& program)
 	{
 		LogTrace("Setting program after loaded...");
 		flecs::id pair = it.pair(2);
@@ -244,21 +270,15 @@ GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 		cached.remove(pair);
 	});
 
-	destroyProgram_ = world.observer<Program>("DestroyGpuProgram")
-					.term<const ProgramStorage>().parent()
-					.event(flecs::UnSet)
-					.each([](flecs::entity e, Program& program)
-	{
-		bgfx::destroy(program.handle);
-	});
+	clearPrograms_ = world.observer<>("DestroyPrograms")
+					  .term<const ProgramStorage>()
+					  .event(flecs::UnSet)
+					  .each(clear_programs);
 
-	destroyShader_ = world.observer<Shader>("DestroyShader")
-					.term<const ProgramStorage>().parent()
-					.event(flecs::UnSet)
-					.each([](flecs::entity e, Shader& shader)
-	{
-		bgfx::destroy(shader.handle);
-	});
+	clearShaders_ = world.observer<>("DestroyShader")
+					 .term<const ProgramStorage>()
+					 .event(flecs::UnSet)
+					 .each(clear_shaders);
 
 	world.entity().add<ProgramStorage>();
 	world.entity().add<ShaderStorage>();

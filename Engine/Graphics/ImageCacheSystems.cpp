@@ -37,13 +37,26 @@ using namespace A3D::Components::Cache::Image;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Str;
 
+namespace A3D
+{
+static void destroy_texture(Texture& texture)
+{
+	bgfx::destroy(texture.handle);
+}
+
+static void clear_textures(flecs::entity e)
+{
+	e.world().filter_builder<Texture>()
+		.term<const TextureStorage>().parent()
+		.build()
+		.each(destroy_texture);
+}
+
 static void release_image(void*, void* userData)
 {
 	bimg::imageFree((bimg::ImageContainer*)userData);
 }
 
-namespace A3D
-{
 ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 {
 	world.import<AsyncLoaderComponents>();
@@ -174,13 +187,10 @@ ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 		cached.remove(pair);
 	});
 
-	destroy_ = world.observer<Texture>("Destroy")
-			   .term<const TextureStorage>().parent()
-			   .event(flecs::UnSet)
-			   .each([](Texture& texture)
-	{
-		bgfx::destroy(texture.handle);
-	});
+	clear_ = world.observer<>("Clear")
+			   .term<const TextureStorage>()
+			   .event(flecs::OnRemove)
+			   .each(clear_textures);
 
 	world.entity().add<TextureStorage>();
 }
