@@ -13,7 +13,7 @@ MACRO (COMPILE_MODEL IN DIR_OUT)
 			--packuv 1
 			--tangent
 			-c
-		DEPENDS ${in} geometryc
+		DEPENDS ${IN} geometryc
 		WORKING_DIRECTORY ${DIRECTORY}
 		VERBATIM
 	)
@@ -77,7 +77,7 @@ MACRO (COMPILE_TEXTURE IN DIR_OUT)
 			-o "${OUT}"
 			-m
 			${ARGS}
-		DEPENDS ${in} texturec
+		DEPENDS ${IN} texturec
 		WORKING_DIRECTORY ${DIRECTORY}
 		VERBATIM
 	)
