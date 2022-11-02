@@ -1,0 +1,4 @@
+<pass>
+	<shader vertex="ColorUnlit.vert" fragment="ColorUnlit.frag">
+	<parameter name="v_color" type="vec3"/>
+</pass>
