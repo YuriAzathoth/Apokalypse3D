@@ -1,0 +1,3 @@
+<technique>
+	<pass type="base" name="BaseColorUnlit.xml" />
+</technique>
