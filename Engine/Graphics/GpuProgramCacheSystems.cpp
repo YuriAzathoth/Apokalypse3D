@@ -109,7 +109,7 @@ GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 
 	findProgram_ = world.system<const GetProgram>("FindProgram")
 				   .kind(flecs::OnLoad)
-				   .no_staging()
+				   .no_readonly()
 				   .each([this](flecs::entity e, const GetProgram& program)
 	{
 		// ProgramName = VertexName|FragmentName
@@ -138,7 +138,7 @@ GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 
 	findShader_ = world.system<const GetShader>("FindShader")
 				  .kind(flecs::PostLoad)
-				  .no_staging()
+				  .no_readonly()
 				  .each([this](flecs::entity e, const GetShader& file)
 	{
 		LogDebug("Finding compiled shader \"%s\"...", file.filename.value);

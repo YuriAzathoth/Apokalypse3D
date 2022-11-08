@@ -71,7 +71,7 @@ ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 
 	findTexture_ = world.system<const GetTexture>("FindTexture")
 					.kind(flecs::PostLoad)
-					.no_staging()
+					.no_readonly()
 					.each([this](flecs::entity e, const GetTexture& file)
 	{
 		LogTrace("Finding texture \"%s\"...", file.filename.value);
