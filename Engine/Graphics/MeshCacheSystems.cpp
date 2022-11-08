@@ -75,7 +75,7 @@ MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 
 	findFile_ = world.system<const GetModelFile>("FindFile")
 				.kind(flecs::OnLoad)
-				.no_staging()
+				.no_readonly()
 				.each([this](flecs::entity e, const GetModelFile& file)
 	{
 		flecs::world w = e.world();
