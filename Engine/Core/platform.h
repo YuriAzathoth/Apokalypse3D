@@ -25,6 +25,8 @@ extern "C" {
 
 void a3d_compare_and_swap();
 
+void a3d_mkdir(const char* path);
+
 #ifdef __WIN32__
 void a3d_disable_high_dpi();
 #else // __WIN32__
