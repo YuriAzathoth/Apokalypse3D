@@ -16,11 +16,33 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <alloca.h>
+#include <stdio.h>
+#include <string.h>
+//#include <time.h>
 #include "platform.h"
 
-#if __WIN32__
+#ifdef _WIN32
 #include <windows.h>
-#endif // __WIN32__
+#define MKDIR(DIR) CreateDirectory(DIR, NULL)
+#else // _WIN32
+#include <sys/stat.h>
+#define MKDIR(DIR) mkdir(DIR, 0774)
+#endif // _WIN32
+
+void a3d_mkdir(const char* path)
+{
+	char* buffer = (char*)alloca(strlen(path) + 1);
+	strcpy(buffer, path);
+	for (char* end = buffer; *end; ++end)
+		if (*end == '/')
+		{
+			*end = '\0';
+			MKDIR(buffer);
+			*end = '/';
+		}
+	MKDIR(buffer);
+}
 
 #if __WIN32__
 void a3d_disable_high_dpi()

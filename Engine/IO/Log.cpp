@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "Filesystem.h"
+#include "Core/platform.h"
 #include "Log.h"
 
 #define BUFFER_SIZE 1024
@@ -47,7 +47,7 @@ inline static const char* GetDate() noexcept
 
 bool LogInit(const char* filepath, LogLevel logLevel) noexcept
 {
-	MkDir(filepath);
+	a3d_mkdir(filepath);
 	char filename[BUFFER_SIZE];
 	sprintf(filename, "%s/%s.log", filepath, GetDate());
 	for (char* chr = filename; *chr; ++chr)
