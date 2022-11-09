@@ -23,8 +23,6 @@
 extern "C" {
 #endif // __cplusplus
 
-void a3d_compare_and_swap();
-
 void a3d_mkdir(const char* path);
 
 #ifdef __WIN32__
