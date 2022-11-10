@@ -19,11 +19,27 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include <stdint.h>
+#include "Apokalypse3DAPI.h"
+
+typedef uintptr_t a3d_thread_t;
+typedef uintptr_t a3d_mutex_t;
+
+typedef int(*a3d_thread_func)(void*);
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-void a3d_mkdir(const char* path);
+APOKALYPSE3DAPI_EXPORT void a3d_mkdir(const char* path);
+
+APOKALYPSE3DAPI_EXPORT a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param);
+APOKALYPSE3DAPI_EXPORT void a3d_thread_destroy(a3d_thread_t thread);
+
+APOKALYPSE3DAPI_EXPORT a3d_mutex_t a3d_mutex_create();
+APOKALYPSE3DAPI_EXPORT void a3d_mutex_destroy(a3d_mutex_t mutex);
+APOKALYPSE3DAPI_EXPORT void a3d_mutex_lock(a3d_mutex_t mutex);
+APOKALYPSE3DAPI_EXPORT void a3d_mutex_unlock(a3d_mutex_t mutex);
 
 #ifdef __WIN32__
 void a3d_disable_high_dpi();

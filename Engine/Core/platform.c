@@ -17,9 +17,9 @@
 */
 
 #include <alloca.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-//#include <time.h>
 #include "platform.h"
 
 #ifdef _WIN32
@@ -75,4 +75,46 @@ void a3d_disable_high_dpi()
 		FreeLibrary(userDll);
 	}
 }
+
+a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param)
+{
+	HANDLE* thread = (HANDLE*)malloc(sizeof(HANDLE));
+	*thread = CreateThread(NULL,
+						   0,
+						   (LPTHREAD_START_ROUTINE)func,
+						   param,
+						   0,
+						   NULL);
+	return (a3d_thread_t)thread;
+}
+
+void a3d_thread_destroy(a3d_thread_t thread)
+{
+	CloseHandle(*((HANDLE*)thread));
+	free((void*)thread);
+}
+
+a3d_mutex_t a3d_mutex_create()
+{
+	CRITICAL_SECTION* mutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection(mutex);
+	return(a3d_mutex_t)mutex;
+}
+
+void a3d_mutex_destroy(a3d_mutex_t mutex)
+{
+	DeleteCriticalSection((CRITICAL_SECTION*)mutex);
+	free((void*)mutex);
+}
+
+void a3d_mutex_lock(a3d_mutex_t mutex)
+{
+	EnterCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
+void a3d_mutex_unlock(a3d_mutex_t mutex)
+{
+	LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
 #endif // __WIN32__
