@@ -19,13 +19,14 @@
 #ifndef ASYNC_QUEUE_H
 #define ASYNC_QUEUE_H
 
-#include <bx/mutex.h>
+#include <flecs.h>
 #include "circular_queue.h"
+#include "Core/platform.h"
 
 typedef struct a3d_async_queue
 {
 	a3d_circular_queue_t queue;
-	bx::Mutex sync;
+	a3d_mutex_t sync;
 } a3d_async_queue_t;
 
 #ifdef __cplusplus
@@ -35,54 +36,55 @@ extern "C" {
 inline static void a3d_async_queue_new(a3d_async_queue_t* queue, unsigned item_size)
 {
 	a3d_circular_queue_new(&queue->queue, item_size);
+	queue->sync = a3d_mutex_create();
 }
 
 inline static void a3d_async_queue_free(a3d_async_queue_t* queue)
 {
 	a3d_circular_queue_free(&queue->queue);
+	a3d_mutex_destroy(queue->sync);
 }
 
 inline static int a3d_async_queue_empty(a3d_async_queue_t* queue)
 {
-	queue->sync.lock();
-	int res = a3d_circular_queue_empty(&queue->queue);
-	queue->sync.unlock();
+	a3d_mutex_lock(queue->sync);
+	const int res = a3d_circular_queue_empty(&queue->queue);
+	a3d_mutex_unlock(queue->sync);
 	return res;
 }
 
 inline static void a3d_async_queue_reserve(a3d_async_queue_t* queue, unsigned count)
 {
-	queue->sync.lock();
+	a3d_mutex_lock(queue->sync);
 	a3d_circular_queue_reserve(&queue->queue, count);
-	queue->sync.unlock();
+	a3d_mutex_unlock(queue->sync);
 }
 
 inline static void a3d_async_queue_push(a3d_async_queue_t* queue, const void* src)
 {
-	queue->sync.lock();
+	a3d_mutex_lock(queue->sync);
 	memcpy(a3d_circular_queue_push(&queue->queue), src, queue->queue.item_size);
-	queue->sync.unlock();
+	a3d_mutex_unlock(queue->sync);
 }
 
 inline static int a3d_async_queue_pop(a3d_async_queue_t* queue, void* dst)
 {
-	queue->sync.lock();
-	int ret = !a3d_circular_queue_empty(&queue->queue);
+	a3d_mutex_lock(queue->sync);
+	const int ret = !a3d_circular_queue_empty(&queue->queue);
 	if (ret)
 	{
 		void* ptr = a3d_circular_queue_pop(&queue->queue);
 		memcpy(dst, ptr, queue->queue.item_size);
 	}
-//		memcpy(dst, a3d_circular_queue_pop(&queue->queue), queue->queue.item_size);
-	queue->sync.unlock();
+	a3d_mutex_unlock(queue->sync);
 	return ret;
 }
 
 inline static void a3d_async_queue_clear(a3d_async_queue_t* queue)
 {
-	queue->sync.lock();
+	a3d_mutex_lock(queue->sync);
 	a3d_circular_queue_clear(&queue->queue);
-	queue->sync.unlock();
+	a3d_mutex_unlock(queue->sync);
 }
 
 #ifdef __cplusplus
