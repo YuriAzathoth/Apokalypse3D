@@ -48,24 +48,30 @@ void a3d_mkdir(const char* path)
 a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param)
 {
 #ifdef __WIN32__
-	HANDLE* hThread = (HANDLE*)malloc(sizeof(HANDLE));
-	*hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, param, 0, NULL);
-	return (a3d_thread_t)hThread;
+	HANDLE* pThread = (HANDLE*)malloc(sizeof(HANDLE));
+	*pThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, param, 0, NULL);
 #else // __WIN32__
-	pthread_t* thread = (pthread_t*)malloc(sizeof(pthread_t));
-	*thread = pthread_create(thread, NULL, func, param);
-	return (a3d_thread_t)thread;
+	pthread_t* pThread = (pthread_t*)malloc(sizeof(pthread_t));
+	*pThread = pthread_create(pThread, NULL, func, param);
 #endif // __WIN32__
+	return (a3d_thread_t)pThread;
 }
 
 void a3d_thread_destroy(a3d_thread_t thread)
 {
+	a3d_thread_wait(thread);
 #ifdef __WIN32__
-	HANDLE* hThread = (HANDLE*)thread;
-	TerminateThread(hThread, 0);
-	CloseHandle(*hThread);
-	free(hThread);
+	CloseHandle(*(HANDLE*)thread);
+#endif // __WIN32__
+	free((void*)thread);
+}
+
+void a3d_thread_wait(a3d_thread_t thread)
+{
+#ifdef __WIN32__
+	WaitForSingleObject(*(HANDLE*)thread, INFINITE);
 #else // __WIN32__
+    pthread_join(*(pthread_t*)thread, NULL);
 #endif // __WIN32__
 }
 

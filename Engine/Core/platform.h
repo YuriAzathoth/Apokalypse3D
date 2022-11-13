@@ -35,6 +35,7 @@ APOKALYPSE3DAPI_EXPORT void a3d_mkdir(const char* path);
 
 APOKALYPSE3DAPI_EXPORT a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param);
 APOKALYPSE3DAPI_EXPORT void a3d_thread_destroy(a3d_thread_t thread);
+APOKALYPSE3DAPI_EXPORT void a3d_thread_wait(a3d_thread_t thread);
 
 APOKALYPSE3DAPI_EXPORT a3d_mutex_t a3d_mutex_create();
 APOKALYPSE3DAPI_EXPORT void a3d_mutex_destroy(a3d_mutex_t mutex);
