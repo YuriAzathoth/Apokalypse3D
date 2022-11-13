@@ -26,6 +26,7 @@
 #include <windows.h>
 #define MKDIR(DIR) CreateDirectory(DIR, NULL)
 #else // _WIN32
+#include <pthread.h>
 #include <sys/stat.h>
 #define MKDIR(DIR) mkdir(DIR, 0774)
 #endif // _WIN32
@@ -42,6 +43,91 @@ void a3d_mkdir(const char* path)
 			*end = '/';
 		}
 	MKDIR(buffer);
+}
+
+a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param)
+{
+#ifdef __WIN32__
+	HANDLE* hThread = (HANDLE*)malloc(sizeof(HANDLE));
+	*hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, param, 0, NULL);
+	return (a3d_thread_t)hThread;
+#else // __WIN32__
+	pthread_t* thread = (pthread_t*)malloc(sizeof(pthread_t));
+	*thread = pthread_create(thread, NULL, func, param);
+	return (a3d_thread_t)thread;
+#endif // __WIN32__
+}
+
+void a3d_thread_destroy(a3d_thread_t thread)
+{
+#ifdef __WIN32__
+	HANDLE* hThread = (HANDLE*)thread;
+	TerminateThread(hThread, 0);
+	CloseHandle(*hThread);
+	free(hThread);
+#else // __WIN32__
+#endif // __WIN32__
+}
+
+a3d_mutex_t a3d_mutex_create()
+{
+#ifdef __WIN32__
+	CRITICAL_SECTION* pMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection(pMutex);
+	return (a3d_mutex_t)pMutex;
+#else // __WIN32__
+	pthread_mutex_t* pMutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+	pthread_mutex_init(pMutex, NULL);
+	return (a3d_mutex_t)pMutex;
+#endif // __WIN32__
+}
+
+void a3d_mutex_destroy(a3d_mutex_t mutex)
+{
+#ifdef __WIN32__
+	CRITICAL_SECTION* pMutex = (CRITICAL_SECTION*)mutex;
+	DeleteCriticalSection(pMutex);
+	free(pMutex);
+#else // __WIN32__
+	pthread_mutex_t* pMutex = (pthread_mutex_t*)mutex;
+	pthread_mutex_destroy(pMutex);
+	free(pMutex);
+#endif // __WIN32__
+}
+
+void a3d_mutex_lock(a3d_mutex_t mutex)
+{
+#ifdef __WIN32__
+	EnterCriticalSection((CRITICAL_SECTION*)mutex);
+#else // __WIN32__
+	pthread_mutex_lock((pthread_mutex_t*)mutex);
+#endif // __WIN32__
+}
+
+void a3d_mutex_unlock(a3d_mutex_t mutex)
+{
+#ifdef __WIN32__
+	LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+#else // __WIN32__
+	pthread_mutex_unlock((pthread_mutex_t*)mutex);
+#endif // __WIN32__
+}
+
+void a3d_sleep(int sec, int nanosec)
+{
+#ifdef __WIN32__
+	LARGE_INTEGER sleep_time;
+	sleep_time.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
+	HANDLE hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+	SetWaitableTimer(hTimer, &sleep_time, 0, NULL, NULL, FALSE);
+	WaitForSingleObject(hTimer, INFINITE);
+    CloseHandle(hTimer);
+#else // __WIN32__
+	struct timespec sleep_time;
+    sleep_time.tv_sec = sec;
+    sleep_time.tv_nsec = nsec;
+    nanosleep(&sleep_time, NULL);
+#endif // __WIN32__
 }
 
 #if __WIN32__
@@ -75,46 +161,4 @@ void a3d_disable_high_dpi()
 		FreeLibrary(userDll);
 	}
 }
-
-a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param)
-{
-	HANDLE* thread = (HANDLE*)malloc(sizeof(HANDLE));
-	*thread = CreateThread(NULL,
-						   0,
-						   (LPTHREAD_START_ROUTINE)func,
-						   param,
-						   0,
-						   NULL);
-	return (a3d_thread_t)thread;
-}
-
-void a3d_thread_destroy(a3d_thread_t thread)
-{
-	CloseHandle(*((HANDLE*)thread));
-	free((void*)thread);
-}
-
-a3d_mutex_t a3d_mutex_create()
-{
-	CRITICAL_SECTION* mutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection(mutex);
-	return(a3d_mutex_t)mutex;
-}
-
-void a3d_mutex_destroy(a3d_mutex_t mutex)
-{
-	DeleteCriticalSection((CRITICAL_SECTION*)mutex);
-	free((void*)mutex);
-}
-
-void a3d_mutex_lock(a3d_mutex_t mutex)
-{
-	EnterCriticalSection((CRITICAL_SECTION*)mutex);
-}
-
-void a3d_mutex_unlock(a3d_mutex_t mutex)
-{
-	LeaveCriticalSection((CRITICAL_SECTION*)mutex);
-}
-
 #endif // __WIN32__

@@ -41,6 +41,8 @@ APOKALYPSE3DAPI_EXPORT void a3d_mutex_destroy(a3d_mutex_t mutex);
 APOKALYPSE3DAPI_EXPORT void a3d_mutex_lock(a3d_mutex_t mutex);
 APOKALYPSE3DAPI_EXPORT void a3d_mutex_unlock(a3d_mutex_t mutex);
 
+APOKALYPSE3DAPI_EXPORT void a3d_sleep(int sec, int nanosec);
+
 #ifdef __WIN32__
 void a3d_disable_high_dpi();
 #else // __WIN32__
