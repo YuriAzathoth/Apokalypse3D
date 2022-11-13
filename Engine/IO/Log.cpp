@@ -16,7 +16,6 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <mutex>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +26,7 @@
 
 #define BUFFER_SIZE 1024
 
-static std::mutex g_mutex;
+static a3d_mutex_t g_mutex = 0;
 
 static char* g_filename = nullptr;
 #ifdef NDEBUG
@@ -64,7 +63,11 @@ void LogDestroy() noexcept
 	free(g_filename);
 }
 
+#ifdef NDEBUG
 void LogWrite(LogLevel level, const char* format, ...) noexcept
+#else // NDEBUG
+void LogWrite(LogLevel level, const char* file, unsigned line, const char* format, ...) noexcept
+#endif // NDEBUG
 {
 	if (level < g_level)
 		return;
@@ -92,12 +95,22 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 	}
 	char message[BUFFER_SIZE];
 	char* messagetop = message + sprintf(message, "%s: %s: ", GetDate(), type);
+
+#ifndef NDEBUG
+	messagetop += sprintf(messagetop, "FILE %s LINE %u: ", file, line);
+#endif // NDEBUG
+
 	va_list args;
 	va_start(args, format);
 	messagetop += vsprintf(messagetop, format, args);
 	va_end(args);
-	sprintf(messagetop, "\n", GetDate(), type);
-	std::lock_guard mutex(g_mutex);
+
+	sprintf(messagetop, "\n");
+
+	if (g_mutex == 0)
+		g_mutex = a3d_mutex_create();
+
+	a3d_mutex_lock(g_mutex);
 	printf(message);
 	if (g_filename)
 	{
@@ -105,4 +118,5 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 		fprintf(file, message);
 		fclose(file);
 	}
+	a3d_mutex_unlock(g_mutex);
 }
