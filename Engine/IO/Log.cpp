@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <bx/debug.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,4 +120,9 @@ void LogWrite(LogLevel level, const char* file, unsigned line, const char* forma
 		fclose(file);
 	}
 	a3d_mutex_unlock(g_mutex);
+
+#ifndef NDEBUG
+	if (level >= LOG_LEVEL_ERROR)
+		bx::debugBreak();
+#endif // NDEBUG
 }
