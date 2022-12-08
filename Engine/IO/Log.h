@@ -21,7 +21,8 @@
 
 #include "Apokalypse3DAPI.h"
 
-#define LOG_LEVEL_TRACE_ENABLED
+// DEBUG:
+//#define LOG_LEVEL_TRACE_ENABLED
 
 #ifdef NDEBUG
 #define LogError(FORMAT, ...) LogWrite(LOG_LEVEL_ERROR, FORMAT, ##__VA_ARGS__)
