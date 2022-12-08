@@ -16,33 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTCOMPONENTS_H
-#define EVENTCOMPONENTS_H
+#ifndef GRAPHICS_PLATFORM_H
+#define GRAPHICS_PLATFORM_H
 
-#include <flecs.h>
-#include <SDL3/SDL_events.h>
-#include "Apokalypse3DAPI.h"
+struct SDL_SysWMinfo;
+struct SDL_Window;
+namespace bgfx { struct PlatformData; }
 
-namespace A3D
-{
-namespace Components
-{
-namespace Event
-{
-struct EventProcessor
-{
-	SDL_Event event;
-};
-} // namespace Event
-} // namespace Components
+bool bind_bgfx_to_sdl(bgfx::PlatformData& pd, SDL_Window* window) noexcept;
 
-struct APOKALYPSE3DAPI_EXPORT EventComponents
-{
-	EventComponents(flecs::world& world);
-
-	flecs::entity eventProcessor_;
-};
-} // namespace A3D
-
-
-#endif // EVENTCOMPONENTS_H
+#endif // GRAPHICS_PLATFORM_H

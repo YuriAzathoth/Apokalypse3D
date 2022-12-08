@@ -16,10 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
 #include <bgfx/bgfx.h>
+#include <SDL3/SDL.h>
 #include "IO/Log.h"
+#include "GraphicsPlatform.h"
 #include "RendererComponents.h"
 #include "RendererSystems.h"
 #include "WindowComponents.h"
@@ -38,7 +38,6 @@ inline static const char* get_gpu_vendor_name(uint16_t vendor_id) noexcept;
 inline static const char* get_renderer_type_name(RendererType type) noexcept;
 inline static bool normalize_config(RendererConfig& config, SDL_Window* window, const flecs::world& world) noexcept;
 inline static unsigned parse_flags(const RendererConfig& config) noexcept;
-inline static bool parse_window_platform_data(bgfx::PlatformData& pd, SDL_Window* window) noexcept;
 inline static RendererType renderer_type_from_bgfx(bgfx::RendererType::Enum type) noexcept;
 inline static bgfx::RendererType::Enum renderer_type_to_bgfx(RendererType type) noexcept;
 inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept;
@@ -72,8 +71,9 @@ bool create_renderer(flecs::world& world, Components::Renderer::RendererConfig& 
 	bgfxInfo.debug = BGFX_DEBUG_NONE;
 	bgfxInfo.allocator = &g_alloc;
 	bgfxInfo.callback = &g_callback;
-	if (!parse_window_platform_data(bgfxInfo.platformData, window->window))
+	if (!bind_bgfx_to_sdl(bgfxInfo.platformData, window->window))
 	{
+		LogError("Could not attach bgfx renderer to SDL: %s.", SDL_GetError());
 		world.quit();
 		return false;
 	}
@@ -180,35 +180,6 @@ inline static unsigned parse_flags(const RendererConfig& config) noexcept
 	default:; // No flags on no MSAA
 	}
 	return flags;
-}
-
-inline static bool parse_window_platform_data(bgfx::PlatformData& pd, SDL_Window* window) noexcept
-{
-#if !BX_PLATFORM_EMSCRIPTEN
-	SDL_SysWMinfo wmi;
-	SDL_VERSION(&wmi.version);
-	if (!SDL_GetWindowWMInfo(window, &wmi))
-	{
-		LogError("Failed to get SDL Window SysWMInfo: %s.", SDL_GetError());
-		return false;
-	}
-#endif // !BX_PLATFORM_EMSCRIPTEN
-
-#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-	pd.ndt = wmi.info.x11.display;
-	pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
-#elif BX_PLATFORM_OSX
-	pd.nwh = wmi.info.cocoa.window;
-#elif BX_PLATFORM_WINDOWS
-	pd.nwh = wmi.info.win.window;
-#elif BX_PLATFORM_STEAMLINK
-	pd.ndt = wmi.info.vivantnode.display;
-	pd.nwh = wmi.info.vivantnode.window;
-#elif BX_PLATFORM_EMSCRIPTEN
-	pd.nwh = (void*)"#canvas";
-#endif // BX_PLATFORM_
-
-	return true;
 }
 
 inline static RendererType renderer_type_from_bgfx(bgfx::RendererType::Enum type) noexcept
