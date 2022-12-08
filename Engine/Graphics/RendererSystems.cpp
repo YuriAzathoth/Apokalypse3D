@@ -19,14 +19,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 #include <bgfx/bgfx.h>
-#include "Core/SystemComponents.h"
 #include "IO/Log.h"
 #include "RendererComponents.h"
 #include "RendererSystems.h"
 #include "WindowComponents.h"
 
 using namespace A3D::Components::Renderer;
-using namespace A3D::Components::System;
 using namespace A3D::Components::Window;
 
 namespace A3D
@@ -284,38 +282,32 @@ inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noe
 	return true;
 }
 
-static void frame_begin(flecs::world& world)
+static void frame_begin(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame begin start...");
 
-	const Renderer* renderer = world.get<Renderer>();
-	const RendererConfig* config = world.get<RendererConfig>();
-
-	bgfx::setViewRect(0, 0, 0, (uint16_t)config->width, (uint16_t)config->height);
+	bgfx::setViewRect(0, 0, 0, (uint16_t)config.width, (uint16_t)config.height);
 	bgfx::touch(0);
 
-	const unsigned threads = config->multi_threaded ? world.get_threads() : 1;
+	const unsigned threads = config.multi_threaded ? e.world().get_threads() : 1;
 	for (unsigned i = 0; i < threads; ++i)
 	{
-		renderer->threads[i].queue = bgfx::begin(i != 0);
-		ecs_assert_var(renderer->threads[i].queue, -1, "Renderer threads' queue is NULL.");
+		renderer.threads[i].queue = bgfx::begin(i != 0);
+		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
 	}
 
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end(flecs::world& world)
+static void frame_end(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame end start...");
 
-	const Renderer* renderer = world.get<Renderer>();
-	const RendererConfig* config = world.get<RendererConfig>();
-
-	const unsigned threads = config->multi_threaded ? world.get_threads() : 1;
+	const unsigned threads = config.multi_threaded ? e.world().get_threads() : 1;
 	for (unsigned i = 0; i < threads; ++i)
 	{
-		ecs_assert_var(renderer->threads[i].queue, -1, "Renderer threads' queue is NULL.");
-		bgfx::end(renderer->threads[i].queue);
+		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
+		bgfx::end(renderer.threads[i].queue);
 	}
 
 	bgfx::frame();
@@ -356,7 +348,12 @@ RendererSystems::RendererSystems(flecs::world& world)
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
-	frameBegin_ = world.entity().set<System>({frame_begin}).add<Singleton>().add(Phase::Begin);
-	frameEnd_ = world.entity().set<System>({frame_end}).add<Singleton>().add(Phase::Submit);
+	frameBegin_ = world.system<const Renderer, const RendererConfig>()
+				  .kind(flecs::PostUpdate)
+				  .each(frame_begin);
+
+	frameEnd_ = world.system<const Renderer, const RendererConfig>()
+				.kind(flecs::OnStore)
+				.each(frame_end);
 }
 } // namespace A3D
