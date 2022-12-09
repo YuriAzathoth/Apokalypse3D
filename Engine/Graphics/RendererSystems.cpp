@@ -220,7 +220,7 @@ inline static bgfx::RendererType::Enum renderer_type_to_bgfx(RendererType type) 
 	}
 }
 
-inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept
+static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept
 {
 	const bgfx::Caps* caps = bgfx::getCaps();
 	if (caps == nullptr)
@@ -272,15 +272,15 @@ static void frame_end_st(flecs::iter&, size_t)
 	LogTrace("Render frame end finish...");
 }
 
-static void frame_begin_mt(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
+static void frame_begin_mt(flecs::iter& it, size_t, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame begin start...");
 
 	bgfx::setViewRect(0, 0, 0, (uint16_t)config.width, (uint16_t)config.height);
 	bgfx::touch(0);
 
-	const unsigned threads = config.multi_threaded ? e.world().get_threads() : 1;
-	for (unsigned i = 0; i < threads; ++i)
+	flecs::world w = it.world();
+	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
 		renderer.threads[i].queue = bgfx::begin(i != 0);
 		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
@@ -289,12 +289,12 @@ static void frame_begin_mt(flecs::entity e, const Renderer& renderer, const Rend
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end_mt(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
+static void frame_end_mt(flecs::iter& it, size_t, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame end start...");
 
-	const unsigned threads = config.multi_threaded ? e.world().get_threads() : 1;
-	for (unsigned i = 0; i < threads; ++i)
+	flecs::world w = it.world();
+	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
 		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
 		bgfx::end(renderer.threads[i].queue);
@@ -305,20 +305,20 @@ static void frame_end_mt(flecs::entity e, const Renderer& renderer, const Render
 	LogTrace("Render frame end finish...");
 }
 
-static void update_config(flecs::entity e, const RendererConfig& config)
+static void update_config(flecs::iter& it, size_t, const RendererConfig& config)
 {
-	flecs::world w = e.world();
+	flecs::world w = it.world();
+
 	w.set<Aspect>({(float)config.width / (float)config.height});
+
+	if (config.multi_threaded)
+		w.add<MultiThreaded>(); // Switch to multi-threaded
+	else
+		w.remove<MultiThreaded>(); // Switch to single-threaded
+
 	Renderer* renderer = w.get_mut<Renderer>();
 	if (renderer)
-	{
 		renderer->threads.resize(w.get_threads());
-		if (renderer->threads.empty() && config.multi_threaded)
-			w.add<MultiThreaded>(); // Switch to multi-threaded
-		else if (!renderer->threads.empty() && !config.multi_threaded)
-			w.remove<MultiThreaded>(); // Switch to multi-threaded
-		w.modified<Renderer>();
-	}
 }
 
 static void destroy_renderer(Renderer&) { bgfx::shutdown(); }
@@ -338,27 +338,27 @@ RendererSystems::RendererSystems(flecs::world& world)
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
-	frameBeginSingleThreaded_ = world.system<const RendererConfig>()
+	frameBeginSingleThreaded_ = world.system<const RendererConfig>("FrameBeginSingleThreaded")
 								.term<const Renderer>().singleton()
 								.term<const MultiThreaded>().not_().singleton()
 								.kind(flecs::PostUpdate)
 								.each(frame_begin_st);
 
-	frameEndSingleThreaded_ = world.system<>()
+	frameEndSingleThreaded_ = world.system<>("FrameEndSingleThreaded")
 							  .term<const Renderer>().singleton()
 							  .term<const RendererConfig>().singleton()
 							  .term<const MultiThreaded>().not_().singleton()
 							  .kind(flecs::OnStore)
 							  .each(frame_end_st);
 
-	frameBeginMultiThreaded_ = world.system<const Renderer, const RendererConfig>()
+	frameBeginMultiThreaded_ = world.system<const Renderer, const RendererConfig>("FramBeginMultiThreaded")
 							   .arg(1).singleton()
 							   .arg(2).singleton()
 							   .term<const MultiThreaded>().singleton()
 							   .kind(flecs::PostUpdate)
 							   .each(frame_begin_mt);
 
-	frameEndMultiThreaded_ = world.system<const Renderer, const RendererConfig>()
+	frameEndMultiThreaded_ = world.system<const Renderer, const RendererConfig>("FramEndMultiThreaded")
 							 .arg(1).singleton()
 							 .arg(2).singleton()
 							 .term<const MultiThreaded>().singleton()

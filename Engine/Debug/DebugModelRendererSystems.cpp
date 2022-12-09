@@ -43,6 +43,10 @@ static void draw_geometry_st(flecs::entity e, const Node& node, const Program& p
 		const MeshGroup* mesh = c.get<MeshGroup>();
 		if (mesh)
 		{
+			LogTrace("Drawing static mesh...");
+			Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
+			Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
+			Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
 			bgfx::setTransform(glm::value_ptr(node.model));
 			bgfx::setVertexBuffer(0, mesh->vbo);
 			bgfx::setIndexBuffer(mesh->ebo);
@@ -60,7 +64,7 @@ static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& p
 	const Renderer* renderer = w.get<Renderer>();
 
 	const unsigned thread_id = w.get_stage_id();
-	ecs_assert(thread_id <= renderer->threads.size(), -1, "Render called from thread \"%d\" that not registered.");
+	Assert(thread_id <= renderer->threads.size(), "Render called from thread \"%d\" that not registered.");
 
 	bgfx::Encoder* queue = renderer->threads[thread_id].queue;
 	if (queue)
@@ -70,9 +74,9 @@ static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& p
 			if (mesh)
 			{
 				LogTrace("Drawing static mesh...");
-				ecs_assert_var(bgfx::isValid(mesh->vbo), -1, "Failed to render node: invalid vertex buffer handle.");
-				ecs_assert_var(bgfx::isValid(mesh->ebo), -1, "Failed to render node: invalid elements buffer handle.");
-				ecs_assert_var(bgfx::isValid(program.handle), -1, "Failed to render node: invalid GPU program handle.");
+				Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
+				Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
+				Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
 				queue->setTransform(glm::value_ptr(node.model));
 				queue->setVertexBuffer(0, mesh->vbo);
 				queue->setIndexBuffer(mesh->ebo);
