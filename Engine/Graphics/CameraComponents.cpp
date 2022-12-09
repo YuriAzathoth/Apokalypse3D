@@ -24,7 +24,6 @@ namespace A3D
 {
 CameraComponents::CameraComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<CameraComponents>::id_explicit(world, 0, false);
 	world.module<CameraComponents>("A3D::Components::Camera");
 
 	eye_ = world.component<Eye>();

@@ -24,7 +24,6 @@ namespace A3D
 {
 GpuProgramCacheComponents::GpuProgramCacheComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<GpuProgramCacheComponents>::id_explicit(world, 0, false);
 	world.module<GpuProgramCacheComponents>("A3D::Components::Cache::GpuProgram");
 
 	linkProgram_ = world.component<LinkProgram>().add(flecs::Tag);

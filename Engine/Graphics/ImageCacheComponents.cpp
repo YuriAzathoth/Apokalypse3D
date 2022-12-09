@@ -24,7 +24,6 @@ namespace A3D
 {
 ImageCacheComponents::ImageCacheComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<ImageCacheComponents>::id_explicit(world, 0, false);
 	world.module<ImageCacheComponents>("A3D::Components::Cache::Image");
 
 	loadTextureFile_ = world.component<LoadTextureFile>().add(flecs::Tag);

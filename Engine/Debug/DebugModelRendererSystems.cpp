@@ -88,14 +88,12 @@ static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& p
 
 DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 {
+	world.module<DebugModelRendererSystems>("A3D::Systems::DebugRenderer");
 	world.import<GpuProgramComponents>();
 	world.import<GeometryComponents>();
 	world.import<MeshComponents>();
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();
-
-	flecs::_::cpp_type<DebugModelRendererSystems>::id_explicit(world, 0, false);
-	world.module<DebugModelRendererSystems>("A3D::Systems::DebugRenderer");
 
 	drawSingleThreaded_ = world.system<const Node, const Program>("DrawSingleThread")
 		.term<const Model>()

@@ -24,7 +24,6 @@ namespace A3D
 {
 MeshCacheComponents::MeshCacheComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<MeshCacheComponents>::id_explicit(world, 0, false);
 	world.module<MeshCacheComponents>("A3D::Components::Cache::Mesh");
 
 	meshStorage_ = world.component<MeshStorage>().add(flecs::Tag);

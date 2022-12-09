@@ -33,7 +33,6 @@ namespace A3D
 {
 RendererComponents::RendererComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<RendererComponents>::id_explicit(world, 0, false);
 	world.module<RendererComponents>("A3D::Components::Renderer");
 
 	msaaLevel_ = world.component<MsaaLevel>()

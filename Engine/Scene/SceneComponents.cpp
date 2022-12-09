@@ -24,7 +24,6 @@ namespace A3D
 {
 SceneComponents::SceneComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<SceneComponents>::id_explicit(world, 0, false);
 	world.module<SceneComponents>("A3D::Components::Scene");
 
 	look_ = world.component<Look>();

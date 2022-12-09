@@ -25,10 +25,8 @@ namespace A3D
 {
 MeshComponents::MeshComponents(flecs::world& world)
 {
-	world.import<StringComponents>();
-
-	flecs::_::cpp_type<MeshComponents>::id_explicit(world, 0, false);
 	world.module<MeshComponents>("A3D::Components::Mesh");
+	world.import<StringComponents>();
 
 	getModelFile_ = world.component<GetModelFile>().member<StringView>("filename");
 	meshGroup_ = world.component<MeshGroup>();
