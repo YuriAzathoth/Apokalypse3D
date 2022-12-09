@@ -59,13 +59,11 @@ static void release_image(void*, void* userData)
 
 ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 {
+	world.module<ImageCacheSystems>("A3D::Systems::Cache::Image");
 	world.import<AsyncLoaderComponents>();
 	world.import<ImageCacheComponents>();
 	world.import<ImageComponents>();
 	world.import<RendererComponents>();
-
-	flecs::_::cpp_type<ImageCacheSystems>::id_explicit(world, 0, false);
-	world.module<ImageCacheSystems>("A3D::Systems::Cache::Image");
 
 	textures_ = world.query_builder<>().term<const TextureStorage>().build();
 

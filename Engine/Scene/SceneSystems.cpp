@@ -28,9 +28,8 @@ namespace A3D
 {
 SceneSystems::SceneSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<SceneSystems>::id_explicit(world, 0, false);
-	world.import<SceneComponents>();
 	world.module<SceneSystems>("A3D::Systems::Scene");
+	world.import<SceneComponents>();
 
 	move_ = world.system<Translation, const Move>("Move")
 		.multi_threaded()

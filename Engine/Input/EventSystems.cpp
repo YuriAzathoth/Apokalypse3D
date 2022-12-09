@@ -39,9 +39,8 @@ namespace A3D
 {
 EventSystems::EventSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<EventSystems>::id_explicit(world, 0, false);
-	world.import<EventComponents>();
 	world.module<EventSystems>("A3D::Systems::Event");
+	world.import<EventComponents>();
 
 	world.add<EventProcessor>();
 

@@ -325,7 +325,6 @@ static void destroy_renderer(Renderer&) { bgfx::shutdown(); }
 
 RendererSystems::RendererSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<RendererSystems>::id_explicit(world, 0, false);
 	world.module<RendererSystems>("A3D::Systems::Renderer");
 
 	updateConfig_ = world.observer<const RendererConfig>("UpdateConfig")

@@ -34,12 +34,10 @@ namespace A3D
 {
 CameraSystems::CameraSystems(flecs::world& world)
 {
+	world.module<CameraSystems>("A3D::Systems::Camera");
 	world.import<CameraComponents>();
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();
-
-	flecs::_::cpp_type<CameraSystems>::id_explicit(world, 0, false);
-	world.module<CameraSystems>("A3D::Systems::Camera");
 
 	view_ = world.system<Eye, const Node>("View")
 			.kind(flecs::OnStore)

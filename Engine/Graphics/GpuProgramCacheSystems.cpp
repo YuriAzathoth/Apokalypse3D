@@ -97,12 +97,10 @@ static void clear_shaders(flecs::entity e)
 
 GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 {
+	world.module<GpuProgramCacheSystems>("A3D::Systems::Cache::GpuProgram");
 	world.import<AsyncLoaderComponents>();
 	world.import<GpuProgramCacheComponents>();
 	world.import<GpuProgramComponents>();
-
-	flecs::_::cpp_type<GpuProgramCacheSystems>::id_explicit(world, 0, false);
-	world.module<GpuProgramCacheSystems>("A3D::Systems::Cache::GpuProgram");
 
 	programs_ = world.query_builder<>().term<const ProgramStorage>().build();
 	shaders_ = world.query_builder<>().term<const ShaderStorage>().build();

@@ -24,7 +24,6 @@ namespace A3D
 {
 GeometryComponents::GeometryComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<GeometryComponents>::id_explicit(world, 0, false);
 	world.module<GeometryComponents>("A3D::Components::Geometry");
 
 	aabb_ = world.component<Aabb>();
