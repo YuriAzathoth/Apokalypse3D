@@ -253,7 +253,26 @@ inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noe
 	return true;
 }
 
-static void frame_begin(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
+static void frame_begin_st(const RendererConfig& config)
+{
+	LogTrace("Render frame begin start...");
+
+	bgfx::setViewRect(0, 0, 0, (uint16_t)config.width, (uint16_t)config.height);
+	bgfx::touch(0);
+
+	LogTrace("Render frame begin finish...");
+}
+
+static void frame_end_st(flecs::iter&, size_t)
+{
+	LogTrace("Render frame end start...");
+
+	bgfx::frame();
+
+	LogTrace("Render frame end finish...");
+}
+
+static void frame_begin_mt(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame begin start...");
 
@@ -270,7 +289,7 @@ static void frame_begin(flecs::entity e, const Renderer& renderer, const Rendere
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
+static void frame_end_mt(flecs::entity e, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame end start...");
 
@@ -319,12 +338,31 @@ RendererSystems::RendererSystems(flecs::world& world)
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
-	frameBegin_ = world.system<const Renderer, const RendererConfig>()
-				  .kind(flecs::PostUpdate)
-				  .each(frame_begin);
+	frameBeginSingleThreaded_ = world.system<const RendererConfig>()
+								.term<const Renderer>().singleton()
+								.term<const MultiThreaded>().not_().singleton()
+								.kind(flecs::PostUpdate)
+								.each(frame_begin_st);
 
-	frameEnd_ = world.system<const Renderer, const RendererConfig>()
-				.kind(flecs::OnStore)
-				.each(frame_end);
+	frameEndSingleThreaded_ = world.system<>()
+							  .term<const Renderer>().singleton()
+							  .term<const RendererConfig>().singleton()
+							  .term<const MultiThreaded>().not_().singleton()
+							  .kind(flecs::OnStore)
+							  .each(frame_end_st);
+
+	frameBeginMultiThreaded_ = world.system<const Renderer, const RendererConfig>()
+							   .arg(1).singleton()
+							   .arg(2).singleton()
+							   .term<const MultiThreaded>().singleton()
+							   .kind(flecs::PostUpdate)
+							   .each(frame_begin_mt);
+
+	frameEndMultiThreaded_ = world.system<const Renderer, const RendererConfig>()
+							 .arg(1).singleton()
+							 .arg(2).singleton()
+							 .term<const MultiThreaded>().singleton()
+							 .kind(flecs::OnStore)
+							 .each(frame_end_mt);
 }
 } // namespace A3D
