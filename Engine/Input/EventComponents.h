@@ -29,7 +29,7 @@ namespace Components
 {
 namespace Event
 {
-struct EventProcessor
+struct Process
 {
 	SDL_Event event;
 };
@@ -40,7 +40,7 @@ struct APOKALYPSE3DAPI_EXPORT EventComponents
 {
 	EventComponents(flecs::world& world);
 
-	flecs::entity eventProcessor_;
+	flecs::entity process_;
 };
 } // namespace A3D
 

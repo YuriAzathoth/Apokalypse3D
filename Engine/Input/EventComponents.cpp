@@ -24,7 +24,5 @@ A3D::EventComponents::EventComponents(flecs::world& world)
 {
 	world.module<EventComponents>("A3D::Components::Event");
 
-	eventProcessor_ = world.component<EventProcessor>();
-
-	world.add<EventProcessor>();
+	process_ = world.component<Process>();
 }
