@@ -35,23 +35,32 @@ using namespace A3D::Components::Scene;
 
 namespace A3D
 {
-static void draw_geometry(flecs::entity e, const Node& node, const Program& program)
+static void draw_geometry_st(flecs::entity e, const Node& node, const Program& program)
+{
+	LogTrace("Drawing model from main thread...");
+	e.children([&node, &program](flecs::entity c)
+	{
+		const MeshGroup* mesh = c.get<MeshGroup>();
+		if (mesh)
+		{
+			bgfx::setTransform(glm::value_ptr(node.model));
+			bgfx::setVertexBuffer(0, mesh->vbo);
+			bgfx::setIndexBuffer(mesh->ebo);
+			bgfx::setState(BGFX_STATE_DEFAULT);
+			bgfx::submit(0, program.handle);
+		}
+	});
+}
+
+static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& program)
 {
 	LogTrace("Drawing model from thread %d...", std::this_thread::get_id());
 
 	flecs::world w = e.world();
 	const Renderer* renderer = w.get<Renderer>();
 
-	unsigned thread_id;
-	if (renderer->threads.size() > 1)
-	{
-		const auto thread_id_tmp = std::this_thread::get_id();
-		thread_id = *reinterpret_cast<const unsigned*>(&thread_id_tmp) - 2;
-		ecs_assert(thread_id <= renderer->threads.size(), -1,
-				   "Render called from thread \"%d\" that not registered.");
-	}
-	else
-		thread_id = 0;
+	const unsigned thread_id = w.get_stage_id();
+	ecs_assert(thread_id <= renderer->threads.size(), -1, "Render called from thread \"%d\" that not registered.");
 
 	bgfx::Encoder* queue = renderer->threads[thread_id].queue;
 	if (queue)
@@ -88,13 +97,13 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 		.term<const Model>()
 		.term<const MultiThreaded>().not_().singleton()
 		.kind(flecs::PreStore)
-		.each(draw_geometry);
+		.each(draw_geometry_st);
 
 	drawMultiThreaded_ = world.system<const Node, const Program>("DrawMultiThread")
 		.term<const Model>()
 		.term<const MultiThreaded>().singleton()
 		.kind(flecs::PreStore)
 		.multi_threaded()
-		.each(draw_geometry);
+		.each(draw_geometry_mt);
 }
 } // namespace A3D
