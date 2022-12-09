@@ -22,10 +22,10 @@
 
 using namespace A3D::Components::Event;
 
-static void poll_events(flecs::entity e, EventProcessor& processor)
+static void poll_events(flecs::entity e, Process& process)
 {
 	LogTrace("SDL events processing begin...");
-	SDL_Event& event = processor.event;
+	SDL_Event& event = process.event;
 	while (SDL_PollEvent(&event))
 		switch (event.type)
 		{
@@ -42,9 +42,9 @@ EventSystems::EventSystems(flecs::world& world)
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
 
-	world.add<EventProcessor>();
+	world.add<Process>();
 
-	pollEvents_ = world.system<EventProcessor>("PollEvents")
+	pollEvents_ = world.system<Process>("PollEvents")
 				  .kind(flecs::OnLoad)
 				  .each(poll_events);
 }
