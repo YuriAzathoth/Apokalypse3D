@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include "IO/Log.h"
 #include "RendererComponents.h"
 
@@ -33,7 +33,6 @@ namespace A3D
 {
 RendererComponents::RendererComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<RendererComponents>::id_explicit(world, 0, false);
 	world.module<RendererComponents>("A3D::Components::Renderer");
 
 	msaaLevel_ = world.component<MsaaLevel>()

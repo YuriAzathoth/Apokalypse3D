@@ -22,10 +22,7 @@ using namespace A3D::Components::Event;
 
 A3D::EventComponents::EventComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<EventComponents>::id_explicit(world, 0, false);
 	world.module<EventComponents>("A3D::Components::Event");
 
-	eventProcessor_ = world.component<EventProcessor>();
-
-	world.add<EventProcessor>();
+	process_ = world.component<Process>();
 }

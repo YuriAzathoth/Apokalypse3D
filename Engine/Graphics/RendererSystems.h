@@ -33,8 +33,10 @@ struct APOKALYPSE3DAPI_EXPORT RendererSystems
 {
 	RendererSystems(flecs::world& world);
 
-	flecs::entity frameBegin_;
-	flecs::entity frameEnd_;
+	flecs::entity frameBeginSingleThreaded_;
+	flecs::entity frameEndSingleThreaded_;
+	flecs::entity frameBeginMultiThreaded_;
+	flecs::entity frameEndMultiThreaded_;
 	flecs::entity unSetRenderer_;
 	flecs::entity updateConfig_;
 };

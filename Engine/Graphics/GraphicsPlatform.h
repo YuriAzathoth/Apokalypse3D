@@ -16,54 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SYSTEMCOMPONENTS_H
-#define SYSTEMCOMPONENTS_H
+#ifndef GRAPHICS_PLATFORM_H
+#define GRAPHICS_PLATFORM_H
 
-#include <flecs.h>
-#include "Apokalypse3DAPI.h"
+struct SDL_SysWMinfo;
+struct SDL_Window;
+namespace bgfx { struct PlatformData; }
 
-namespace A3D
-{
-namespace Components
-{
-namespace System
-{
-using UpdateFunc = void(flecs::world&);
+bool bind_bgfx_to_sdl(bgfx::PlatformData& pd, SDL_Window* window) noexcept;
 
-enum class Phase
-{
-	Begin,
-	Prepare,
-	Submit,
-	End
-};
-
-struct Singletons
-{
-	flecs::query<> begin;
-	flecs::query<> prepare;
-	flecs::query<> submit;
-	flecs::query<> end;
-};
-
-struct System
-{
-	UpdateFunc* func;
-};
-
-struct Singleton {};
-} // namespace System
-} // namespace Components
-
-struct APOKALYPSE3DAPI_EXPORT SystemComponents
-{
-	SystemComponents(flecs::world& world);
-
-	flecs::entity phase_;
-	flecs::entity singleton_;
-	flecs::entity singletons_;
-	flecs::entity system_;
-};
-} // namespace A3D
-
-#endif // SYSTEMCOMPONENTS_H
+#endif // GRAPHICS_PLATFORM_H

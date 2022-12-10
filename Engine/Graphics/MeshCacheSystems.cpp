@@ -64,12 +64,10 @@ static void clear_meshes(flecs::entity e)
 
 MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 {
+	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
 	world.import<AsyncLoaderComponents>();
 	world.import<MeshCacheComponents>();
 	world.import<MeshComponents>();
-
-	flecs::_::cpp_type<MeshCacheSystems>::id_explicit(world, 0, false);
-	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
 
 	meshes_ = world.query_builder<>().term<const MeshStorage>().build();
 

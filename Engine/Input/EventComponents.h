@@ -20,7 +20,7 @@
 #define EVENTCOMPONENTS_H
 
 #include <flecs.h>
-#include <SDL2/SDL_events.h>
+#include <SDL3/SDL_events.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
@@ -29,7 +29,7 @@ namespace Components
 {
 namespace Event
 {
-struct EventProcessor
+struct Process
 {
 	SDL_Event event;
 };
@@ -40,7 +40,7 @@ struct APOKALYPSE3DAPI_EXPORT EventComponents
 {
 	EventComponents(flecs::world& world);
 
-	flecs::entity eventProcessor_;
+	flecs::entity process_;
 };
 } // namespace A3D
 

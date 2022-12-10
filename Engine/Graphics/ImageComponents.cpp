@@ -25,10 +25,8 @@ namespace A3D
 {
 ImageComponents::ImageComponents(flecs::world& world)
 {
-	world.import<StringComponents>();
-
-	flecs::_::cpp_type<ImageComponents>::id_explicit(world, 0, false);
 	world.module<ImageComponents>("A3D::Components::Image");
+	world.import<StringComponents>();
 
 	getTexture_ = world.component<GetTexture>().member<StringView>("filename");
 	texture_ = world.component<Texture>().member<uint16_t>("handle");

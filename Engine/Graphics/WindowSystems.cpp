@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include "IO/Log.h"
 #include "WindowComponents.h"
 #include "WindowSystems.h"
@@ -134,7 +134,6 @@ inline static void select_hightest_resolution(uint8_t display, uint16_t& width, 
 
 WindowSystems::WindowSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<WindowSystems>::id_explicit(world, 0, false);
 	world.module<WindowSystems>("A3D::Systems::Window");
 
 	unSetWindow_ = world.observer<Window>("DestroyWindow")

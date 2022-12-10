@@ -24,7 +24,6 @@ namespace A3D
 {
 StringComponents::StringComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<StringComponents>::id_explicit(world, 0, false);
 	world.module<StringComponents>("A3D::Components::Str");
 	stringView_ = world.component<StringView>().member<const char*>("str");
 }

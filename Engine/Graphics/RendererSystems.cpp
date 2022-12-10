@@ -16,17 +16,15 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
 #include <bgfx/bgfx.h>
-#include "Core/SystemComponents.h"
+#include <SDL3/SDL.h>
 #include "IO/Log.h"
+#include "GraphicsPlatform.h"
 #include "RendererComponents.h"
 #include "RendererSystems.h"
 #include "WindowComponents.h"
 
 using namespace A3D::Components::Renderer;
-using namespace A3D::Components::System;
 using namespace A3D::Components::Window;
 
 namespace A3D
@@ -40,7 +38,6 @@ inline static const char* get_gpu_vendor_name(uint16_t vendor_id) noexcept;
 inline static const char* get_renderer_type_name(RendererType type) noexcept;
 inline static bool normalize_config(RendererConfig& config, SDL_Window* window, const flecs::world& world) noexcept;
 inline static unsigned parse_flags(const RendererConfig& config) noexcept;
-inline static bool parse_window_platform_data(bgfx::PlatformData& pd, SDL_Window* window) noexcept;
 inline static RendererType renderer_type_from_bgfx(bgfx::RendererType::Enum type) noexcept;
 inline static bgfx::RendererType::Enum renderer_type_to_bgfx(RendererType type) noexcept;
 inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept;
@@ -74,8 +71,9 @@ bool create_renderer(flecs::world& world, Components::Renderer::RendererConfig& 
 	bgfxInfo.debug = BGFX_DEBUG_NONE;
 	bgfxInfo.allocator = &g_alloc;
 	bgfxInfo.callback = &g_callback;
-	if (!parse_window_platform_data(bgfxInfo.platformData, window->window))
+	if (!bind_bgfx_to_sdl(bgfxInfo.platformData, window->window))
 	{
+		LogError("Could not attach bgfx renderer to SDL: %s.", SDL_GetError());
 		world.quit();
 		return false;
 	}
@@ -184,35 +182,6 @@ inline static unsigned parse_flags(const RendererConfig& config) noexcept
 	return flags;
 }
 
-inline static bool parse_window_platform_data(bgfx::PlatformData& pd, SDL_Window* window) noexcept
-{
-#if !BX_PLATFORM_EMSCRIPTEN
-	SDL_SysWMinfo wmi;
-	SDL_VERSION(&wmi.version);
-	if (!SDL_GetWindowWMInfo(window, &wmi))
-	{
-		LogError("Failed to get SDL Window SysWMInfo: %s.", SDL_GetError());
-		return false;
-	}
-#endif // !BX_PLATFORM_EMSCRIPTEN
-
-#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-	pd.ndt = wmi.info.x11.display;
-	pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
-#elif BX_PLATFORM_OSX
-	pd.nwh = wmi.info.cocoa.window;
-#elif BX_PLATFORM_WINDOWS
-	pd.nwh = wmi.info.win.window;
-#elif BX_PLATFORM_STEAMLINK
-	pd.ndt = wmi.info.vivantnode.display;
-	pd.nwh = wmi.info.vivantnode.window;
-#elif BX_PLATFORM_EMSCRIPTEN
-	pd.nwh = (void*)"#canvas";
-#endif // BX_PLATFORM_
-
-	return true;
-}
-
 inline static RendererType renderer_type_from_bgfx(bgfx::RendererType::Enum type) noexcept
 {
 	switch (type)
@@ -251,7 +220,7 @@ inline static bgfx::RendererType::Enum renderer_type_to_bgfx(RendererType type) 
 	}
 }
 
-inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept
+static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noexcept
 {
 	const bgfx::Caps* caps = bgfx::getCaps();
 	if (caps == nullptr)
@@ -284,38 +253,51 @@ inline static bool select_best_gpu(uint16_t& device_id, uint16_t& vendor_id) noe
 	return true;
 }
 
-static void frame_begin(flecs::world& world)
+static void frame_begin_st(const RendererConfig& config)
 {
 	LogTrace("Render frame begin start...");
 
-	const Renderer* renderer = world.get<Renderer>();
-	const RendererConfig* config = world.get<RendererConfig>();
-
-	bgfx::setViewRect(0, 0, 0, (uint16_t)config->width, (uint16_t)config->height);
+	bgfx::setViewRect(0, 0, 0, (uint16_t)config.width, (uint16_t)config.height);
 	bgfx::touch(0);
 
-	const unsigned threads = config->multi_threaded ? world.get_threads() : 1;
-	for (unsigned i = 0; i < threads; ++i)
+	LogTrace("Render frame begin finish...");
+}
+
+static void frame_end_st(flecs::iter&, size_t)
+{
+	LogTrace("Render frame end start...");
+
+	bgfx::frame();
+
+	LogTrace("Render frame end finish...");
+}
+
+static void frame_begin_mt(flecs::iter& it, size_t, const Renderer& renderer, const RendererConfig& config)
+{
+	LogTrace("Render frame begin start...");
+
+	bgfx::setViewRect(0, 0, 0, (uint16_t)config.width, (uint16_t)config.height);
+	bgfx::touch(0);
+
+	flecs::world w = it.world();
+	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
-		renderer->threads[i].queue = bgfx::begin(i != 0);
-		ecs_assert_var(renderer->threads[i].queue, -1, "Renderer threads' queue is NULL.");
+		renderer.threads[i].queue = bgfx::begin(i != 0);
+		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
 	}
 
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end(flecs::world& world)
+static void frame_end_mt(flecs::iter& it, size_t, const Renderer& renderer, const RendererConfig& config)
 {
 	LogTrace("Render frame end start...");
 
-	const Renderer* renderer = world.get<Renderer>();
-	const RendererConfig* config = world.get<RendererConfig>();
-
-	const unsigned threads = config->multi_threaded ? world.get_threads() : 1;
-	for (unsigned i = 0; i < threads; ++i)
+	flecs::world w = it.world();
+	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
-		ecs_assert_var(renderer->threads[i].queue, -1, "Renderer threads' queue is NULL.");
-		bgfx::end(renderer->threads[i].queue);
+		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
+		bgfx::end(renderer.threads[i].queue);
 	}
 
 	bgfx::frame();
@@ -323,27 +305,26 @@ static void frame_end(flecs::world& world)
 	LogTrace("Render frame end finish...");
 }
 
-static void update_config(flecs::entity e, const RendererConfig& config)
+static void update_config(flecs::iter& it, size_t, const RendererConfig& config)
 {
-	flecs::world w = e.world();
+	flecs::world w = it.world();
+
 	w.set<Aspect>({(float)config.width / (float)config.height});
+
+	if (config.multi_threaded)
+		w.add<MultiThreaded>(); // Switch to multi-threaded
+	else
+		w.remove<MultiThreaded>(); // Switch to single-threaded
+
 	Renderer* renderer = w.get_mut<Renderer>();
 	if (renderer)
-	{
 		renderer->threads.resize(w.get_threads());
-		if (renderer->threads.empty() && config.multi_threaded)
-			w.add<MultiThreaded>(); // Switch to multi-threaded
-		else if (!renderer->threads.empty() && !config.multi_threaded)
-			w.remove<MultiThreaded>(); // Switch to multi-threaded
-		w.modified<Renderer>();
-	}
 }
 
 static void destroy_renderer(Renderer&) { bgfx::shutdown(); }
 
 RendererSystems::RendererSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<RendererSystems>::id_explicit(world, 0, false);
 	world.module<RendererSystems>("A3D::Systems::Renderer");
 
 	updateConfig_ = world.observer<const RendererConfig>("UpdateConfig")
@@ -356,7 +337,31 @@ RendererSystems::RendererSystems(flecs::world& world)
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
-	frameBegin_ = world.entity().set<System>({frame_begin}).add<Singleton>().add(Phase::Begin);
-	frameEnd_ = world.entity().set<System>({frame_end}).add<Singleton>().add(Phase::Submit);
+	frameBeginSingleThreaded_ = world.system<const RendererConfig>("FrameBeginSingleThreaded")
+								.term<const Renderer>().singleton()
+								.term<const MultiThreaded>().not_().singleton()
+								.kind(flecs::PostUpdate)
+								.each(frame_begin_st);
+
+	frameEndSingleThreaded_ = world.system<>("FrameEndSingleThreaded")
+							  .term<const Renderer>().singleton()
+							  .term<const RendererConfig>().singleton()
+							  .term<const MultiThreaded>().not_().singleton()
+							  .kind(flecs::OnStore)
+							  .each(frame_end_st);
+
+	frameBeginMultiThreaded_ = world.system<const Renderer, const RendererConfig>("FramBeginMultiThreaded")
+							   .arg(1).singleton()
+							   .arg(2).singleton()
+							   .term<const MultiThreaded>().singleton()
+							   .kind(flecs::PostUpdate)
+							   .each(frame_begin_mt);
+
+	frameEndMultiThreaded_ = world.system<const Renderer, const RendererConfig>("FramEndMultiThreaded")
+							 .arg(1).singleton()
+							 .arg(2).singleton()
+							 .term<const MultiThreaded>().singleton()
+							 .kind(flecs::OnStore)
+							 .each(frame_end_mt);
 }
 } // namespace A3D

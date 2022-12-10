@@ -16,36 +16,36 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/SystemComponents.h"
 #include "EventComponents.h"
 #include "EventSystems.h"
 #include "IO/Log.h"
 
 using namespace A3D::Components::Event;
-using namespace A3D::Components::System;
 
-namespace A3D
-{
-static void PollEvents(flecs::world& world)
+static void poll_events(flecs::entity e, Process& process)
 {
 	LogTrace("SDL events processing begin...");
-	SDL_Event& event = world.get_mut<EventProcessor>()->event;
+	SDL_Event& event = process.event;
 	while (SDL_PollEvent(&event))
 		switch (event.type)
 		{
 		case SDL_QUIT:
-			world.quit();
+			e.world().quit();
 		}
 	LogTrace("SDL events processing end...");
 }
 
+namespace A3D
+{
 EventSystems::EventSystems(flecs::world& world)
 {
-	flecs::_::cpp_type<EventSystems>::id_explicit(world, 0, false);
-	world.import<EventComponents>();
 	world.module<EventSystems>("A3D::Systems::Event");
+	world.import<EventComponents>();
 
-	world.add<EventProcessor>();
-	world.entity().set<System>({PollEvents}).add<Singleton>().add(Phase::Begin);
+	world.add<Process>();
+
+	pollEvents_ = world.system<Process>("PollEvents")
+				  .kind(flecs::OnLoad)
+				  .each(poll_events);
 }
 } // namespace A3D

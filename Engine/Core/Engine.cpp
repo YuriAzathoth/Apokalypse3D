@@ -21,17 +21,9 @@
 #include <thread>
 #include "Engine.h"
 #include "IO/Log.h"
-#include "SystemComponents.h"
-
-using namespace A3D::Components::System;
 
 namespace A3D
 {
-static void run_singletons(flecs::iter& it)
-{
-	flecs::world w = it.world();
-	it.field<System>(1)->func(w);
-}
 
 Engine::Engine(const EngineInfo& init)
 {
@@ -99,22 +91,16 @@ Engine::Engine(const EngineInfo& init)
 	LogDebug("Initializing Core...");
 
 	world.set_threads(threads_num);
-	world.import<SystemComponents>();
 
 	LogInfo("Core has been initialized.");
 }
 
 int Engine::Run()
 {
-	const Singletons* singletons = world.get<Singletons>();
 	while (!world.should_quit())
 	{
 		LogTrace("FRAME BEGIN.");
-		singletons->begin.iter(run_singletons);
 		world.progress();
-		singletons->prepare.iter(run_singletons);
-		singletons->submit.iter(run_singletons);
-		singletons->end.iter(run_singletons);
 		LogTrace("FRAME END.");
 	}
 	return 0;

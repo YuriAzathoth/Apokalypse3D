@@ -25,12 +25,10 @@ namespace A3D
 {
 GpuProgramComponents::GpuProgramComponents(flecs::world& world)
 {
+	world.module<GpuProgramComponents>("A3D::Components::GpuProgram");
 	world.import<StringComponents>();
 
-	flecs::_::cpp_type<GpuProgramComponents>::id_explicit(world, 0, false);
-	world.module<GpuProgramComponents>("A3D::Components::GpuProgram");
-
-	getProgram_ = world.component<GetProgram>();//.member<StringView>("vertex").member<StringView>("fragment");
+	getProgram_ = world.component<GetProgram>().member<StringView>("vertex").member<StringView>("fragment");
 	getShader_ = world.component<GetShader>().member<StringView>("filename");
 	program_ = world.component<Program>().member<uint16_t>("handle");
 	shader_ = world.component<Shader>().member<uint16_t>("handle");

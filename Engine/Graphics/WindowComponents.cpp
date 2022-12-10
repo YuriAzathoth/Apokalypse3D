@@ -24,7 +24,6 @@ namespace A3D
 {
 WindowComponents::WindowComponents(flecs::world& world)
 {
-	flecs::_::cpp_type<WindowComponents>::id_explicit(world, 0, false);
 	world.module<WindowComponents>("A3D::Components::Window");
 
 	video_ = world.component<Video>().add(flecs::Tag);
