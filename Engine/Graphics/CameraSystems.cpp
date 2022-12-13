@@ -49,11 +49,12 @@ CameraSystems::CameraSystems(flecs::world& world)
 		glm::vec3 skew;
 		glm::vec4 perspective;
 		glm::decompose(node.model, scale, rotation, position, skew, perspective);
-		const glm::vec3 front_vec(0.0f, 0.0f, -1.0f);
-		const glm::vec3 front = position + (rotation * front_vec);
-		const glm::quat front_to_up = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		const glm::vec3 up = front_to_up * front;
-		eye.view = glm::lookAt(front, position, up);
+		const glm::vec3 FRONT_VEC(0.0f, 0.0f, -1.0f);
+		const glm::vec3 UP_VEC(0.0f, 1.0f, 0.0f);
+		const glm::vec3 front = rotation * FRONT_VEC;
+		const glm::vec3 up = rotation * UP_VEC;
+		const glm::vec3 target = position + front;
+		eye.view = glm::lookAt(target, position, up);
 	});
 
 	perspective_ = world.system<Eye, const Perspective, const Aspect>("Perspective")
