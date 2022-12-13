@@ -17,10 +17,8 @@
 */
 
 
-#include <bgfx/bgfx.h>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/glm.hpp>
-#include <thread>
 #include "Core/Engine.h"
 #include "Debug/DebugModelRendererSystems.h"
 #include "Graphics/CameraComponents.h"
@@ -57,11 +55,11 @@ void CreateBoxes(flecs::entity parent,
 				 glm::mat4 transform = glm::mat4{1.0f})
 {
 	flecs::entity cube = parent.world().entity().child_of(parent)
-		.add<Scene::Node>()
-		.set<Scene::Translation>({transform})
-		.set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
-		.set<Mesh::GetModelFile>({model})
-		.set<GpuProgram::GetProgram>({vertex, fragment});
+						 .add<Scene::Node>()
+						 .set<Scene::Translation>({transform})
+	.set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
+	.set<Mesh::GetModelFile>({model})
+	.set<GpuProgram::GetProgram>({vertex, fragment});
 
 	if (levels > 1)
 	{
@@ -129,6 +127,91 @@ int main()
 	constexpr const char VERTEX_SHADER[] = "white_solid.vert";
 	constexpr const char FRAGMENT_SHADER[] = "white_solid.frag";
 	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 1.0f, 8, 4);
+
+	const float look_sens = 0.1f;
+	const float move_sens = 100.0f;
+	float dpitch = 0.0f;
+	float dyaw = 0.0f;
+	float dx = 0.0f;
+	float dy = 0.0f;
+	float dz = 0.0f;
+
+	world.observer<Event::Process>()
+	.event<Event::MouseMove>()
+	.each([&dpitch, &dyaw, look_sens](flecs::iter& it, size_t i, Event::Process&)
+	{
+		const Event::MouseMove* arg = it.param<Event::MouseMove>();
+		dpitch = (float)arg->dy * look_sens;
+		dyaw = (float)arg->dx * look_sens;
+	});
+
+	world.observer<Event::Process>()
+	.event<Event::KeyDown>()
+	.each([&dx, &dy, &dz, move_sens](flecs::iter& it, size_t i, Event::Process&)
+	{
+		const Event::KeyDown* arg = it.param<Event::KeyDown>();
+		if (arg->code == SDL_SCANCODE_W)
+			dz += move_sens;
+		else if (arg->code == SDL_SCANCODE_S)
+			dz -= move_sens;
+		else if (arg->code == SDL_SCANCODE_A)
+			dx -= move_sens;
+		else if (arg->code == SDL_SCANCODE_D)
+			dx += move_sens;
+		else if (arg->code == SDL_SCANCODE_SPACE)
+			dy += move_sens;
+		else if (arg->code == SDL_SCANCODE_LCTRL)
+			dy -= move_sens;
+	});
+
+	world.observer<Event::Process>()
+	.event<Event::KeyUp>()
+	.each([&dx, &dy, &dz, move_sens](flecs::iter& it, size_t i, Event::Process&)
+	{
+		Event::KeyDown* arg = it.param<Event::KeyDown>();
+		if (arg->code == SDL_SCANCODE_W)
+			dz -= move_sens;
+		else if (arg->code == SDL_SCANCODE_S)
+			dz += move_sens;
+		else if (arg->code == SDL_SCANCODE_A)
+			dx += move_sens;
+		else if (arg->code == SDL_SCANCODE_D)
+			dx -= move_sens;
+		else if (arg->code == SDL_SCANCODE_SPACE)
+			dy -= move_sens;
+		else if (arg->code == SDL_SCANCODE_LCTRL)
+			dy += move_sens;
+	});
+
+	world.system<Scene::Translation>()
+	.term<const Camera::Eye>()
+	.kind(flecs::OnUpdate)
+	.multi_threaded()
+	.each([&dpitch, &dyaw, &dx, &dy, &dz](flecs::entity e, Scene::Translation& translation)
+	{
+		glm::quat pitch = glm::angleAxis(dpitch * e.delta_time(), glm::vec3{-1.0f, 0.0f, 0.0f});
+		glm::quat yaw = glm::angleAxis(dyaw * e.delta_time(), glm::vec3{0.0f, 1.0f, 0.0f});
+		glm::quat rot = pitch * yaw;
+		translation.model *= glm::toMat4(rot);
+
+		glm::vec3 move(dx, dy, dz);
+		move *= e.delta_time();
+		glm::translate(translation.model, move);
+
+		e.modified<Scene::Translation>();
+	});
+
+	world.system<>()
+	.term<const Event::Process>()
+	.kind(flecs::PostUpdate)
+	.each([&dpitch, &dyaw, &dx, &dy, &dz](flecs::entity)
+	{
+		dpitch = 0.0f;
+		dyaw = 0.0f;
+		dx = 0.0f;
+		dy = 0.0f;
+		dz = 0.0f;
+	});
 
 	engine.Run();
 

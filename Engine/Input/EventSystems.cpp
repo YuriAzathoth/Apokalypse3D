@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <SDL3/SDL.h>
 #include "EventComponents.h"
 #include "EventSystems.h"
 #include "IO/Log.h"
@@ -25,12 +26,61 @@ using namespace A3D::Components::Event;
 static void poll_events(flecs::entity e, Process& process)
 {
 	LogTrace("SDL events processing begin...");
-	SDL_Event& event = process.event;
-	while (SDL_PollEvent(&event))
-		switch (event.type)
+	flecs::world w = e.world();
+	while (SDL_PollEvent(&process.event))
+		switch (process.event.type)
 		{
+		case SDL_KEYDOWN:
+			w.event<KeyDown>()
+				.id<Process>()
+				.entity(e)
+				.ctx(KeyDown{static_cast<unsigned>(process.event.key.keysym.scancode)})
+				.emit();
+			break;
+		case SDL_KEYUP:
+			w.event<KeyUp>()
+				.id<Process>()
+				.entity(e)
+				.ctx(KeyUp{static_cast<unsigned>(process.event.key.keysym.scancode)})
+				.emit();
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			w.event<MouseButtonDown>()
+				.id<Process>()
+				.entity(e)
+				.ctx(MouseButtonDown{process.event.button.button})
+				.emit();
+			break;
+		case SDL_MOUSEBUTTONUP:
+			w.event<MouseButtonDown>()
+				.id<Process>()
+				.entity(e)
+				.ctx(MouseButtonDown{process.event.button.button})
+				.emit();
+			break;
+		case SDL_MOUSEMOTION:
+			w.event<MouseMove>()
+				.id<Process>()
+				.entity(e)
+				.ctx(MouseMove
+				{
+					process.event.motion.x,
+					process.event.motion.y,
+					process.event.motion.xrel,
+					process.event.motion.yrel
+				})
+				.emit();
+			break;
+		case SDL_MOUSEWHEEL:
+			w.event<MouseWheel>()
+				.id<Process>()
+				.entity(e)
+				.ctx(MouseWheel{process.event.wheel.y})
+				.emit();
+			break;
 		case SDL_QUIT:
-			e.world().quit();
+			w.quit();
+			break;
 		}
 	LogTrace("SDL events processing end...");
 }
@@ -42,10 +92,28 @@ EventSystems::EventSystems(flecs::world& world)
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
 
-	world.add<Process>();
+	onAddProcess_ = world.observer<Process>("Init")
+					.event(flecs::OnAdd)
+					.each([](Process&)
+	{
+		LogInfo("Initializing SDL events...");
+		SDL_InitSubSystem(SDL_INIT_EVENTS);
+		LogInfo("SDL events has been initialized...");
+	});
+
+	onRemoveProcess_ = world.observer<Process>("Destroy")
+					   .event(flecs::OnRemove)
+					   .each([](Process&)
+	{
+		SDL_QuitSubSystem(SDL_INIT_EVENTS);
+		LogInfo("SDL events shutdowned...");
+	});
 
 	pollEvents_ = world.system<Process>("PollEvents")
 				  .kind(flecs::OnLoad)
+				  .no_readonly()
 				  .each(poll_events);
+
+	world.add<Process>();
 }
 } // namespace A3D
