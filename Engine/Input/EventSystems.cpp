@@ -109,7 +109,7 @@ EventSystems::EventSystems(flecs::world& world)
 					   .each([](Process&)
 	{
 		SDL_QuitSubSystem(SDL_INIT_EVENTS);
-		LogInfo("SDL events shutdowned...");
+		LogInfo("SDL events shutdowned.");
 	});
 
 	pollEvents_ = world.system<Process>("PollEvents")
