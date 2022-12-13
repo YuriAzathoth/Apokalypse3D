@@ -16,13 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "InputComponents.h"
+#include "RawInputComponents.h"
 
-using namespace A3D::Components::Input;
+using namespace A3D::Components::RawInput;
 
-A3D::InputComponents::InputComponents(flecs::world& world)
+A3D::RawInputComponents::RawInputComponents(flecs::world& world)
 {
-	world.module<InputComponents>("A3D::Components::Input");
+	world.module<RawInputComponents>("A3D::Components::RawInput");
 
 	keyDown_ = world.component<KeyDown>().member<unsigned>("sym");
 	keyUp_ = world.component<KeyUp>().member<unsigned>("sym");

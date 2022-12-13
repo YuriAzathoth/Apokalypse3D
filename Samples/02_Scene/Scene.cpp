@@ -38,7 +38,7 @@
 #include "Graphics/WindowSystems.h"
 #include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
-#include "Input/InputComponents.h"
+#include "Input/RawInputComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -58,9 +58,9 @@ void CreateBoxes(flecs::entity parent,
 	flecs::entity cube = parent.world().entity().child_of(parent)
 						 .add<Scene::Node>()
 						 .set<Scene::Translation>({transform})
-	.set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
-	.set<Mesh::GetModelFile>({model})
-	.set<GpuProgram::GetProgram>({vertex, fragment});
+						 .set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
+						 .set<Mesh::GetModelFile>({model})
+						 .set<GpuProgram::GetProgram>({vertex, fragment});
 
 	if (levels > 1)
 	{
@@ -136,19 +136,19 @@ int main()
 	glm::vec3 move(0.0f);
 
 	world.observer<Event::Process>()
-		.event<Input::MouseMove>()
+		.event<RawInput::MouseMove>()
 		.each([&dpitch, &dyaw, look_sens](flecs::iter& it, size_t i, Event::Process&)
 	{
-		const Input::MouseMove* arg = it.param<Input::MouseMove>();
+		const RawInput::MouseMove* arg = it.param<RawInput::MouseMove>();
 		dpitch = (float)arg->dy * look_sens;
 		dyaw = (float)arg->dx * -look_sens;
 	});
 
 	world.observer<Event::Process>()
-		.event<Input::KeyDown>()
+		.event<RawInput::KeyDown>()
 		.each([&move](flecs::iter& it, size_t i, Event::Process&)
 	{
-		const Input::KeyDown* arg = it.param<Input::KeyDown>();
+		const RawInput::KeyDown* arg = it.param<RawInput::KeyDown>();
 		if (arg->code == SDL_SCANCODE_W)
 			move.z = 1.0f;
 		else if (arg->code == SDL_SCANCODE_S)
@@ -164,10 +164,10 @@ int main()
 	});
 
 	world.observer<Event::Process>()
-		.event<Input::KeyUp>()
+		.event<RawInput::KeyUp>()
 		.each([&move](flecs::iter& it, size_t i, Event::Process&)
 	{
-		Input::KeyDown* arg = it.param<Input::KeyDown>();
+		RawInput::KeyDown* arg = it.param<RawInput::KeyDown>();
 		if (arg->code == SDL_SCANCODE_W || arg->code == SDL_SCANCODE_S)
 			move.z = 0.0f;
 		else if (arg->code == SDL_SCANCODE_A || arg->code == SDL_SCANCODE_D)

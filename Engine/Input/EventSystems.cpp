@@ -19,11 +19,11 @@
 #include <SDL3/SDL.h>
 #include "EventComponents.h"
 #include "EventSystems.h"
-#include "InputComponents.h"
 #include "IO/Log.h"
+#include "RawInputComponents.h"
 
 using namespace A3D::Components::Event;
-using namespace A3D::Components::Input;
+using namespace A3D::Components::RawInput;
 
 static void poll_events(flecs::entity e, Process& process)
 {
@@ -93,7 +93,7 @@ EventSystems::EventSystems(flecs::world& world)
 {
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
-	world.import<InputComponents>();
+	world.import<RawInputComponents>();
 
 	onAddProcess_ = world.observer<Process>("Init")
 					.event(flecs::OnAdd)

@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef INPUTCOMPONENTS_H
-#define INPUTCOMPONENTS_H
+#ifndef RAWINPUTCOMPONENTS_H
+#define RAWINPUTCOMPONENTS_H
 
 #include <flecs.h>
 #include <SDL3/SDL_scancode.h>
@@ -27,7 +27,7 @@ namespace A3D
 {
 namespace Components
 {
-namespace Input
+namespace RawInput
 {
 struct KeyDown
 {
@@ -61,12 +61,12 @@ struct MouseWheel
 {
 	int dist;
 };
-} // namespace Input
+} // namespace RawInput
 } // namespace Components
 
-struct APOKALYPSE3DAPI_EXPORT InputComponents
+struct APOKALYPSE3DAPI_EXPORT RawInputComponents
 {
-	InputComponents(flecs::world& world);
+	RawInputComponents(flecs::world& world);
 
 	flecs::entity keyDown_;
 	flecs::entity keyUp_;
@@ -79,4 +79,4 @@ struct APOKALYPSE3DAPI_EXPORT InputComponents
 } // namespace A3D
 
 
-#endif // INPUTCOMPONENTS_H
+#endif // RAWINPUTCOMPONENTS_H
