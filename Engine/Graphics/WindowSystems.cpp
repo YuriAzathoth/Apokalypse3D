@@ -64,18 +64,20 @@ bool create_window(flecs::world& world, Components::Window::WindowConfig& config
 										  config.width,
 										  config.height,
 										  parse_flags(config));
-	if (window != nullptr)
+	if (!window)
 	{
-		LogInfo("SDL Window has been initialized.");
-		world.set<Window>({window});
-		return true;
-	}
-	else
-	{
-		LogError("Failed to create SDL window: %s", SDL_GetError());
+		LogError("Failed to create SDL window: %s.", SDL_GetError());
 		world.quit();
 		return false;
 	}
+
+	if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
+		SDL_SetWindowGrab(window, SDL_TRUE);
+
+	world.set<Window>({window});
+	LogInfo("SDL Window has been initialized.");
+
+	return true;
 }
 
 static void destroy_video(Video)
