@@ -38,6 +38,7 @@
 #include "Graphics/WindowSystems.h"
 #include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
+#include "Input/InputComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -120,7 +121,7 @@ int main()
 						   .add<Scene::Node>()
 						   .set<Scene::Translation>({glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -50.0f})})
 						   .add<Camera::Eye>()
-						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 100.0f})
+						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 1000.0f})
 						   .add<Camera::Viewport>();
 
 	constexpr const char MODEL[] = "../Data/Models/Box.mdl";
@@ -128,89 +129,80 @@ int main()
 	constexpr const char FRAGMENT_SHADER[] = "white_solid.frag";
 	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 1.0f, 8, 4);
 
-	const float look_sens = 0.1f;
-	const float move_sens = 100.0f;
+	const float look_sens = 1.0f;
+	const float move_sens = 50.0f;
 	float dpitch = 0.0f;
 	float dyaw = 0.0f;
-	float dx = 0.0f;
-	float dy = 0.0f;
-	float dz = 0.0f;
+	glm::vec3 move(0.0f);
 
 	world.observer<Event::Process>()
-	.event<Event::MouseMove>()
-	.each([&dpitch, &dyaw, look_sens](flecs::iter& it, size_t i, Event::Process&)
+		.event<Input::MouseMove>()
+		.each([&dpitch, &dyaw, look_sens](flecs::iter& it, size_t i, Event::Process&)
 	{
-		const Event::MouseMove* arg = it.param<Event::MouseMove>();
+		const Input::MouseMove* arg = it.param<Input::MouseMove>();
 		dpitch = (float)arg->dy * look_sens;
-		dyaw = (float)arg->dx * look_sens;
+		dyaw = (float)arg->dx * -look_sens;
 	});
 
 	world.observer<Event::Process>()
-	.event<Event::KeyDown>()
-	.each([&dx, &dy, &dz, move_sens](flecs::iter& it, size_t i, Event::Process&)
+		.event<Input::KeyDown>()
+		.each([&move](flecs::iter& it, size_t i, Event::Process&)
 	{
-		const Event::KeyDown* arg = it.param<Event::KeyDown>();
+		const Input::KeyDown* arg = it.param<Input::KeyDown>();
 		if (arg->code == SDL_SCANCODE_W)
-			dz += move_sens;
+			move.z = 1.0f;
 		else if (arg->code == SDL_SCANCODE_S)
-			dz -= move_sens;
+			move.z = -1.0f;
 		else if (arg->code == SDL_SCANCODE_A)
-			dx -= move_sens;
+			move.x = 1.0f;
 		else if (arg->code == SDL_SCANCODE_D)
-			dx += move_sens;
+			move.x = -1.0f;
 		else if (arg->code == SDL_SCANCODE_SPACE)
-			dy += move_sens;
+			move.y = 1.0f;
 		else if (arg->code == SDL_SCANCODE_LCTRL)
-			dy -= move_sens;
+			move.y = -1.0f;
 	});
 
 	world.observer<Event::Process>()
-	.event<Event::KeyUp>()
-	.each([&dx, &dy, &dz, move_sens](flecs::iter& it, size_t i, Event::Process&)
+		.event<Input::KeyUp>()
+		.each([&move](flecs::iter& it, size_t i, Event::Process&)
 	{
-		Event::KeyDown* arg = it.param<Event::KeyDown>();
-		if (arg->code == SDL_SCANCODE_W)
-			dz -= move_sens;
-		else if (arg->code == SDL_SCANCODE_S)
-			dz += move_sens;
-		else if (arg->code == SDL_SCANCODE_A)
-			dx += move_sens;
-		else if (arg->code == SDL_SCANCODE_D)
-			dx -= move_sens;
-		else if (arg->code == SDL_SCANCODE_SPACE)
-			dy -= move_sens;
-		else if (arg->code == SDL_SCANCODE_LCTRL)
-			dy += move_sens;
+		Input::KeyDown* arg = it.param<Input::KeyDown>();
+		if (arg->code == SDL_SCANCODE_W || arg->code == SDL_SCANCODE_S)
+			move.z = 0.0f;
+		else if (arg->code == SDL_SCANCODE_A || arg->code == SDL_SCANCODE_D)
+			move.x = 0.0f;
+		else if (arg->code == SDL_SCANCODE_SPACE || arg->code == SDL_SCANCODE_LCTRL)
+			move.y = 0.0f;
 	});
 
 	world.system<Scene::Translation>()
-	.term<const Camera::Eye>()
-	.kind(flecs::OnUpdate)
-	.multi_threaded()
-	.each([&dpitch, &dyaw, &dx, &dy, &dz](flecs::entity e, Scene::Translation& translation)
+		.term<const Camera::Eye>()
+		.kind(flecs::OnUpdate)
+		.multi_threaded()
+		.each([&dpitch, &dyaw, &move, move_sens](flecs::entity e, Scene::Translation& translation)
 	{
-		glm::quat pitch = glm::angleAxis(dpitch * e.delta_time(), glm::vec3{-1.0f, 0.0f, 0.0f});
+		if (move.x || move.y || move.z)
+		{
+			move = glm::normalize(move) * move_sens;
+			translation.model = glm::translate(translation.model, move * e.delta_time());
+		}
+
+		glm::quat pitch = glm::angleAxis(dpitch * e.delta_time(), glm::vec3{1.0f, 0.0f, 0.0f});
 		glm::quat yaw = glm::angleAxis(dyaw * e.delta_time(), glm::vec3{0.0f, 1.0f, 0.0f});
 		glm::quat rot = pitch * yaw;
 		translation.model *= glm::toMat4(rot);
-
-		glm::vec3 move(dx, dy, dz);
-		move *= e.delta_time();
-		glm::translate(translation.model, move);
 
 		e.modified<Scene::Translation>();
 	});
 
 	world.system<>()
-	.term<const Event::Process>()
-	.kind(flecs::PostUpdate)
-	.each([&dpitch, &dyaw, &dx, &dy, &dz](flecs::entity)
+		.term<const Event::Process>()
+		.kind(flecs::OnStore)
+		.each([&dpitch, &dyaw](flecs::entity)
 	{
 		dpitch = 0.0f;
 		dyaw = 0.0f;
-		dx = 0.0f;
-		dy = 0.0f;
-		dz = 0.0f;
 	});
 
 	engine.Run();

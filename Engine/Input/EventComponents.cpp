@@ -25,16 +25,4 @@ A3D::EventComponents::EventComponents(flecs::world& world)
 	world.module<EventComponents>("A3D::Components::Event");
 
 	process_ = world.component<Process>();
-
-	keyDown_ = world.component<KeyDown>().member<unsigned>("sym");
-	keyUp_ = world.component<KeyUp>().member<unsigned>("sym");
-
-	mouseButtonDown_ = world.component<MouseButtonDown>().member<unsigned char>("button");
-	mouseButtonUp_ = world.component<MouseButtonDown>().member<unsigned char>("button");
-	mouseMove_ = world.component<MouseMove>()
-		.member<int>("posx")
-		.member<int>("posy")
-		.member<int>("dx")
-		.member<int>("dy");
-	mouseWheel_ = world.component<MouseWheel>().member<int>("dist");
 }
