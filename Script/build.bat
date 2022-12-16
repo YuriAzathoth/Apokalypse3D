@@ -1,0 +1,43 @@
+@echo off
+
+set PLATFORM=%1
+set BUILD_TYPE=%2
+if %BUILD_TYPE%==Debug set DIR_PREFIX=_d
+
+set PROJECT_NAME=Apokalypse3D
+set SOURCE_DIR=%CD%\..
+cd ..
+
+if %PLATFORM%==W32 goto W32
+if %PLATFORM%==WEB goto EMSRIPTEN
+
+:W32
+set BUILD_DIR=%CD%\..\W32\Build\%PROJECT_NAME%%DIR_PREFIX%
+set INSTALL_DIR=%CD%\..\W32\%PROJECT_NAME%%DIR_PREFIX%
+
+mkdir %BUILD_DIR%
+cd %PROJECT_NAME%
+cmake -G "Ninja" -B %BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
+cd %BUILD_DIR%
+ninja all
+
+goto END
+
+:EMSRIPTEN
+set BUILD_DIR=%CD%\..\WASM\Build\%PROJECT_NAME%%DIR_PREFIX%
+set INSTALL_DIR=%CD%\..\WASM\%PROJECT_NAME%%DIR_PREFIX%
+
+set EMSCRIPTEN_PATH=D:\Work\SDK\Source\Emscripten
+call %EMSCRIPTEN_PATH%\emsdk_env.bat
+
+mkdir %BUILD_DIR%
+cd %SOURCE_DIR%
+call emcmake cmake -B %BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
+
+cd %BUILD_DIR%
+cmake --build .
+
+goto END
+
+:END
+pause
