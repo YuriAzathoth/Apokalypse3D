@@ -2,16 +2,19 @@
 
 set PLATFORM=%1
 set BUILD_TYPE=%2
-if %BUILD_TYPE%==Debug set DIR_PREFIX=_d
+set DIR_PREFIX=
+if %BUILD_TYPE%==Debug (
+	set DIR_PREFIX=_d
+)
 
 set PROJECT_NAME=Apokalypse3D
 set SOURCE_DIR=%CD%\..
 cd ..
 
-if %PLATFORM%==W32 goto W32
+if %PLATFORM%==- goto NATIVE
 if %PLATFORM%==WEB goto EMSRIPTEN
 
-:W32
+:NATIVE
 set BUILD_DIR=%CD%\..\W32\Build\%PROJECT_NAME%%DIR_PREFIX%
 set INSTALL_DIR=%CD%\..\W32\%PROJECT_NAME%%DIR_PREFIX%
 
@@ -27,8 +30,7 @@ goto END
 set BUILD_DIR=%CD%\..\WASM\Build\%PROJECT_NAME%%DIR_PREFIX%
 set INSTALL_DIR=%CD%\..\WASM\%PROJECT_NAME%%DIR_PREFIX%
 
-set EMSCRIPTEN_PATH=D:\Work\SDK\Source\Emscripten
-call %EMSCRIPTEN_PATH%\emsdk_env.bat
+call %EMSCRIPTEN_HOME%\emsdk_env.bat
 
 mkdir %BUILD_DIR%
 cd %SOURCE_DIR%
