@@ -20,11 +20,6 @@
 
 using namespace A3D::Components::Scene;
 
-static void InitWorldTransform(WorldTransform& wt)
-{
-	wt.transform = glm::mat4{1.0f};
-}
-
 namespace A3D
 {
 SceneComponents::SceneComponents(flecs::world& world)

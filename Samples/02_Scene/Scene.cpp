@@ -16,11 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
-#include <bgfx/bgfx.h>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/glm.hpp>
-#include <thread>
+#include <glm/trigonometric.hpp>
 #include "Core/Engine.h"
 #include "Debug/DebugModelRendererSystems.h"
 #include "Graphics/CameraComponents.h"
@@ -149,10 +145,9 @@ int main()
 	constexpr const char MODEL[] = "../Data/Models/Box.mdl";
 	constexpr const char VERTEX_SHADER[] = "white_solid.vert";
 	constexpr const char FRAGMENT_SHADER[] = "white_solid.frag";
-	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 0.0f, 1.0f, 8, 1);
+	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 0.0f, 1.0f, 8, 4);
 
 	world.system<Scene::Rotation, const Rotate>()
-		.arg(1).out()
 		.multi_threaded()
 		.each([](flecs::entity e, Scene::Rotation& rotation, const Rotate& rotate)
 		{

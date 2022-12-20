@@ -19,7 +19,6 @@
 #ifndef SCENECOMPONENTS_H
 #define SCENECOMPONENTS_H
 
-#include <bgfx/bgfx.h>
 #include <flecs.h>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -31,19 +30,6 @@ namespace Components
 {
 namespace Scene
 {
-struct RelativeTransform
-{
-	glm::mat4 transform;
-};
-
-struct WorldTransform
-{
-	glm::mat4 transform;
-};
-
-struct Node {};
-struct Root {};
-
 struct Position
 {
 	float x;
@@ -64,6 +50,19 @@ struct Scale
 	float y;
 	float z;
 };
+
+struct RelativeTransform
+{
+	glm::mat4 transform;
+};
+
+struct WorldTransform
+{
+	glm::mat4 transform;
+};
+
+struct Node {};
+struct Root {};
 } // namespace Scene
 } // namespace Components
 
@@ -74,12 +73,12 @@ struct APOKALYPSE3DAPI_EXPORT SceneComponents
 	flecs::entity relativeTransform_;
 	flecs::entity worldTransform_;
 
-	flecs::entity node_;
-	flecs::entity root_;
-
 	flecs::entity position_;
 	flecs::entity rotation_;
 	flecs::entity scale_;
+
+	flecs::entity node_;
+	flecs::entity root_;
 };
 } // namespace A3D
 
