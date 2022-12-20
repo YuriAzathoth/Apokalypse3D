@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Core/GlmComponents.h"
 #include "SceneComponents.h"
 
 using namespace A3D::Components::Scene;
@@ -25,31 +26,14 @@ namespace A3D
 SceneComponents::SceneComponents(flecs::world& world)
 {
 	world.module<SceneComponents>("A3D::Components::Scene");
+	world.import<GlmComponents>();
 
 	relativeTransform_ = world.component<RelativeTransform>();
 	worldTransform_ = world.component<WorldTransform>();//.add(flecs::With, changed_);
 
-	position_ = world.component<Position>()
-		.member<float>("x")
-		.member<float>("y")
-		.member<float>("z")
-		.add(flecs::With, relativeTransform_);
-	rotation_ = world.component<Rotation>()
-		.member<float>("pitch")
-		.member<float>("yaw")
-		.member<float>("roll")
-		.add(flecs::With, relativeTransform_);
-	scale_ = world.component<Scale>()
-		.on_add([](Scale& scale)
-		{
-			scale.x = 1.0f;
-			scale.y = 1.0f;
-			scale.z = 1.0f;
-		})
-		.member<float>("x")
-		.member<float>("y")
-		.member<float>("z")
-		.add(flecs::With, relativeTransform_);
+	position_ = world.component<Position>().member<glm::vec3>("position").add(flecs::With, relativeTransform_);
+	rotation_ = world.component<Rotation>().member<glm::vec3>("euler").add(flecs::With, relativeTransform_);
+	scale_ = world.component<Scale>().member<glm::vec3>("scale").add(flecs::With, relativeTransform_);
 
 	node_ = world.component<Node>().add(flecs::Tag)
 		.add(flecs::With, position_)

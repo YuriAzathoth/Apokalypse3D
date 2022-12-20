@@ -32,23 +32,17 @@ namespace Scene
 {
 struct Position
 {
-	float x;
-	float y;
-	float z;
+	glm::vec3 position;
 };
 
 struct Rotation
 {
-	float pitch;
-	float yaw;
-	float roll;
+	glm::vec3 euler;
 };
 
 struct Scale
 {
-	float x;
-	float y;
-	float z;
+	glm::vec3 scale;
 };
 
 struct RelativeTransform

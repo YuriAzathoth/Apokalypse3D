@@ -65,12 +65,12 @@ void CreateBoxes(flecs::entity parent,
 	{
 		flecs::entity origin = parent.world().entity().child_of(parent)
 			.add<Scene::Node>()
-			.set<Scene::Rotation>({0.0f, 0.0f, roll});
+			.set<Scene::Rotation>({{0.0f, 0.0f, roll}});
 
 		cube = parent.world().entity().child_of(origin)
 			.add<Scene::Node>()
-			.set<Scene::Position>({10.0f, 0.0f, 0.0f})
-			.set<Scene::Scale>({scale, scale, scale});
+			.set<Scene::Position>({{10.0f, 0.0f, 0.0f}})
+			.set<Scene::Scale>({{scale, scale, scale}});
 	}
 	else
 		cube = parent.world().entity().child_of(parent).add<Scene::Node>();
@@ -137,7 +137,7 @@ int main()
 
 	flecs::entity camera = world.entity().child_of(scene)
 						   .add<Scene::Node>()
-						   .set<Scene::Position>({0.0f, 0.0f, 50.0f})
+						   .set<Scene::Position>({{0.0f, 0.0f, 50.0f}})
 						   .add<Camera::Eye>()
 						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 1000.0f})
 						   .add<Camera::Viewport>();
@@ -151,9 +151,9 @@ int main()
 		.multi_threaded()
 		.each([](flecs::entity e, Scene::Rotation& rotation, const Rotate& rotate)
 		{
-			rotation.pitch += rotate.pitch * e.delta_time();
-			rotation.yaw += rotate.yaw * e.delta_time();
-			rotation.roll += rotate.roll * e.delta_time();
+			rotation.euler.y += rotate.pitch * e.delta_time();
+			rotation.euler.x += rotate.yaw * e.delta_time();
+			rotation.euler.z += rotate.roll * e.delta_time();
 		});
 
 	engine.Run();

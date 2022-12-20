@@ -34,9 +34,8 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 	flecs::entity setScale_;
 	flecs::entity buildTransform_;
 
-	flecs::entity onRootAdd_;
-
-	flecs::entity staticNodesChanged_;
+	flecs::entity initRoot_;
+	flecs::entity initScale_;
 };
 } // namespace A3D
 

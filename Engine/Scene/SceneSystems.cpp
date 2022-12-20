@@ -48,9 +48,9 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Rotation& rot)
 		{
-			const glm::quat pitch = glm::angleAxis(rot.pitch, glm::vec3{1.0f, 0.0f, 0.0f});
-			const glm::quat yaw = glm::angleAxis(rot.yaw, glm::vec3{0.0f, 1.0f, 0.0f});
-			const glm::quat roll = glm::angleAxis(rot.roll, glm::vec3{0.0f, 0.0f, 1.0f});
+			const glm::quat pitch = glm::angleAxis(rot.euler.y, glm::vec3{1.0f, 0.0f, 0.0f});
+			const glm::quat yaw = glm::angleAxis(rot.euler.x, glm::vec3{0.0f, 1.0f, 0.0f});
+			const glm::quat roll = glm::angleAxis(rot.euler.z, glm::vec3{0.0f, 0.0f, 1.0f});
 			rt.transform *= glm::toMat4(pitch * yaw * roll);
 		});
 
@@ -59,7 +59,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Position& pos)
 		{
-			rt.transform = glm::translate(rt.transform, {pos.x, pos.y, pos.z});
+			rt.transform = glm::translate(rt.transform, pos.position);
 		});
 
 	setScale_ = world.system<RelativeTransform, const Scale>("SetScale")
@@ -67,7 +67,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Scale& scale)
 		{
-			rt.transform = glm::scale(rt.transform, {scale.x, scale.y, scale.z});
+			rt.transform = glm::scale(rt.transform, scale.scale);
 		});
 
 	buildTransform_ = world.system<WorldTransform, const RelativeTransform, const WorldTransform>("BuildTransform")
@@ -79,12 +79,21 @@ SceneSystems::SceneSystems(flecs::world& world)
 			current.transform = parent.transform * relative.transform;
 		});
 
-	onRootAdd_ = world.observer<WorldTransform>("OnRootAdd")
+	initRoot_ = world.observer<WorldTransform>("InitRoot")
 		.term<const Root>()
 		.event(flecs::OnAdd)
 		.each([](WorldTransform& wt)
 		{
 			wt.transform = glm::mat4{1.0f};
+		});
+
+	initScale_ = world.observer<Scale>("InitScale")
+		.event(flecs::OnAdd)
+		.each([](Scale& scale)
+		{
+			scale.scale.x = 1.0f;
+			scale.scale.y = 1.0f;
+			scale.scale.z = 1.0f;
 		});
 }
 } // namespace A3D
