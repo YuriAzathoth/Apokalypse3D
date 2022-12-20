@@ -20,6 +20,7 @@
 #define EVENTCOMPONENTS_H
 
 #include <flecs.h>
+#include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_events.h>
 #include "Apokalypse3DAPI.h"
 
