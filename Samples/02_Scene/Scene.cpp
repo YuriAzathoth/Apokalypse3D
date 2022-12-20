@@ -47,35 +47,49 @@
 using namespace A3D;
 using namespace A3D::Components;
 
+struct Rotate
+{
+	float pitch;
+	float yaw;
+	float roll;
+};
+
 void CreateBoxes(flecs::entity parent,
 				 const char* model,
 				 const char* vertex,
 				 const char* fragment,
+				 float roll,
 				 float scale,
 				 unsigned children,
 				 unsigned levels,
-				 glm::mat4 transform = glm::mat4{1.0f})
+				 bool root = true)
 {
-	flecs::entity cube = parent.world().entity().child_of(parent)
-		.add<Scene::Node>()
-		.set<Scene::Translation>({transform})
-		.set<Scene::Rotate>({{0.0f, 0.0f, 1.0f}})
-		.set<Mesh::GetModelFile>({model})
-		.set<GpuProgram::GetProgram>({vertex, fragment});
+	flecs::entity cube;
+	if (!root)
+	{
+		flecs::entity origin = parent.world().entity().child_of(parent)
+			.add<Scene::Node>()
+			.set<Scene::Rotation>({0.0f, 0.0f, roll});
+
+		cube = parent.world().entity().child_of(origin)
+			.add<Scene::Node>()
+			.set<Scene::Position>({10.0f, 0.0f, 0.0f})
+			.set<Scene::Scale>({scale, scale, scale});
+	}
+	else
+		cube = parent.world().entity().child_of(parent).add<Scene::Node>();
+
+	cube.set<Mesh::GetModelFile>({model})
+		.set<GpuProgram::GetProgram>({vertex, fragment})
+		.set<Rotate>({glm::radians(50.0f), glm::radians(25.0f), glm::radians(20.0f)});
 
 	if (levels > 1)
 	{
-		const glm::vec3 pos{5.0f, 0.0f, 0.0f};
-		const glm::vec3 size(scale, scale, scale);
-		const float angle_step = glm::radians(360.0f / (float)children);
-		glm::quat rot;
+		const float fl_children = (float)children;
+		const float angle_step = glm::radians(360.0f / fl_children);
 		scale *= 0.5f;
-		for (float i = 0.0f; i < (float)children; ++i)
-		{
-			rot = glm::angleAxis(angle_step * i, glm::vec3{0.0f, 0.0f, 1.0f});
-			transform = glm::scale(glm::translate(glm::toMat4(rot), pos), size);
-			CreateBoxes(cube, model, vertex, fragment, scale, children, levels - 1, transform);
-		}
+		for (float i = 0.0f; i < fl_children; ++i)
+			CreateBoxes(cube, model, vertex, fragment, angle_step * i, scale, children, levels - 1, false);
 	}
 }
 
@@ -105,30 +119,47 @@ int main()
 	world.import<SceneSystems>();
 	world.import<DebugModelRendererSystems>();
 
+	world.component<Rotate>();
+
 	Renderer::RendererConfig renderer{};
+	renderer.fullscreen = false;
+	renderer.width = 800;
+	renderer.height = 600;
 	renderer.multi_threaded = true;
+	renderer.type = Renderer::RendererType::OpenGL;
+	Window::WindowConfig window{};
+	window.width = 800;
+	window.height = 600;
+	window.fullscreen = false;
 	world.set<Renderer::RendererConfig>(renderer);
-	world.add<Window::WindowConfig>();
+	world.set<Window::WindowConfig>({window});
 	create_video(world);
 	create_window(world);
 	create_renderer(world);
 
-	flecs::entity scene = world.entity()
-						  .add<Scene::Root>()
-						  .add<Scene::Node>()
-						  .add<Scene::Translation>();
+	flecs::entity scene = world.entity().add<Scene::Root>();
 
 	flecs::entity camera = world.entity().child_of(scene)
 						   .add<Scene::Node>()
-						   .set<Scene::Translation>({glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -50.0f})})
+						   .set<Scene::Position>({0.0f, 0.0f, 50.0f})
 						   .add<Camera::Eye>()
-						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 100.0f})
+						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 1000.0f})
 						   .add<Camera::Viewport>();
 
 	constexpr const char MODEL[] = "../Data/Models/Box.mdl";
 	constexpr const char VERTEX_SHADER[] = "white_solid.vert";
 	constexpr const char FRAGMENT_SHADER[] = "white_solid.frag";
-	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 1.0f, 8, 4);
+	CreateBoxes(scene, MODEL, VERTEX_SHADER, FRAGMENT_SHADER, 0.0f, 1.0f, 8, 1);
+
+	world.system<Scene::Rotation, const Rotate>()
+		.arg(1).out()
+		.multi_threaded()
+		.each([](flecs::entity e, Scene::Rotation& rotation, const Rotate& rotate)
+		{
+			rotation.pitch += rotate.pitch * e.delta_time();
+			rotation.yaw += rotate.yaw * e.delta_time();
+			rotation.roll += rotate.roll * e.delta_time();
+		});
 
 	engine.Run();
 

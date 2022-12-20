@@ -28,9 +28,15 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 {
 	SceneSystems(flecs::world& world);
 
-	flecs::entity move_;
-	flecs::entity rotate_;
-	flecs::entity updateScene_;
+	flecs::entity resetRelativeTransform_;
+	flecs::entity setRotation_;
+	flecs::entity setPosition_;
+	flecs::entity setScale_;
+	flecs::entity buildTransform_;
+
+	flecs::entity onRootAdd_;
+
+	flecs::entity staticNodesChanged_;
 };
 } // namespace A3D
 

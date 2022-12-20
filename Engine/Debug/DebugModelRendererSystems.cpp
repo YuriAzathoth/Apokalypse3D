@@ -35,10 +35,10 @@ using namespace A3D::Components::Scene;
 
 namespace A3D
 {
-static void draw_geometry_st(flecs::entity e, const Node& node, const Program& program)
+static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Program& program)
 {
 	LogTrace("Drawing model from main thread...");
-	e.children([&node, &program](flecs::entity c)
+	e.children([&program, &wt](flecs::entity c)
 	{
 		const MeshGroup* mesh = c.get<MeshGroup>();
 		if (mesh)
@@ -47,7 +47,7 @@ static void draw_geometry_st(flecs::entity e, const Node& node, const Program& p
 			Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 			Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 			Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
-			bgfx::setTransform(glm::value_ptr(node.model));
+			bgfx::setTransform(glm::value_ptr(wt.transform));
 			bgfx::setVertexBuffer(0, mesh->vbo);
 			bgfx::setIndexBuffer(mesh->ebo);
 			bgfx::setState(BGFX_STATE_DEFAULT);
@@ -56,7 +56,7 @@ static void draw_geometry_st(flecs::entity e, const Node& node, const Program& p
 	});
 }
 
-static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& program)
+static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Program& program)
 {
 	LogTrace("Drawing model from thread %d...", std::this_thread::get_id());
 
@@ -68,7 +68,7 @@ static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& p
 
 	bgfx::Encoder* queue = renderer->threads[thread_id].queue;
 	if (queue)
-		e.children([&node, &program, queue, &w](flecs::entity c)
+		e.children([&program, queue, &w, &wt](flecs::entity c)
 		{
 			const MeshGroup* mesh = c.get<MeshGroup>();
 			if (mesh)
@@ -77,7 +77,7 @@ static void draw_geometry_mt(flecs::entity e, const Node& node, const Program& p
 				Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 				Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 				Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
-				queue->setTransform(glm::value_ptr(node.model));
+				queue->setTransform(glm::value_ptr(wt.transform));
 				queue->setVertexBuffer(0, mesh->vbo);
 				queue->setIndexBuffer(mesh->ebo);
 				queue->setState(BGFX_STATE_DEFAULT);
@@ -95,13 +95,13 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();
 
-	drawSingleThreaded_ = world.system<const Node, const Program>("DrawSingleThread")
+	drawSingleThreaded_ = world.system<const WorldTransform, const Program>("DrawSingleThread")
 		.term<const Model>()
 		.term<const MultiThreaded>().not_().singleton()
 		.kind(flecs::PreStore)
 		.each(draw_geometry_st);
 
-	drawMultiThreaded_ = world.system<const Node, const Program>("DrawMultiThread")
+	drawMultiThreaded_ = world.system<const WorldTransform, const Program>("DrawMultiThread")
 		.term<const Model>()
 		.term<const MultiThreaded>().singleton()
 		.kind(flecs::PreStore)

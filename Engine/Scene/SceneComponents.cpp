@@ -20,17 +20,48 @@
 
 using namespace A3D::Components::Scene;
 
+static void InitWorldTransform(WorldTransform& wt)
+{
+	wt.transform = glm::mat4{1.0f};
+}
+
 namespace A3D
 {
 SceneComponents::SceneComponents(flecs::world& world)
 {
 	world.module<SceneComponents>("A3D::Components::Scene");
 
-	look_ = world.component<Look>();
-	move_ = world.component<Move>();
-	node_ = world.component<Node>();
-	root_ = world.component<Root>().add(flecs::Tag);
-	rotate_ = world.component<Rotate>();
-	translation_ = world.component<Translation>();
+	relativeTransform_ = world.component<RelativeTransform>();
+	worldTransform_ = world.component<WorldTransform>();//.add(flecs::With, changed_);
+
+	position_ = world.component<Position>()
+		.member<float>("x")
+		.member<float>("y")
+		.member<float>("z")
+		.add(flecs::With, relativeTransform_);
+	rotation_ = world.component<Rotation>()
+		.member<float>("pitch")
+		.member<float>("yaw")
+		.member<float>("roll")
+		.add(flecs::With, relativeTransform_);
+	scale_ = world.component<Scale>()
+		.on_add([](Scale& scale)
+		{
+			scale.x = 1.0f;
+			scale.y = 1.0f;
+			scale.z = 1.0f;
+		})
+		.member<float>("x")
+		.member<float>("y")
+		.member<float>("z")
+		.add(flecs::With, relativeTransform_);
+
+	node_ = world.component<Node>().add(flecs::Tag)
+		.add(flecs::With, position_)
+		.add(flecs::With, rotation_)
+		.add(flecs::With, scale_)
+		.add(flecs::With, worldTransform_);
+
+	root_ = world.component<Root>().add(flecs::Tag).add(flecs::With, node_);
 }
 } // namespace A3D

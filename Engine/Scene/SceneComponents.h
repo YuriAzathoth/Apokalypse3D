@@ -31,35 +31,39 @@ namespace Components
 {
 namespace Scene
 {
-struct Look
+struct RelativeTransform
 {
-	glm::vec3 move;
+	glm::mat4 transform;
 };
 
-struct Move
+struct WorldTransform
 {
-	glm::vec3 move;
+	glm::mat4 transform;
 };
 
-struct Node
-{
-	glm::mat4 model;
-	Node() : model(1.0f) {}
-};
-
-struct Rotate
-{
-	glm::vec3 rot;
-};
-
-struct Translation
-{
-	glm::mat4 model;
-	Translation() : model(1.0f) {}
-	Translation(const glm::mat4& _model) : model(_model) {}
-};
-
+struct Node {};
 struct Root {};
+
+struct Position
+{
+	float x;
+	float y;
+	float z;
+};
+
+struct Rotation
+{
+	float pitch;
+	float yaw;
+	float roll;
+};
+
+struct Scale
+{
+	float x;
+	float y;
+	float z;
+};
 } // namespace Scene
 } // namespace Components
 
@@ -67,12 +71,15 @@ struct APOKALYPSE3DAPI_EXPORT SceneComponents
 {
 	SceneComponents(flecs::world& world);
 
-	flecs::entity look_;
-	flecs::entity move_;
+	flecs::entity relativeTransform_;
+	flecs::entity worldTransform_;
+
 	flecs::entity node_;
 	flecs::entity root_;
-	flecs::entity rotate_;
-	flecs::entity translation_;
+
+	flecs::entity position_;
+	flecs::entity rotation_;
+	flecs::entity scale_;
 };
 } // namespace A3D
 
