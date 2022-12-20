@@ -24,9 +24,11 @@
 
 namespace A3D
 {
-
-Engine::Engine(const EngineInfo& init)
+Engine::Engine(const EngineInfo& init) :
+	app(world)
 {
+	LogDebug("Initializing Core...");
+
 	unsigned threads_num;
 	if (init.threads == 0)
 		threads_num = std::thread::hardware_concurrency();
@@ -88,21 +90,13 @@ Engine::Engine(const EngineInfo& init)
 			}
 	}*/
 
-	LogDebug("Initializing Core...");
-
-	world.set_threads(threads_num);
+	app.threads(threads_num);
 
 	LogInfo("Core has been initialized.");
 }
 
 int Engine::Run()
 {
-	while (!world.should_quit())
-	{
-		LogTrace("FRAME BEGIN.");
-		world.progress();
-		LogTrace("FRAME END.");
-	}
-	return 0;
+	return world.app().run();
 }
 } // namespace A3D
