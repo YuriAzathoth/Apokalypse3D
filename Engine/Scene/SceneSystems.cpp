@@ -48,10 +48,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Rotation& rot)
 		{
-			const glm::quat pitch = glm::angleAxis(rot.euler.y, glm::vec3{1.0f, 0.0f, 0.0f});
-			const glm::quat yaw = glm::angleAxis(rot.euler.x, glm::vec3{0.0f, 1.0f, 0.0f});
-			const glm::quat roll = glm::angleAxis(rot.euler.z, glm::vec3{0.0f, 0.0f, 1.0f});
-			rt.transform *= glm::toMat4(pitch * yaw * roll);
+			rt.transform *= glm::toMat4(rot.quat);
 		});
 
 	setPosition_ = world.system<RelativeTransform, const Position>("SetPosition")
@@ -85,6 +82,16 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.each([](WorldTransform& wt)
 		{
 			wt.transform = glm::mat4{1.0f};
+		});
+
+	initRotate_ = world.observer<Rotation>("InitRotate")
+		.event(flecs::OnAdd)
+		.each([](Rotation& rot)
+		{
+			rot.quat.w = 1.0f;
+			rot.quat.x = 0.0f;
+			rot.quat.y = 0.0f;
+			rot.quat.z = 0.0f;
 		});
 
 	initScale_ = world.observer<Scale>("InitScale")

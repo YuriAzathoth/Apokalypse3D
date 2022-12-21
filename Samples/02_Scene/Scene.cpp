@@ -65,7 +65,7 @@ void CreateBoxes(flecs::entity parent,
 	{
 		flecs::entity origin = parent.world().entity().child_of(parent)
 			.add<Scene::Node>()
-			.set<Scene::Rotation>({{0.0f, 0.0f, roll}});
+			.set<Scene::Rotation>({glm::angleAxis(roll, glm::vec3{0.0f, 0.0f, 1.0f})});
 
 		cube = parent.world().entity().child_of(origin)
 			.add<Scene::Node>()
@@ -77,7 +77,7 @@ void CreateBoxes(flecs::entity parent,
 
 	cube.set<Mesh::GetModelFile>({model})
 		.set<GpuProgram::GetProgram>({vertex, fragment})
-		.set<Rotate>({glm::radians(50.0f), glm::radians(25.0f), glm::radians(20.0f)});
+		.set<Rotate>({glm::radians(50.0f), glm::radians(15.0f), glm::radians(25.0f)});
 
 	if (levels > 1)
 	{
@@ -151,9 +151,10 @@ int main()
 		.multi_threaded()
 		.each([](flecs::entity e, Scene::Rotation& rotation, const Rotate& rotate)
 		{
-			rotation.euler.y += rotate.pitch * e.delta_time();
-			rotation.euler.x += rotate.yaw * e.delta_time();
-			rotation.euler.z += rotate.roll * e.delta_time();
+			const glm::quat pitch = glm::angleAxis(rotate.pitch * e.delta_time(), glm::vec3{1.0f, 0.0f, 0.0f});
+			const glm::quat yaw = glm::angleAxis(rotate.yaw * e.delta_time(), glm::vec3{0.0f, 1.0f, 0.0f});
+			const glm::quat roll = glm::angleAxis(rotate.roll * e.delta_time(), glm::vec3{0.0f, 0.0f, 1.0f});
+			rotation.quat *= pitch * yaw * roll;
 		});
 
 	engine.Run();
