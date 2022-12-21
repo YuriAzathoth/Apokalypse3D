@@ -76,14 +76,6 @@ SceneSystems::SceneSystems(flecs::world& world)
 			current.transform = parent.transform * relative.transform;
 		});
 
-	initRoot_ = world.observer<WorldTransform>("InitRoot")
-		.term<const Root>()
-		.event(flecs::OnAdd)
-		.each([](WorldTransform& wt)
-		{
-			wt.transform = glm::mat4{1.0f};
-		});
-
 	initPosition_ = world.observer<Position>("InitPosition")
 		.event(flecs::OnAdd)
 		.each([](Position& pos)
@@ -110,6 +102,14 @@ SceneSystems::SceneSystems(flecs::world& world)
 			scale.scale.x = 1.0f;
 			scale.scale.y = 1.0f;
 			scale.scale.z = 1.0f;
+		});
+
+	initRoot_ = world.observer<WorldTransform>("InitRoot")
+		.term<const Root>()
+		.event(flecs::OnAdd)
+		.each([](WorldTransform& wt)
+		{
+			wt.transform = glm::mat4{1.0f};
 		});
 }
 } // namespace A3D
