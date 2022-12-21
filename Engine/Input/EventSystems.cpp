@@ -21,9 +21,11 @@
 #include "EventSystems.h"
 #include "IO/Log.h"
 #include "KeyboardComponents.h"
+#include "MouseComponents.h"
 
 using namespace A3D::Components::Event;
 using namespace A3D::Components::Keyboard;
+using namespace A3D::Components::Mouse;
 
 static void poll_events(flecs::entity e, Process& process)
 {
@@ -94,6 +96,7 @@ EventSystems::EventSystems(flecs::world& world)
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
 	world.import<KeyboardComponents>();
+	world.import<MouseComponents>();
 
 	onAddProcess_ = world.observer<Process>("Init")
 					.event(flecs::OnAdd)

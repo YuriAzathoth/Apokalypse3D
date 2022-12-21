@@ -175,29 +175,6 @@ struct KeyUp
 {
 	Key code;
 };
-
-struct MouseButtonDown
-{
-	unsigned char button;
-};
-
-struct MouseButtonUp
-{
-	unsigned char button;
-};
-
-struct MouseMove
-{
-	int posx;
-	int posy;
-	int dx;
-	int dy;
-};
-
-struct MouseWheel
-{
-	int dist;
-};
 } // namespace Keyboard
 } // namespace Components
 
@@ -208,11 +185,6 @@ struct APOKALYPSE3DAPI_EXPORT KeyboardComponents
 	flecs::entity key_;
 	flecs::entity keyDown_;
 	flecs::entity keyUp_;
-
-	flecs::entity mouseButtonDown_;
-	flecs::entity mouseButtonUp_;
-	flecs::entity mouseMove_;
-	flecs::entity mouseWheel_;
 };
 } // namespace A3D
 

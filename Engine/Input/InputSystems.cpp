@@ -21,6 +21,7 @@
 #include "InputSystems.h"
 #include "IO/Log.h"
 #include "KeyboardComponents.h"
+#include "MouseComponents.h"
 
 using namespace A3D::Components::Event;
 using namespace A3D::Components::Input;
@@ -32,6 +33,7 @@ A3D::InputSystems::InputSystems(flecs::world& world)
 	world.import<EventComponents>();
 	world.import<InputComponents>();
 	world.import<KeyboardComponents>();
+	world.import<MouseComponents>();
 
 	onKeyDown_ = world.observer()
 				 .term<const Process>()
