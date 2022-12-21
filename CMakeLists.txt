@@ -16,7 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.2 FATAL_ERROR)
 
 IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY (SET CMP0048 NEW)
