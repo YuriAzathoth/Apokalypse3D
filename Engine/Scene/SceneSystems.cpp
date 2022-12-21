@@ -84,6 +84,15 @@ SceneSystems::SceneSystems(flecs::world& world)
 			wt.transform = glm::mat4{1.0f};
 		});
 
+	initPosition_ = world.observer<Position>("InitPosition")
+		.event(flecs::OnAdd)
+		.each([](Position& pos)
+		{
+			pos.position.x = 0.0f;
+			pos.position.y = 0.0f;
+			pos.position.z = 0.0f;
+		});
+
 	initRotate_ = world.observer<Rotation>("InitRotate")
 		.event(flecs::OnAdd)
 		.each([](Rotation& rot)

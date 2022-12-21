@@ -35,6 +35,7 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 	flecs::entity buildTransform_;
 
 	flecs::entity initRoot_;
+	flecs::entity initPosition_;
 	flecs::entity initRotate_;
 	flecs::entity initScale_;
 };
