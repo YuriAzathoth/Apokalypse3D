@@ -19,8 +19,8 @@
 #ifndef SCENECOMPONENTS_H
 #define SCENECOMPONENTS_H
 
-#include <bgfx/bgfx.h>
 #include <flecs.h>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include "Apokalypse3DAPI.h"
@@ -31,34 +31,32 @@ namespace Components
 {
 namespace Scene
 {
-struct Look
+struct Position
 {
-	glm::vec3 move;
+	glm::vec3 position;
 };
 
-struct Move
+struct Rotation
 {
-	glm::vec3 move;
+	glm::quat quat;
 };
 
-struct Node
+struct Scale
 {
-	glm::mat4 model;
-	Node() : model(1.0f) {}
+	glm::vec3 scale;
 };
 
-struct Rotate
+struct RelativeTransform
 {
-	glm::vec3 rot;
+	glm::mat4 transform;
 };
 
-struct Translation
+struct WorldTransform
 {
-	glm::mat4 model;
-	Translation() : model(1.0f) {}
-	Translation(const glm::mat4& _model) : model(_model) {}
+	glm::mat4 transform;
 };
 
+struct Node {};
 struct Root {};
 } // namespace Scene
 } // namespace Components
@@ -67,12 +65,15 @@ struct APOKALYPSE3DAPI_EXPORT SceneComponents
 {
 	SceneComponents(flecs::world& world);
 
-	flecs::entity look_;
-	flecs::entity move_;
+	flecs::entity relativeTransform_;
+	flecs::entity worldTransform_;
+
+	flecs::entity position_;
+	flecs::entity rotation_;
+	flecs::entity scale_;
+
 	flecs::entity node_;
 	flecs::entity root_;
-	flecs::entity rotate_;
-	flecs::entity translation_;
 };
 } // namespace A3D
 

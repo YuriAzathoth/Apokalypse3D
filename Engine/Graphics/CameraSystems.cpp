@@ -39,29 +39,32 @@ CameraSystems::CameraSystems(flecs::world& world)
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();
 
-	view_ = world.system<Eye, const Node>("View")
+	view_ = world.system<Eye, const WorldTransform>("View")
 			.kind(flecs::OnStore)
-			.each([](Eye& eye, const Node& node)
+			.multi_threaded()
+			.each([](Eye& eye, const WorldTransform& wt)
 	{
+		LogTrace("Set camera view...");
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 position;
 		glm::vec3 skew;
 		glm::vec4 perspective;
-		glm::decompose(node.model, scale, rotation, position, skew, perspective);
+		glm::decompose(wt.transform, scale, rotation, position, skew, perspective);
 		const glm::vec3 FRONT_VEC(0.0f, 0.0f, -1.0f);
 		const glm::vec3 UP_VEC(0.0f, 1.0f, 0.0f);
-		const glm::vec3 front = rotation * FRONT_VEC;
-		const glm::vec3 up = rotation * UP_VEC;
-		const glm::vec3 target = position + front;
-		eye.view = glm::lookAt(target, position, up);
+		const glm::vec3 front = glm::normalize(rotation * FRONT_VEC);
+		const glm::vec3 up = glm::normalize(rotation * UP_VEC);
+		eye.view = glm::lookAt(position, position + front, up);
 	});
 
 	perspective_ = world.system<Eye, const Perspective, const Aspect>("Perspective")
 				   .kind(flecs::OnStore)
 				   .arg(3).singleton()
+				   .multi_threaded()
 				   .each([](Eye& eye, const Perspective& persp, const Aspect& aspect)
 	{
+		LogTrace("Set camera perspective...");
 		eye.proj = glm::perspective(persp.fov, aspect.ratio, persp.nearest, persp.farthest);
 	});
 
@@ -69,6 +72,7 @@ CameraSystems::CameraSystems(flecs::world& world)
 			  .kind(flecs::OnStore)
 			  .each([](const Eye& eye)
 	{
+		LogTrace("Send camera transform...");
 		bgfx::setViewTransform(0, glm::value_ptr(eye.view), glm::value_ptr(eye.proj));
 	});
 }

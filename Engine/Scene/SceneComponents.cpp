@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Core/GlmComponents.h"
 #include "SceneComponents.h"
 
 using namespace A3D::Components::Scene;
@@ -25,12 +26,21 @@ namespace A3D
 SceneComponents::SceneComponents(flecs::world& world)
 {
 	world.module<SceneComponents>("A3D::Components::Scene");
+	world.import<GlmComponents>();
 
-	look_ = world.component<Look>();
-	move_ = world.component<Move>();
-	node_ = world.component<Node>();
-	root_ = world.component<Root>().add(flecs::Tag);
-	rotate_ = world.component<Rotate>();
-	translation_ = world.component<Translation>();
+	relativeTransform_ = world.component<RelativeTransform>();
+	worldTransform_ = world.component<WorldTransform>();
+
+	position_ = world.component<Position>().member<glm::vec3>("position").add(flecs::With, relativeTransform_);
+	rotation_ = world.component<Rotation>().member<glm::quat>("quat").add(flecs::With, relativeTransform_);
+	scale_ = world.component<Scale>().member<glm::vec3>("scale").add(flecs::With, relativeTransform_);
+
+	node_ = world.component<Node>().add(flecs::Tag)
+		.add(flecs::With, position_)
+		.add(flecs::With, rotation_)
+		.add(flecs::With, scale_)
+		.add(flecs::With, worldTransform_);
+
+	root_ = world.component<Root>().add(flecs::Tag).add(flecs::With, node_);
 }
 } // namespace A3D

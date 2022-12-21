@@ -41,6 +41,7 @@ public:
 
 private:
 	flecs::world world;
+	flecs::app_builder app;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

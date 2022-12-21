@@ -1,11 +1,11 @@
 # Apokalypse3D
-Fast and cache-friendly 3D game engine (WIP)
+Fast and cache-friendly Entity Component System 3D game engine (WIP)
 
 ## Requirements
 - **CMake** (2.8.12+)
 - **C++ Build Tools**
 	- ninja
-	- make
+	- make (not fully tested yet)
 - **C++ Compiller**
 	- **Linux** gcc, clang
 	- **W32** mingw, clang
