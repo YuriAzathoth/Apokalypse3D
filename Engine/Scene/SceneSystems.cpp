@@ -31,30 +31,85 @@ SceneSystems::SceneSystems(flecs::world& world)
 	world.module<SceneSystems>("A3D::Systems::Scene");
 	world.import<SceneComponents>();
 
-	move_ = world.system<Translation, const Move>("Move")
-		.multi_threaded()
-		.each([](flecs::iter& it, size_t, Translation& tr, const Move& move)
-		{
-			LogTrace("Moving scene node...");
-			tr.model = glm::translate(tr.model, move.move * it.delta_time());
-		});
-
-	rotate_ = world.system<Translation, const Rotate>("Rotate")
-		.multi_threaded()
-		.each([](flecs::iter& it, size_t, Translation& tr, const Rotate& rotate)
-		{
-			LogTrace("Rotating scene node...");
-			tr.model *= glm::toMat4(glm::quat(rotate.rot * it.delta_time()));
-		});
-
-	updateScene_ = world.system<Node, const Translation, const Node>("Update")
+	resetRelativeTransform_ = world.system<RelativeTransform>("ResetRelativeTransform")
+		.term<const Node>()
+		.term<const Position>().or_()
+		.term<const Rotation>().or_()
+		.term<const Scale>().or_()
 		.kind(flecs::PostUpdate)
 		.multi_threaded()
-		.arg(3).parent().cascade()
-		.each([](Node& node, const Translation& translation, const Node& parent)
+		.each([](RelativeTransform& rt)
 		{
-			LogTrace("Updating hierarchy child matrix...");
-			node.model = parent.model * translation.model;
+			rt.transform = glm::mat4{1.0f};
+		});
+
+	setPosition_ = world.system<RelativeTransform, const Position>("SetPosition")
+		.kind(flecs::PostUpdate)
+		.multi_threaded()
+		.each([](RelativeTransform& rt, const Position& pos)
+		{
+			rt.transform = glm::translate(rt.transform, pos.position);
+		});
+
+	setRotation_ = world.system<RelativeTransform, const Rotation>("SetRotation")
+		.kind(flecs::PostUpdate)
+		.multi_threaded()
+		.each([](RelativeTransform& rt, const Rotation& rot)
+		{
+			rt.transform *= glm::toMat4(rot.quat);
+		});
+
+	setScale_ = world.system<RelativeTransform, const Scale>("SetScale")
+		.kind(flecs::PostUpdate)
+		.multi_threaded()
+		.each([](RelativeTransform& rt, const Scale& scale)
+		{
+			rt.transform = glm::scale(rt.transform, scale.scale);
+		});
+
+	buildTransform_ = world.system<WorldTransform, const RelativeTransform, const WorldTransform>("BuildTransform")
+		.arg(3).parent().cascade()
+		.kind(flecs::PostUpdate)
+		.multi_threaded()
+		.each([](WorldTransform& current, const RelativeTransform& relative, const WorldTransform& parent)
+		{
+			current.transform = parent.transform * relative.transform;
+		});
+
+	initPosition_ = world.observer<Position>("InitPosition")
+		.event(flecs::OnAdd)
+		.each([](Position& pos)
+		{
+			pos.position.x = 0.0f;
+			pos.position.y = 0.0f;
+			pos.position.z = 0.0f;
+		});
+
+	initRotate_ = world.observer<Rotation>("InitRotate")
+		.event(flecs::OnAdd)
+		.each([](Rotation& rot)
+		{
+			rot.quat.w = 1.0f;
+			rot.quat.x = 0.0f;
+			rot.quat.y = 0.0f;
+			rot.quat.z = 0.0f;
+		});
+
+	initScale_ = world.observer<Scale>("InitScale")
+		.event(flecs::OnAdd)
+		.each([](Scale& scale)
+		{
+			scale.scale.x = 1.0f;
+			scale.scale.y = 1.0f;
+			scale.scale.z = 1.0f;
+		});
+
+	initRoot_ = world.observer<WorldTransform>("InitRoot")
+		.term<const Root>()
+		.event(flecs::OnAdd)
+		.each([](WorldTransform& wt)
+		{
+			wt.transform = glm::mat4{1.0f};
 		});
 }
 } // namespace A3D

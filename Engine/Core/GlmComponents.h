@@ -16,29 +16,32 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENESYSTEMS_H
-#define SCENESYSTEMS_H
+#ifndef GLMCOMPONENTS_H
+#define GLMCOMPONENTS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT SceneSystems
+struct APOKALYPSE3DAPI_EXPORT GlmComponents
 {
-	SceneSystems(flecs::world& world);
+	explicit GlmComponents(flecs::world& world);
 
-	flecs::entity resetRelativeTransform_;
-	flecs::entity setPosition_;
-	flecs::entity setRotation_;
-	flecs::entity setScale_;
-	flecs::entity buildTransform_;
-
-	flecs::entity initPosition_;
-	flecs::entity initRotate_;
-	flecs::entity initScale_;
-	flecs::entity initRoot_;
+	flecs::entity mat2_;
+	flecs::entity mat2x3_;
+	flecs::entity mat2x4_;
+	flecs::entity mat3x2_;
+	flecs::entity mat3_;
+	flecs::entity mat3x4_;
+	flecs::entity mat4x2_;
+	flecs::entity mat4x3_;
+	flecs::entity mat4_;
+	flecs::entity quat_;
+	flecs::entity vec2_;
+	flecs::entity vec3_;
+	flecs::entity vec4_;
 };
 } // namespace A3D
 
-#endif // SCENESYSTEMS_H
+#endif // GLMCOMPONENTS_H
