@@ -29,7 +29,7 @@ SceneComponents::SceneComponents(flecs::world& world)
 	world.import<GlmComponents>();
 
 	relativeTransform_ = world.component<RelativeTransform>();
-	worldTransform_ = world.component<WorldTransform>();//.add(flecs::With, changed_);
+	worldTransform_ = world.component<WorldTransform>();
 
 	position_ = world.component<Position>().member<glm::vec3>("position").add(flecs::With, relativeTransform_);
 	rotation_ = world.component<Rotation>().member<glm::quat>("quat").add(flecs::With, relativeTransform_);
