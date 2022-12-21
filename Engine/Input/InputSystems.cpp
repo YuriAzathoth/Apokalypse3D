@@ -20,18 +20,18 @@
 #include "InputComponents.h"
 #include "InputSystems.h"
 #include "IO/Log.h"
-#include "RawInputComponents.h"
+#include "KeyboardComponents.h"
 
 using namespace A3D::Components::Event;
 using namespace A3D::Components::Input;
-using namespace A3D::Components::RawInput;
+using namespace A3D::Components::Keyboard;
 
 A3D::InputSystems::InputSystems(flecs::world& world)
 {
 	world.module<InputSystems>("A3D::Systems::Input");
 	world.import<EventComponents>();
 	world.import<InputComponents>();
-	world.import<RawInputComponents>();
+	world.import<KeyboardComponents>();
 
 	onKeyDown_ = world.observer()
 				 .term<const Process>()

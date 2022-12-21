@@ -16,13 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "RawInputComponents.h"
+#include "KeyboardComponents.h"
 
-using namespace A3D::Components::RawInput;
+using namespace A3D::Components::Keyboard;
 
-A3D::RawInputComponents::RawInputComponents(flecs::world& world)
+A3D::KeyboardComponents::KeyboardComponents(flecs::world& world)
 {
-	world.module<RawInputComponents>("A3D::Components::RawInput");
+	world.module<KeyboardComponents>("A3D::Components::Keyboard");
 
 	key_ = world.component<Key>()
 		.constant("KEY_UNKNOWN", (int)Key::KEY_UNKNOWN)

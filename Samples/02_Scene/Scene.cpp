@@ -39,7 +39,7 @@
 #include "Input/EventSystems.h"
 #include "Input/InputComponents.h"
 #include "Input/InputSystems.h"
-#include "Input/RawInputComponents.h"
+#include "Input/KeyboardComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -167,7 +167,7 @@ int main()
 	world.entity("ACTION_EXIT")
 		.add(action_exit)
 		.add<Input::ActionKey>().set<Input::ActionKeyState>({})
-		.add<Input::KeyboardBind>().add(RawInput::Key::KEY_ESCAPE);
+		.add<Input::KeyboardBind>().add(Keyboard::Key::KEY_ESCAPE);
 	world.system<Input::ActionKeyState>()
 		.term(action_exit)
 		.each([](flecs::entity e, Input::ActionKeyState& action)
