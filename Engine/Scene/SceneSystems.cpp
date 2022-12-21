@@ -43,20 +43,20 @@ SceneSystems::SceneSystems(flecs::world& world)
 			rt.transform = glm::mat4{1.0f};
 		});
 
-	setRotation_ = world.system<RelativeTransform, const Rotation>("SetRotation")
-		.kind(flecs::PostUpdate)
-		.multi_threaded()
-		.each([](RelativeTransform& rt, const Rotation& rot)
-		{
-			rt.transform *= glm::toMat4(rot.quat);
-		});
-
 	setPosition_ = world.system<RelativeTransform, const Position>("SetPosition")
 		.kind(flecs::PostUpdate)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Position& pos)
 		{
 			rt.transform = glm::translate(rt.transform, pos.position);
+		});
+
+	setRotation_ = world.system<RelativeTransform, const Rotation>("SetRotation")
+		.kind(flecs::PostUpdate)
+		.multi_threaded()
+		.each([](RelativeTransform& rt, const Rotation& rot)
+		{
+			rt.transform *= glm::toMat4(rot.quat);
 		});
 
 	setScale_ = world.system<RelativeTransform, const Scale>("SetScale")

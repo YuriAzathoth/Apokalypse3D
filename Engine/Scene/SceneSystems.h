@@ -29,8 +29,8 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 	SceneSystems(flecs::world& world);
 
 	flecs::entity resetRelativeTransform_;
-	flecs::entity setRotation_;
 	flecs::entity setPosition_;
+	flecs::entity setRotation_;
 	flecs::entity setScale_;
 	flecs::entity buildTransform_;
 
