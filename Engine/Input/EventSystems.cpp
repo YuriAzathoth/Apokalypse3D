@@ -38,14 +38,14 @@ static void poll_events(flecs::entity e, Process& process)
 			w.event<KeyDown>()
 				.id<Process>()
 				.entity(e)
-				.ctx(KeyDown{static_cast<Key>(process.event.key.keysym.scancode)})
+				.ctx(KeyDown{static_cast<unsigned>(process.event.key.keysym.scancode)})
 				.emit();
 			break;
 		case SDL_KEYUP:
 			w.event<KeyUp>()
 				.id<Process>()
 				.entity(e)
-				.ctx(KeyUp{static_cast<Key>(process.event.key.keysym.scancode)})
+				.ctx(KeyUp{static_cast<unsigned>(process.event.key.keysym.scancode)})
 				.emit();
 			break;
 		case SDL_MOUSEBUTTONDOWN:

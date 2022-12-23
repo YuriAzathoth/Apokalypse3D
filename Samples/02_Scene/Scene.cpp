@@ -167,7 +167,7 @@ int main()
 	world.entity("ACTION_EXIT")
 		.add(action_exit)
 		.add<Input::ActionKey>().set<Input::ActionKeyState>({})
-		.add<Input::KeyboardBind>().add(Keyboard::Key::KEY_ESCAPE);
+		.add<Input::KeyboardBind>().add(SDL_SCANCODE_ESCAPE);
 	world.system<Input::ActionKeyState>()
 		.term(action_exit)
 		.each([](flecs::entity e, Input::ActionKeyState& action)
