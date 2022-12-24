@@ -29,12 +29,16 @@ namespace Components
 {
 namespace Keyboard
 {
-struct KeyDown
+constexpr const unsigned KEYS_COUNT = 256;
+constexpr const unsigned KEYS_PER_ELEMENT = static_cast<unsigned>(sizeof(unsigned)) * 8;
+constexpr const unsigned KEYS_ARR_SIZE = KEYS_COUNT / KEYS_PER_ELEMENT;
+
+struct Keyboard
 {
-	unsigned keycode;
+	unsigned down[KEYS_ARR_SIZE];
 };
 
-struct KeyUp
+struct KeyboardKey
 {
 	unsigned keycode;
 };
@@ -45,8 +49,8 @@ struct APOKALYPSE3DAPI_EXPORT KeyboardComponents
 {
 	explicit KeyboardComponents(flecs::world& world);
 
-	flecs::entity keyDown_;
-	flecs::entity keyUp_;
+	flecs::entity keyboard_;
+	flecs::entity keyboardKey_;
 };
 } // namespace A3D
 

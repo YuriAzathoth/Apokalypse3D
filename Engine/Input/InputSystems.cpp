@@ -35,45 +35,24 @@ A3D::InputSystems::InputSystems(flecs::world& world)
 	world.import<KeyboardComponents>();
 	world.import<MouseComponents>();
 
-	onKeyDown_ = world.observer()
-				 .term<const Process>()
-				 .event<KeyDown>()
-				 .each([](flecs::iter& it, size_t i)
+	flecs::query keyActions = world.query<ActionKey, const KeyboardKey>();
+	updateKeyboard_ = world.observer<const Keyboard>("UpdateKeyboard")
+					  .event(flecs::OnSet)
+					  .each([keyActions = std::move(keyActions)](flecs::entity e, const Keyboard& keyboard)
 	{
-		const KeyDown* arg = it.param<KeyDown>();
-		it.world().filter_builder<ActionKeyState>()
-			.term<ActionKey>()
-			.term<KeyboardBind>()
-			.term(arg->keycode)
-			.build()
-			.each([](ActionKeyState& action)
-			{
-				action.current = true;
-			});
+		keyActions.each([&keyboard](flecs::entity e, ActionKey& action, const KeyboardKey& key)
+		{
+			const unsigned element_id = key.keycode / KEYS_PER_ELEMENT;
+			const unsigned bit_shift = key.keycode % KEYS_PER_ELEMENT;
+			action.current = keyboard.down[element_id] << (1 << bit_shift);
+		});
 	});
 
-	onKeyUp_ = world.observer()
-			   .term<const Process>()
-			   .event<KeyUp>()
-			   .each([](flecs::iter& it, size_t i)
-	{
-		const KeyUp* arg = it.param<KeyUp>();
-		it.world().filter_builder<ActionKeyState>()
-			.term<ActionKey>()
-			.term<KeyboardBind>()
-			.term(arg->keycode)
-			.build()
-			.each([](ActionKeyState& action)
-			{
-				action.current = false;
-			});
-	});
-
-	updateKeyActions_ = world.system<ActionKeyState>("UpdateKeyActions")
-						.kind(flecs::PreStore)
+	updateKeyActions_ = world.system<ActionKey>("UpdateKeyActions")
+						.kind(flecs::OnStore)
 						.multi_threaded()
-						.each([](ActionKeyState& state)
+						.each([](ActionKey& action)
 	{
-		state.previous = state.current;
+		action.previous = action.current;
 	});
 }

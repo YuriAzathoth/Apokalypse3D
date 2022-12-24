@@ -35,18 +35,20 @@ static void poll_events(flecs::entity e, Process& process)
 		switch (process.event.type)
 		{
 		case SDL_KEYDOWN:
-			w.event<KeyDown>()
-				.id<Process>()
-				.entity(e)
-				.ctx(KeyDown{static_cast<unsigned>(process.event.key.keysym.scancode)})
-				.emit();
+			{
+				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				w.get_mut<Keyboard>()->down[element_id] |= (1 << bit_shift);
+				w.modified<Keyboard>();
+			}
 			break;
 		case SDL_KEYUP:
-			w.event<KeyUp>()
-				.id<Process>()
-				.entity(e)
-				.ctx(KeyUp{static_cast<unsigned>(process.event.key.keysym.scancode)})
-				.emit();
+			{
+				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				w.get_mut<Keyboard>()->down[element_id] &= ~(1 << bit_shift);
+				w.modified<Keyboard>();
+			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			w.event<MouseButtonDown>()

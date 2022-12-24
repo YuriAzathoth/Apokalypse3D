@@ -30,15 +30,11 @@ namespace RawInput { enum class Key : unsigned; }
 
 namespace Input
 {
-struct ActionKey {};
-
-struct ActionKeyState
+struct ActionKey
 {
 	bool current;
 	bool previous;
 };
-
-struct KeyboardBind {};
 } // namespace Input
 } // namespace Components
 
@@ -47,9 +43,6 @@ struct APOKALYPSE3DAPI_EXPORT InputComponents
 	explicit InputComponents(flecs::world& world);
 
 	flecs::entity actionKey_;
-	flecs::entity actionKeyState_;
-
-	flecs::entity keyboardBind_;
 };
 } // namespace A3D
 

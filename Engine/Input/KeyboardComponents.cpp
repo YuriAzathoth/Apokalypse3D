@@ -24,6 +24,15 @@ A3D::KeyboardComponents::KeyboardComponents(flecs::world& world)
 {
 	world.module<KeyboardComponents>("A3D::Components::Keyboard");
 
-	keyDown_ = world.component<KeyDown>().member<unsigned>("keycode");
-	keyUp_ = world.component<KeyUp>().member<unsigned>("keycode");
+	keyboard_ = world.component<Keyboard>()
+				.on_add([](Keyboard& keyboard)
+				{
+					constexpr const unsigned size = static_cast<unsigned>(sizeof(keyboard.down) / sizeof(unsigned));
+					for (unsigned i = 0; i < size; ++i)
+						keyboard.down[i] = 0;
+				});
+
+	keyboardKey_ = world.component<KeyboardKey>().member<unsigned>("keycode");
+
+	world.add<Keyboard>();
 }

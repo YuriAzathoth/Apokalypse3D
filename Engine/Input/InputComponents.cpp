@@ -24,8 +24,12 @@ A3D::InputComponents::InputComponents(flecs::world& world)
 {
 	world.module<InputComponents>("A3D::Components::Input");
 
-	actionKey_ = world.component<ActionKey>().add(flecs::Tag);
-	actionKeyState_ = world.component<ActionKeyState>().member<bool>("current").member<bool>("previous");
-
-	keyboardBind_ = world.component<KeyboardBind>().add(flecs::Tag);
+	actionKey_ = world.component<ActionKey>()
+		.on_add([](ActionKey& key)
+		{
+			key.current = false;
+			key.previous = false;
+		})
+		.member<bool>("current")
+		.member<bool>("previous");
 }
