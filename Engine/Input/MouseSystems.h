@@ -16,62 +16,22 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef INPUTCOMPONENTS_H
-#define INPUTCOMPONENTS_H
+#ifndef MOUSESYSTEMS_H
+#define MOUSESYSTEMS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-namespace Components
+struct APOKALYPSE3DAPI_EXPORT MouseSystems
 {
-namespace RawInput { enum class Key : unsigned; }
+	explicit MouseSystems(flecs::world& world);
 
-namespace Input
-{
-struct ActionAxis
-{
-	float delta;
-};
-
-struct ActionKey
-{
-	bool current;
-	bool previous;
-};
-
-struct Controller {};
-
-struct ControllerAxis
-{
-	float delta;
-};
-
-struct Sensitivity
-{
-	float sensitivity;
-};
-
-struct IsAxisOf {};
-struct IsAxisControlOf {};
-} // namespace Input
-} // namespace Components
-
-struct APOKALYPSE3DAPI_EXPORT InputComponents
-{
-	explicit InputComponents(flecs::world& world);
-
-	flecs::entity actionAxis_;
-	flecs::entity actionKey_;
-
-	flecs::entity controller_;
-	flecs::entity controllerAxis_;
-	flecs::entity sensitivity_;
-	flecs::entity isAxisOf_;
-	flecs::entity isAxisControlOf_;
+	flecs::entity updateButtons_;
+	flecs::entity updateMovement_;
+	flecs::entity updateWheel_;
 };
 } // namespace A3D
 
-
-#endif // INPUTCOMPONENTS_H
+#endif // MOUSESYSTEMS_H

@@ -34,6 +34,17 @@ A3D::InputSystems::InputSystems(flecs::world& world)
 		action.previous = action.current;
 	});
 
+	addAxis_ = world.system<ControllerAxis, const ActionAxis, const Sensitivity>("AddAxis")
+			   .arg(1).up<IsAxisControlOf>()
+			   .kind(flecs::PostLoad)
+			   .multi_threaded()
+			   .each([](ControllerAxis& axis,
+						const ActionAxis& action,
+						const Sensitivity& sensitivity)
+	{
+		axis.delta += action.delta * sensitivity.sensitivity;
+	});
+
 	addAxisKey_ = world.system<ControllerAxis, const ActionKey, const Sensitivity>("AddAxisKey")
 				  .arg(1).up<IsAxisControlOf>()
 				  .kind(flecs::PostLoad)
@@ -43,6 +54,14 @@ A3D::InputSystems::InputSystems(flecs::world& world)
 						   const Sensitivity& sensitivity)
 	{
 		axis.delta += (action.current ? sensitivity.sensitivity : 0.0f);
+	});
+
+	resetAxes_ = world.system<ActionAxis>("ResetAxes")
+				 .kind(flecs::OnStore)
+				 .multi_threaded()
+				 .each([](ActionAxis& axis)
+	{
+		axis.delta = 0.0f;
 	});
 
 	resetControllers_ = world.system<ControllerAxis>("ResetControllers")

@@ -51,38 +51,32 @@ static void poll_events(flecs::entity e, Process& process)
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			w.event<MouseButtonDown>()
-				.id<Process>()
-				.entity(e)
-				.ctx(MouseButtonDown{process.event.button.button})
-				.emit();
+			{
+				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				w.get_mut<ButtonsState>()->down |= (1 << bit_shift);
+				w.modified<ButtonsState>();
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			w.event<MouseButtonDown>()
-				.id<Process>()
-				.entity(e)
-				.ctx(MouseButtonDown{process.event.button.button})
-				.emit();
+			{
+				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				w.get_mut<ButtonsState>()->down &= ~(1 << bit_shift);
+				w.modified<ButtonsState>();
+			}
 			break;
 		case SDL_MOUSEMOTION:
-			w.event<MouseMove>()
-				.id<Process>()
-				.entity(e)
-				.ctx(MouseMove
-				{
-					process.event.motion.x,
-					process.event.motion.y,
-					process.event.motion.xrel,
-					process.event.motion.yrel
-				})
-				.emit();
+			{
+				Movement* movement = w.get_mut<Movement>();
+				movement->x = process.event.motion.x;
+				movement->y = process.event.motion.y;
+				movement->dx = process.event.motion.xrel;
+				movement->dy = process.event.motion.yrel;
+				w.modified<Movement>();
+			}
 			break;
 		case SDL_MOUSEWHEEL:
-			w.event<MouseWheel>()
-				.id<Process>()
-				.entity(e)
-				.ctx(MouseWheel{process.event.wheel.y})
-				.emit();
+			w.get_mut<WheelState>()->delta = process.event.wheel.y;
+			w.modified<WheelState>();
 			break;
 		case SDL_QUIT:
 			w.quit();

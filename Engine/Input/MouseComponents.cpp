@@ -24,12 +24,18 @@ A3D::MouseComponents::MouseComponents(flecs::world& world)
 {
 	world.module<MouseComponents>("A3D::Components::Mouse");
 
-	buttonDown_ = world.component<MouseButtonDown>().member<unsigned char>("button");
-	buttonUp_ = world.component<MouseButtonDown>().member<unsigned char>("button");
-	move_ = world.component<MouseMove>()
-		.member<int>("posx")
-		.member<int>("posy")
-		.member<int>("dx")
-		.member<int>("dy");
-	wheel_ = world.component<MouseWheel>().member<int>("dist");
+	axisX_ = world.component<AxisX>().add(flecs::Tag);
+	axisY_ = world.component<AxisY>().add(flecs::Tag);
+	wheel_ = world.component<Wheel>().add(flecs::Tag);
+	button_ = world.component<Button>().member<unsigned char>("code");
+
+	buttonsState_ = world.component<ButtonsState>().member<unsigned char>("down");
+
+	movement_ = world.component<Movement>()
+		.member<int>("x")
+		.member<int>("y")
+		.member<float>("dx")
+		.member<float>("dy");
+
+	wheelState_ = world.component<WheelState>().member<int>("delta");
 }

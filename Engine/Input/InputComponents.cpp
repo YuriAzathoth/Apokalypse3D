@@ -24,6 +24,13 @@ A3D::InputComponents::InputComponents(flecs::world& world)
 {
 	world.module<InputComponents>("A3D::Components::Input");
 
+	actionAxis_ = world.component<ActionAxis>()
+		.on_add([](ActionAxis& axis)
+		{
+			axis.delta = 0.0f;
+		})
+		.member<float>("delta");
+
 	actionKey_ = world.component<ActionKey>()
 		.on_add([](ActionKey& key)
 		{

@@ -28,27 +28,31 @@ namespace Components
 {
 namespace Mouse
 {
-struct MouseButtonDown
+struct AxisX {};
+struct AxisY {};
+struct Wheel {};
+
+struct Button
 {
-	unsigned char button;
+	unsigned char code;
 };
 
-struct MouseButtonUp
+struct ButtonsState
 {
-	unsigned char button;
+	unsigned char down;
 };
 
-struct MouseMove
+struct Movement
 {
-	int posx;
-	int posy;
-	int dx;
-	int dy;
+	int x;
+	int y;
+	float dx;
+	float dy;
 };
 
-struct MouseWheel
+struct WheelState
 {
-	int dist;
+	float delta;
 };
 } // namespace Mouse
 } // namespace Components
@@ -57,10 +61,13 @@ struct APOKALYPSE3DAPI_EXPORT MouseComponents
 {
 	explicit MouseComponents(flecs::world& world);
 
-	flecs::entity buttonDown_;
-	flecs::entity buttonUp_;
-	flecs::entity move_;
+	flecs::entity axisX_;
+	flecs::entity axisY_;
+	flecs::entity button_;
+	flecs::entity buttonsState_;
+	flecs::entity movement_;
 	flecs::entity wheel_;
+	flecs::entity wheelState_;
 };
 } // namespace A3D
 

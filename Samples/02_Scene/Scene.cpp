@@ -184,14 +184,13 @@ int main()
 				e.world().quit();
 		});
 
-	flecs::entity ctrlr = world.entity().add<Input::Controller>();
-
 	flecs::entity forward_back = world.entity();
 	flecs::entity left_right = world.entity();
 	flecs::entity up_down = world.entity();
-	flecs::entity fbctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(forward_back).add<CamControl>(camera);
-	flecs::entity lrctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(left_right).add<CamControl>(camera);
-	flecs::entity udctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(up_down).add<CamControl>(camera);
+	flecs::entity movement = world.entity().add<Input::Controller>();
+	flecs::entity fbctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(forward_back).add<CamControl>(camera);
+	flecs::entity lrctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(left_right).add<CamControl>(camera);
+	flecs::entity udctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(up_down).add<CamControl>(camera);
 
 	world.entity("ACTION_FORWARD")
 		.add<Input::ActionKey>()
@@ -246,6 +245,47 @@ int main()
 		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
 	{
 		pos.position.y += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	flecs::entity look_pitch = world.entity();
+	flecs::entity look_yaw = world.entity();
+	flecs::entity look = world.entity().add<Input::Controller>();
+	flecs::entity pitchctrl = world.entity("LOOK_PITCH")
+		.add<Input::ControllerAxis>()
+		.add<Input::IsAxisOf>(look)
+		.add(look_pitch)
+		.add<CamControl>(camera);
+	flecs::entity yawctrl = world.entity("LOOK_YAW")
+		.add<Input::ControllerAxis>()
+		.add<Input::IsAxisOf>(look)
+		.add(look_yaw)
+		.add<CamControl>(camera);
+
+	world.entity()
+		.add<Input::ActionAxis>()
+		.add<Input::IsAxisControlOf>(yawctrl)
+		.add<Mouse::AxisX>()
+		.set<Input::Sensitivity>({0.25f});
+	world.entity()
+		.add<Input::ActionAxis>()
+		.add<Input::IsAxisControlOf>(pitchctrl)
+		.add<Mouse::AxisY>()
+		.set<Input::Sensitivity>({0.25f});
+
+	world.system<Scene::Rotation, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(look_pitch)
+		.each([](flecs::entity e, Scene::Rotation& rot, const Input::ControllerAxis& axis)
+	{
+		rot.quat *= glm::angleAxis(axis.delta * e.delta_time(), glm::vec3{-1.0f, 0.0f, 0.0f});
+	});
+
+	world.system<Scene::Rotation, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(look_yaw)
+		.each([](flecs::entity e, Scene::Rotation& rot, const Input::ControllerAxis& axis)
+	{
+		rot.quat *= glm::angleAxis(axis.delta * e.delta_time(), glm::vec3{0.0f, -1.0f, 0.0f});
 	});
 
 	engine.Run();
