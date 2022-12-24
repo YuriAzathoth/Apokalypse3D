@@ -41,6 +41,11 @@ SceneComponents::SceneComponents(flecs::world& world)
 		.add(flecs::With, scale_)
 		.add(flecs::With, worldTransform_);
 
-	root_ = world.component<Root>().add(flecs::Tag).add(flecs::With, node_);
+	static_ = world.component<Static>().add(flecs::Tag);
+
+	root_ = world.component<Root>()
+		.add(flecs::Tag)
+		.add(flecs::With, node_)
+		.add(flecs::With, static_);
 }
 } // namespace A3D

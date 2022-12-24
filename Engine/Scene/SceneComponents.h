@@ -58,6 +58,7 @@ struct WorldTransform
 
 struct Node {};
 struct Root {};
+struct Static {};
 } // namespace Scene
 } // namespace Components
 
@@ -74,6 +75,7 @@ struct APOKALYPSE3DAPI_EXPORT SceneComponents
 
 	flecs::entity node_;
 	flecs::entity root_;
+	flecs::entity static_;
 };
 } // namespace A3D
 
