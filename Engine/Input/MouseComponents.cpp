@@ -16,23 +16,26 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTSYSTEMS_H
-#define EVENTSYSTEMS_H
+#include "MouseComponents.h"
 
-#include <flecs.h>
-#include "Apokalypse3DAPI.h"
+using namespace A3D::Components::Mouse;
 
-namespace A3D
+A3D::MouseComponents::MouseComponents(flecs::world& world)
 {
-struct APOKALYPSE3DAPI_EXPORT EventSystems
-{
-	EventSystems(flecs::world& world);
+	world.module<MouseComponents>("A3D::Components::Mouse");
 
-	flecs::entity onAddProcess_;
-	flecs::entity onRemoveProcess_;
+	axisX_ = world.component<AxisX>().add(flecs::Tag);
+	axisY_ = world.component<AxisY>().add(flecs::Tag);
+	wheel_ = world.component<Wheel>().add(flecs::Tag);
+	button_ = world.component<Button>().member<unsigned char>("code");
 
-	flecs::entity pollEvents_;
-};
-} // namespace A3D
+	buttonsState_ = world.component<ButtonsState>().member<unsigned char>("down");
 
-#endif // EVENTSYSTEMS_H
+	movement_ = world.component<Movement>()
+		.member<int>("x")
+		.member<int>("y")
+		.member<float>("dx")
+		.member<float>("dy");
+
+	wheelState_ = world.component<WheelState>().member<int>("delta");
+}

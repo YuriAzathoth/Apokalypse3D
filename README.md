@@ -2,7 +2,7 @@
 Fast and cache-friendly Entity Component System 3D game engine (WIP)
 
 ## Requirements
-- **CMake** (2.8.12+)
+- **CMake** (3.2+)
 - **C++ Build Tools**
 	- ninja
 	- make (not fully tested yet)

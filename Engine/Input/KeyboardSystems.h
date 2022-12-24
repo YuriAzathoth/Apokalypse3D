@@ -16,23 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTSYSTEMS_H
-#define EVENTSYSTEMS_H
+#ifndef KEYBOARDSYSTEMS_H
+#define KEYBOARDSYSTEMS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT EventSystems
+struct APOKALYPSE3DAPI_EXPORT KeyboardSystems
 {
-	EventSystems(flecs::world& world);
+	explicit KeyboardSystems(flecs::world& world);
 
-	flecs::entity onAddProcess_;
-	flecs::entity onRemoveProcess_;
-
-	flecs::entity pollEvents_;
+	flecs::entity update_;
 };
 } // namespace A3D
 
-#endif // EVENTSYSTEMS_H
+#endif // KEYBOARDSYSTEMS_H

@@ -16,23 +16,43 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTSYSTEMS_H
-#define EVENTSYSTEMS_H
+#ifndef KEYBOARDCOMPONENTS_H
+#define KEYBOARDCOMPONENTS_H
 
+#include <bitset>
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT EventSystems
+namespace Components
 {
-	EventSystems(flecs::world& world);
+namespace Keyboard
+{
+constexpr const unsigned KEYS_COUNT = 256;
+constexpr const unsigned KEYS_PER_ELEMENT = static_cast<unsigned>(sizeof(unsigned)) * 8;
+constexpr const unsigned KEYS_ARR_SIZE = KEYS_COUNT / KEYS_PER_ELEMENT;
 
-	flecs::entity onAddProcess_;
-	flecs::entity onRemoveProcess_;
+struct Keyboard
+{
+	unsigned down[KEYS_ARR_SIZE];
+};
 
-	flecs::entity pollEvents_;
+struct KeyboardKey
+{
+	unsigned keycode;
+};
+} // namespace Keyboard
+} // namespace Components
+
+struct APOKALYPSE3DAPI_EXPORT KeyboardComponents
+{
+	explicit KeyboardComponents(flecs::world& world);
+
+	flecs::entity keyboard_;
+	flecs::entity keyboardKey_;
 };
 } // namespace A3D
 
-#endif // EVENTSYSTEMS_H
+
+#endif // KEYBOARDCOMPONENTS_H

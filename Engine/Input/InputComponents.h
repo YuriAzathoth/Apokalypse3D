@@ -16,23 +16,62 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTSYSTEMS_H
-#define EVENTSYSTEMS_H
+#ifndef INPUTCOMPONENTS_H
+#define INPUTCOMPONENTS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT EventSystems
+namespace Components
 {
-	EventSystems(flecs::world& world);
+namespace RawInput { enum class Key : unsigned; }
 
-	flecs::entity onAddProcess_;
-	flecs::entity onRemoveProcess_;
+namespace Input
+{
+struct ActionAxis
+{
+	float delta;
+};
 
-	flecs::entity pollEvents_;
+struct ActionKey
+{
+	bool current;
+	bool previous;
+};
+
+struct Controller {};
+
+struct ControllerAxis
+{
+	float delta;
+};
+
+struct Sensitivity
+{
+	float sensitivity;
+};
+
+struct IsAxisOf {};
+struct IsAxisControlOf {};
+} // namespace Input
+} // namespace Components
+
+struct APOKALYPSE3DAPI_EXPORT InputComponents
+{
+	explicit InputComponents(flecs::world& world);
+
+	flecs::entity actionAxis_;
+	flecs::entity actionKey_;
+
+	flecs::entity controller_;
+	flecs::entity controllerAxis_;
+	flecs::entity sensitivity_;
+	flecs::entity isAxisOf_;
+	flecs::entity isAxisControlOf_;
 };
 } // namespace A3D
 
-#endif // EVENTSYSTEMS_H
+
+#endif // INPUTCOMPONENTS_H

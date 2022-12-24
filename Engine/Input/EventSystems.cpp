@@ -16,21 +16,71 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <SDL3/SDL.h>
 #include "EventComponents.h"
 #include "EventSystems.h"
 #include "IO/Log.h"
+#include "KeyboardComponents.h"
+#include "MouseComponents.h"
 
 using namespace A3D::Components::Event;
+using namespace A3D::Components::Keyboard;
+using namespace A3D::Components::Mouse;
 
 static void poll_events(flecs::entity e, Process& process)
 {
 	LogTrace("SDL events processing begin...");
-	SDL_Event& event = process.event;
-	while (SDL_PollEvent(&event))
-		switch (event.type)
+	flecs::world w = e.world();
+	while (SDL_PollEvent(&process.event))
+		switch (process.event.type)
 		{
+		case SDL_KEYDOWN:
+			{
+				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				w.get_mut<Keyboard>()->down[element_id] |= (1 << bit_shift);
+				w.modified<Keyboard>();
+			}
+			break;
+		case SDL_KEYUP:
+			{
+				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				w.get_mut<Keyboard>()->down[element_id] &= ~(1 << bit_shift);
+				w.modified<Keyboard>();
+			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			{
+				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				w.get_mut<ButtonsState>()->down |= (1 << bit_shift);
+				w.modified<ButtonsState>();
+			}
+			break;
+		case SDL_MOUSEBUTTONUP:
+			{
+				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				w.get_mut<ButtonsState>()->down &= ~(1 << bit_shift);
+				w.modified<ButtonsState>();
+			}
+			break;
+		case SDL_MOUSEMOTION:
+			{
+				Movement* movement = w.get_mut<Movement>();
+				movement->x = process.event.motion.x;
+				movement->y = process.event.motion.y;
+				movement->dx = process.event.motion.xrel;
+				movement->dy = process.event.motion.yrel;
+				w.modified<Movement>();
+			}
+			break;
+		case SDL_MOUSEWHEEL:
+			w.get_mut<WheelState>()->delta = process.event.wheel.y;
+			w.modified<WheelState>();
+			break;
 		case SDL_QUIT:
-			e.world().quit();
+			w.quit();
+			break;
 		}
 	LogTrace("SDL events processing end...");
 }
@@ -41,11 +91,31 @@ EventSystems::EventSystems(flecs::world& world)
 {
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
+	world.import<KeyboardComponents>();
+	world.import<MouseComponents>();
 
-	world.add<Process>();
+	onAddProcess_ = world.observer<Process>("Init")
+					.event(flecs::OnAdd)
+					.each([](Process&)
+	{
+		LogInfo("Initializing SDL events...");
+		SDL_InitSubSystem(SDL_INIT_EVENTS);
+		LogInfo("SDL events has been initialized...");
+	});
+
+	onRemoveProcess_ = world.observer<Process>("Destroy")
+					   .event(flecs::OnRemove)
+					   .each([](Process&)
+	{
+		SDL_QuitSubSystem(SDL_INIT_EVENTS);
+		LogInfo("SDL events shutdowned.");
+	});
 
 	pollEvents_ = world.system<Process>("PollEvents")
 				  .kind(flecs::OnLoad)
+				  .no_readonly()
 				  .each(poll_events);
+
+	world.add<Process>();
 }
 } // namespace A3D

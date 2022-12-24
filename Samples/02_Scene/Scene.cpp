@@ -16,7 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <glm/trigonometric.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/glm.hpp>
 #include "Core/Engine.h"
 #include "Debug/DebugModelRendererSystems.h"
 #include "Graphics/CameraComponents.h"
@@ -36,6 +37,12 @@
 #include "Graphics/WindowSystems.h"
 #include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
+#include "Input/InputComponents.h"
+#include "Input/InputSystems.h"
+#include "Input/KeyboardComponents.h"
+#include "Input/KeyboardSystems.h"
+#include "Input/MouseComponents.h"
+#include "Input/MouseSystems.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -49,6 +56,8 @@ struct Rotate
 	float yaw;
 	float roll;
 };
+
+struct CamControl {};
 
 void CreateBoxes(flecs::entity parent,
 				 const char* model,
@@ -96,6 +105,7 @@ int main()
 	world.import<AsyncLoaderComponents>();
 	world.import<CameraComponents>();
 	world.import<EventComponents>();
+	world.import<InputComponents>();
 	world.import<GpuProgramComponents>();
 	world.import<GpuProgramCacheComponents>();
 	world.import<ImageComponents>();
@@ -107,6 +117,9 @@ int main()
 	world.import<WindowComponents>();
 	world.import<CameraSystems>();
 	world.import<EventSystems>();
+	world.import<InputSystems>();
+	world.import<KeyboardSystems>();
+	world.import<MouseSystems>();
 	world.import<GpuProgramCacheSystems>();
 	world.import<ImageCacheSystems>();
 	world.import<MeshCacheSystems>();
@@ -114,8 +127,6 @@ int main()
 	world.import<WindowSystems>();
 	world.import<SceneSystems>();
 	world.import<DebugModelRendererSystems>();
-
-	world.component<Rotate>();
 
 	Renderer::RendererConfig renderer{};
 	renderer.fullscreen = false;
@@ -132,6 +143,9 @@ int main()
 	create_video(world);
 	create_window(world);
 	create_renderer(world);
+
+	world.component<CamControl>().add(flecs::Tag).add(flecs::Acyclic);
+	world.component<Rotate>();
 
 	flecs::entity scene = world.entity().add<Scene::Root>();
 
@@ -156,6 +170,123 @@ int main()
 			const glm::quat roll = glm::angleAxis(rotate.roll * e.delta_time(), glm::vec3{0.0f, 0.0f, 1.0f});
 			rotation.quat *= pitch * yaw * roll;
 		});
+
+	flecs::entity action_exit = world.entity();
+	world.entity("ACTION_EXIT")
+		.add(action_exit)
+		.add<Input::ActionKey>()
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_ESCAPE});
+	world.system<Input::ActionKey>()
+		.term(action_exit)
+		.each([](flecs::entity e, Input::ActionKey& action)
+		{
+			if (action.current)
+				e.world().quit();
+		});
+
+	flecs::entity forward_back = world.entity();
+	flecs::entity left_right = world.entity();
+	flecs::entity up_down = world.entity();
+	flecs::entity movement = world.entity().add<Input::Controller>();
+	flecs::entity fbctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(forward_back).add<CamControl>(camera);
+	flecs::entity lrctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(left_right).add<CamControl>(camera);
+	flecs::entity udctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(movement).add(up_down).add<CamControl>(camera);
+
+	world.entity("ACTION_FORWARD")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(fbctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_W});
+	world.entity("ACTION_BACK")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(fbctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_S});
+	world.entity("ACTION_LEFT")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(lrctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_A});
+	world.entity("ACTION_RIGHT")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(lrctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_D});
+	world.entity("ACTION_UP")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(udctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_SPACE});
+	world.entity("ACTION_DOWN")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(udctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_LCTRL});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(forward_back)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.z += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(left_right)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.x += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(up_down)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.y += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	flecs::entity look_pitch = world.entity();
+	flecs::entity look_yaw = world.entity();
+	flecs::entity look = world.entity().add<Input::Controller>();
+	flecs::entity pitchctrl = world.entity("LOOK_PITCH")
+		.add<Input::ControllerAxis>()
+		.add<Input::IsAxisOf>(look)
+		.add(look_pitch)
+		.add<CamControl>(camera);
+	flecs::entity yawctrl = world.entity("LOOK_YAW")
+		.add<Input::ControllerAxis>()
+		.add<Input::IsAxisOf>(look)
+		.add(look_yaw)
+		.add<CamControl>(camera);
+
+	world.entity()
+		.add<Input::ActionAxis>()
+		.add<Input::IsAxisControlOf>(yawctrl)
+		.add<Mouse::AxisX>()
+		.set<Input::Sensitivity>({0.25f});
+	world.entity()
+		.add<Input::ActionAxis>()
+		.add<Input::IsAxisControlOf>(pitchctrl)
+		.add<Mouse::AxisY>()
+		.set<Input::Sensitivity>({0.25f});
+
+	world.system<Scene::Rotation, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(look_pitch)
+		.each([](flecs::entity e, Scene::Rotation& rot, const Input::ControllerAxis& axis)
+	{
+		rot.quat *= glm::angleAxis(axis.delta * e.delta_time(), glm::vec3{-1.0f, 0.0f, 0.0f});
+	});
+
+	world.system<Scene::Rotation, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(look_yaw)
+		.each([](flecs::entity e, Scene::Rotation& rot, const Input::ControllerAxis& axis)
+	{
+		rot.quat *= glm::angleAxis(axis.delta * e.delta_time(), glm::vec3{0.0f, -1.0f, 0.0f});
+	});
 
 	engine.Run();
 
