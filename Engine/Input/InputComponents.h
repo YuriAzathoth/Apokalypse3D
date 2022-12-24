@@ -35,6 +35,21 @@ struct ActionKey
 	bool current;
 	bool previous;
 };
+
+struct Controller {};
+
+struct ControllerAxis
+{
+	float delta;
+};
+
+struct Sensitivity
+{
+	float sensitivity;
+};
+
+struct IsAxisOf {};
+struct IsAxisControlOf {};
 } // namespace Input
 } // namespace Components
 
@@ -43,6 +58,13 @@ struct APOKALYPSE3DAPI_EXPORT InputComponents
 	explicit InputComponents(flecs::world& world);
 
 	flecs::entity actionKey_;
+	flecs::entity actionController2D_;
+
+	flecs::entity controller_;
+	flecs::entity controllerAxis_;
+	flecs::entity sensitivity_;
+	flecs::entity isAxisOf_;
+	flecs::entity isAxisControlOf_;
 };
 } // namespace A3D
 

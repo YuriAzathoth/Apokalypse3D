@@ -40,6 +40,7 @@
 #include "Input/InputComponents.h"
 #include "Input/InputSystems.h"
 #include "Input/KeyboardComponents.h"
+#include "Input/KeyboardSystems.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -53,6 +54,8 @@ struct Rotate
 	float yaw;
 	float roll;
 };
+
+struct CamControl {};
 
 void CreateBoxes(flecs::entity parent,
 				 const char* model,
@@ -113,6 +116,7 @@ int main()
 	world.import<CameraSystems>();
 	world.import<EventSystems>();
 	world.import<InputSystems>();
+	world.import<KeyboardSystems>();
 	world.import<GpuProgramCacheSystems>();
 	world.import<ImageCacheSystems>();
 	world.import<MeshCacheSystems>();
@@ -120,8 +124,6 @@ int main()
 	world.import<WindowSystems>();
 	world.import<SceneSystems>();
 	world.import<DebugModelRendererSystems>();
-
-	world.component<Rotate>();
 
 	Renderer::RendererConfig renderer{};
 	renderer.fullscreen = false;
@@ -138,6 +140,9 @@ int main()
 	create_video(world);
 	create_window(world);
 	create_renderer(world);
+
+	world.component<CamControl>().add(flecs::Tag).add(flecs::Acyclic);
+	world.component<Rotate>();
 
 	flecs::entity scene = world.entity().add<Scene::Root>();
 
@@ -175,6 +180,50 @@ int main()
 			if (action.current)
 				e.world().quit();
 		});
+
+	flecs::entity ctrlr = world.entity().add<Input::Controller>();
+
+	flecs::entity forward_back = world.entity();
+	flecs::entity left_right = world.entity();
+	flecs::entity fbctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(forward_back).add<CamControl>(camera);
+	flecs::entity lrctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(left_right).add<CamControl>(camera);
+
+	world.entity("ACTION_FORWARD")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(fbctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_W});
+	world.entity("ACTION_BACK")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(fbctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_S});
+	world.entity("ACTION_LEFT")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(lrctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_A});
+	world.entity("ACTION_RIGHT")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(lrctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_D});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(forward_back)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.z += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(left_right)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.x += axis.delta * e.delta_time() * 50.0f;
+	});
 
 	engine.Run();
 

@@ -30,15 +30,18 @@ A3D::KeyboardSystems::KeyboardSystems(flecs::world& world)
 	world.import<KeyboardComponents>();
 
 	flecs::query keyActions = world.query<ActionKey, const KeyboardKey>();
+
 	update_ = world.observer<const Keyboard>("Update")
 			  .event(flecs::OnSet)
-			  .each([keyActions = std::move(keyActions)](flecs::entity e, const Keyboard& keyboard)
+			  .each([keyActions = std::move(keyActions)](const Keyboard& keyboard)
 	{
 		keyActions.each([&keyboard](flecs::entity e, ActionKey& action, const KeyboardKey& key)
 		{
 			const unsigned element_id = key.keycode / KEYS_PER_ELEMENT;
 			const unsigned bit_shift = key.keycode % KEYS_PER_ELEMENT;
-			action.current = keyboard.down[element_id] << (1 << bit_shift);
+			action.current = keyboard.down[element_id] & (1 << bit_shift);
+			if (action.previous != action.current)
+				e.modified<ActionKey>();
 		});
 	});
 

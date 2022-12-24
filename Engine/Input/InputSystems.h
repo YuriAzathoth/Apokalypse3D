@@ -29,6 +29,9 @@ struct APOKALYPSE3DAPI_EXPORT InputSystems
 	explicit InputSystems(flecs::world& world);
 
 	flecs::entity updateKeyActions_;
+
+	flecs::entity addAxisKey_;
+	flecs::entity resetControllers_;
 };
 } // namespace A3D
 

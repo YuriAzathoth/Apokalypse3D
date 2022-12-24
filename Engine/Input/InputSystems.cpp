@@ -33,4 +33,23 @@ A3D::InputSystems::InputSystems(flecs::world& world)
 	{
 		action.previous = action.current;
 	});
+
+	addAxisKey_ = world.system<ControllerAxis, const ActionKey, const Sensitivity>("AddAxisKey")
+				  .arg(1).up<IsAxisControlOf>()
+				  .kind(flecs::PostLoad)
+				  .multi_threaded()
+				  .each([](ControllerAxis& axis,
+						   const ActionKey& action,
+						   const Sensitivity& sensitivity)
+	{
+		axis.delta += (action.current ? sensitivity.sensitivity : 0.0f);
+	});
+
+	resetControllers_ = world.system<ControllerAxis>("ResetControllers")
+						.kind(flecs::OnStore)
+						.multi_threaded()
+						.each([](ControllerAxis& axis)
+	{
+		axis.delta = 0.0f;
+	});
 }

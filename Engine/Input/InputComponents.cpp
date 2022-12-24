@@ -32,4 +32,10 @@ A3D::InputComponents::InputComponents(flecs::world& world)
 		})
 		.member<bool>("current")
 		.member<bool>("previous");
+
+	controller_ = world.component<Controller>().add(flecs::Tag);
+	sensitivity_ = world.component<Sensitivity>().add(flecs::Tag);
+	controllerAxis_ = world.component<ControllerAxis>().member<float>("delta");
+	isAxisOf_ = world.component<IsAxisOf>().add(flecs::Tag).add(flecs::Acyclic);
+	isAxisControlOf_ = world.component<IsAxisControlOf>().add(flecs::Tag).add(flecs::Acyclic);
 }
