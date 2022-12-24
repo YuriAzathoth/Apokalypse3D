@@ -41,6 +41,8 @@
 #include "Input/InputSystems.h"
 #include "Input/KeyboardComponents.h"
 #include "Input/KeyboardSystems.h"
+#include "Input/MouseComponents.h"
+#include "Input/MouseSystems.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
@@ -117,6 +119,7 @@ int main()
 	world.import<EventSystems>();
 	world.import<InputSystems>();
 	world.import<KeyboardSystems>();
+	world.import<MouseSystems>();
 	world.import<GpuProgramCacheSystems>();
 	world.import<ImageCacheSystems>();
 	world.import<MeshCacheSystems>();
@@ -185,8 +188,10 @@ int main()
 
 	flecs::entity forward_back = world.entity();
 	flecs::entity left_right = world.entity();
+	flecs::entity up_down = world.entity();
 	flecs::entity fbctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(forward_back).add<CamControl>(camera);
 	flecs::entity lrctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(left_right).add<CamControl>(camera);
+	flecs::entity udctrl = world.entity().add<Input::ControllerAxis>().add<Input::IsAxisOf>(ctrlr).add(up_down).add<CamControl>(camera);
 
 	world.entity("ACTION_FORWARD")
 		.add<Input::ActionKey>()
@@ -208,6 +213,16 @@ int main()
 		.add<Input::IsAxisControlOf>(lrctrl)
 		.set<Input::Sensitivity>({1.0f})
 		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_D});
+	world.entity("ACTION_UP")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(udctrl)
+		.set<Input::Sensitivity>({1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_SPACE});
+	world.entity("ACTION_DOWN")
+		.add<Input::ActionKey>()
+		.add<Input::IsAxisControlOf>(udctrl)
+		.set<Input::Sensitivity>({-1.0f})
+		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_LCTRL});
 
 	world.system<Scene::Position, const Input::ControllerAxis>()
 		.arg(1).up<CamControl>()
@@ -223,6 +238,14 @@ int main()
 		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
 	{
 		pos.position.x += axis.delta * e.delta_time() * 50.0f;
+	});
+
+	world.system<Scene::Position, const Input::ControllerAxis>()
+		.arg(1).up<CamControl>()
+		.term(up_down)
+		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+	{
+		pos.position.y += axis.delta * e.delta_time() * 50.0f;
 	});
 
 	engine.Run();
