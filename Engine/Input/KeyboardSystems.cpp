@@ -16,30 +16,31 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "EventComponents.h"
 #include "InputComponents.h"
-#include "InputSystems.h"
-#include "IO/Log.h"
 #include "KeyboardComponents.h"
-#include "MouseComponents.h"
+#include "KeyboardSystems.h"
 
-using namespace A3D::Components::Event;
 using namespace A3D::Components::Input;
 using namespace A3D::Components::Keyboard;
 
-A3D::InputSystems::InputSystems(flecs::world& world)
+A3D::KeyboardSystems::KeyboardSystems(flecs::world& world)
 {
-	world.module<InputSystems>("A3D::Systems::Input");
-	world.import<EventComponents>();
+	world.module<KeyboardSystems>("A3D::Systems::Keyboard");
 	world.import<InputComponents>();
 	world.import<KeyboardComponents>();
-	world.import<MouseComponents>();
 
-	updateKeyActions_ = world.system<ActionKey>("UpdateKeyActions")
-						.kind(flecs::OnStore)
-						.multi_threaded()
-						.each([](ActionKey& action)
+	flecs::query keyActions = world.query<ActionKey, const KeyboardKey>();
+	update_ = world.observer<const Keyboard>("Update")
+			  .event(flecs::OnSet)
+			  .each([keyActions = std::move(keyActions)](flecs::entity e, const Keyboard& keyboard)
 	{
-		action.previous = action.current;
+		keyActions.each([&keyboard](flecs::entity e, ActionKey& action, const KeyboardKey& key)
+		{
+			const unsigned element_id = key.keycode / KEYS_PER_ELEMENT;
+			const unsigned bit_shift = key.keycode % KEYS_PER_ELEMENT;
+			action.current = keyboard.down[element_id] << (1 << bit_shift);
+		});
 	});
+
+	world.add<Keyboard>();
 }

@@ -30,7 +30,6 @@ struct APOKALYPSE3DAPI_EXPORT InputSystems
 {
 	explicit InputSystems(flecs::world& world);
 
-	flecs::entity updateKeyboard_;
 	flecs::entity updateKeyActions_;
 };
 } // namespace A3D

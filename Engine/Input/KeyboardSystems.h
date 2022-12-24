@@ -16,21 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "KeyboardComponents.h"
+#ifndef KEYBOARDSYSTEMS_H
+#define KEYBOARDSYSTEMS_H
 
-using namespace A3D::Components::Keyboard;
+#include <flecs.h>
+#include "Apokalypse3DAPI.h"
 
-A3D::KeyboardComponents::KeyboardComponents(flecs::world& world)
+namespace A3D
 {
-	world.module<KeyboardComponents>("A3D::Components::Keyboard");
+struct APOKALYPSE3DAPI_EXPORT KeyboardSystems
+{
+	explicit KeyboardSystems(flecs::world& world);
 
-	keyboard_ = world.component<Keyboard>()
-				.on_add([](Keyboard& keyboard)
-				{
-					constexpr const unsigned size = static_cast<unsigned>(sizeof(keyboard.down) / sizeof(unsigned));
-					for (unsigned i = 0; i < size; ++i)
-						keyboard.down[i] = 0;
-				});
+	flecs::entity update_;
+};
+} // namespace A3D
 
-	keyboardKey_ = world.component<KeyboardKey>().member<unsigned>("keycode");
-}
+#endif // KEYBOARDSYSTEMS_H
