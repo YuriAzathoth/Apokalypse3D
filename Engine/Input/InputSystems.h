@@ -24,8 +24,6 @@
 
 namespace A3D
 {
-namespace Components { namespace RawInput { enum class Key : unsigned; }}
-
 struct APOKALYPSE3DAPI_EXPORT InputSystems
 {
 	explicit InputSystems(flecs::world& world);

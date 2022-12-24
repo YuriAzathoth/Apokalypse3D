@@ -16,24 +16,15 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "EventComponents.h"
 #include "InputComponents.h"
 #include "InputSystems.h"
-#include "IO/Log.h"
-#include "KeyboardComponents.h"
-#include "MouseComponents.h"
 
-using namespace A3D::Components::Event;
 using namespace A3D::Components::Input;
-using namespace A3D::Components::Keyboard;
 
 A3D::InputSystems::InputSystems(flecs::world& world)
 {
 	world.module<InputSystems>("A3D::Systems::Input");
-	world.import<EventComponents>();
 	world.import<InputComponents>();
-	world.import<KeyboardComponents>();
-	world.import<MouseComponents>();
 
 	updateKeyActions_ = world.system<ActionKey>("UpdateKeyActions")
 						.kind(flecs::OnStore)
