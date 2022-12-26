@@ -20,9 +20,7 @@
 
 using namespace A3D::Components::Geometry;
 
-namespace A3D
-{
-GeometryComponents::GeometryComponents(flecs::world& world)
+A3D::GeometryComponents::GeometryComponents(flecs::world& world)
 {
 	world.module<GeometryComponents>("A3D::Components::Geometry");
 
@@ -31,4 +29,3 @@ GeometryComponents::GeometryComponents(flecs::world& world)
 	obb_ = world.component<Obb>();
 	sphere_ = world.component<Sphere>();
 }
-} // namespace A3D

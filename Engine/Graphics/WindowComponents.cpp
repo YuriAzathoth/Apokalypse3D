@@ -20,9 +20,7 @@
 
 using namespace A3D::Components::Window;
 
-namespace A3D
-{
-WindowComponents::WindowComponents(flecs::world& world)
+A3D::WindowComponents::WindowComponents(flecs::world& world)
 {
 	world.module<WindowComponents>("A3D::Components::Window");
 
@@ -37,4 +35,3 @@ WindowComponents::WindowComponents(flecs::world& world)
 		.member<bool>("borderless")
 		.member<bool>("resizeable");
 }
-} // namespace A3D

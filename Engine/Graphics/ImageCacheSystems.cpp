@@ -37,8 +37,6 @@ using namespace A3D::Components::Cache::Image;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
 static void destroy_texture(Texture& texture)
 {
 	bgfx::destroy(texture.handle);
@@ -57,7 +55,7 @@ static void release_image(void*, void* userData)
 	bimg::imageFree((bimg::ImageContainer*)userData);
 }
 
-ImageCacheSystems::ImageCacheSystems(flecs::world& world)
+A3D::ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 {
 	world.module<ImageCacheSystems>("A3D::Systems::Cache::Image");
 	world.import<AsyncLoaderComponents>();
@@ -192,4 +190,3 @@ ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 
 	world.entity().add<TextureStorage>();
 }
-} // namespace A3D

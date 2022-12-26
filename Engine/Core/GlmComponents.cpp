@@ -22,9 +22,7 @@
 
 using namespace glm;
 
-namespace A3D
-{
-GlmComponents::GlmComponents(flecs::world& world)
+A3D::GlmComponents::GlmComponents(flecs::world& world)
 {
 	world.module<GlmComponents>("glm");
 
@@ -79,4 +77,3 @@ GlmComponents::GlmComponents(flecs::world& world)
 		.member<float>("ca").member<float>("cb").member<float>("cc").member<float>("cd")
 		.member<float>("da").member<float>("db").member<float>("dc").member<float>("dd");
 }
-} // namespace A3D

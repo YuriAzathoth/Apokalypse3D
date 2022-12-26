@@ -46,8 +46,6 @@ static constexpr const unsigned CHUNK_INDEX_BUFFER = BX_MAKEFOURCC('I', 'B', ' '
 static constexpr const unsigned CHUNK_INDEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('I', 'B', 'C', 0x1);
 static constexpr const unsigned CHUNK_PRIMITIVE = BX_MAKEFOURCC('P', 'R', 'I', 0x0);
 
-namespace A3D
-{
 static void destroy_mesh(MeshGroup& group)
 {
 	bgfx::destroy(group.vbo);
@@ -62,7 +60,7 @@ static void clear_meshes(flecs::entity e)
 		.each(destroy_mesh);
 }
 
-MeshCacheSystems::MeshCacheSystems(flecs::world& world)
+A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 {
 	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
 	world.import<AsyncLoaderComponents>();
@@ -256,4 +254,3 @@ MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 
 	world.entity().add<MeshStorage>();
 }
-} // namespace A3D

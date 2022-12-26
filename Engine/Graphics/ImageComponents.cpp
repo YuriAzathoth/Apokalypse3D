@@ -21,9 +21,7 @@
 using namespace A3D::Components::Image;
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
-ImageComponents::ImageComponents(flecs::world& world)
+A3D::ImageComponents::ImageComponents(flecs::world& world)
 {
 	world.module<ImageComponents>("A3D::Components::Image");
 	world.import<StringComponents>();
@@ -31,4 +29,3 @@ ImageComponents::ImageComponents(flecs::world& world)
 	getTexture_ = world.component<GetTexture>().member<StringView>("filename");
 	texture_ = world.component<Texture>().member<uint16_t>("handle");
 }
-} // namespace A3D

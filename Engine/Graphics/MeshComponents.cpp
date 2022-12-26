@@ -21,9 +21,7 @@
 using namespace A3D::Components::Mesh;
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
-MeshComponents::MeshComponents(flecs::world& world)
+A3D::MeshComponents::MeshComponents(flecs::world& world)
 {
 	world.module<MeshComponents>("A3D::Components::Mesh");
 	world.import<StringComponents>();
@@ -33,4 +31,3 @@ MeshComponents::MeshComponents(flecs::world& world)
 	meshPrimitive_ = world.component<MeshPrimitive>();
 	vertexLayout_ = world.component<VertexLayout>();
 }
-} // namespace A3D

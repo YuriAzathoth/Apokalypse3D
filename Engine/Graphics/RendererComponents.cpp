@@ -16,15 +16,11 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL3/SDL.h>
 #include "IO/Log.h"
 #include "RendererComponents.h"
 
-#include <bx/allocator.h>
-#include <stdlib.h>
-
 #ifndef BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
-#	define BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT 8
+#define BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT 8
 #endif // BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
 
 using namespace A3D::Components::Renderer;

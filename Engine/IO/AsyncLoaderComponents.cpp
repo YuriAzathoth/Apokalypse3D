@@ -20,12 +20,9 @@
 
 using namespace A3D::Components::AsyncLoader;
 
-namespace A3D
-{
-AsyncLoaderComponents::AsyncLoaderComponents(flecs::world& world)
+A3D::AsyncLoaderComponents::AsyncLoaderComponents(flecs::world& world)
 {
 	world.module<AsyncLoaderComponents>("A3D::Components::AsyncLoader");
 
 	setAfterLoad_ = world.component<SetAfterLoad>().add(flecs::Tag);
 }
-} // namespace A3D

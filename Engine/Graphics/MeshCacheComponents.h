@@ -19,8 +19,6 @@
 #ifndef MESHCACHECOMPONENTS_H
 #define MESHCACHECOMPONENTS_H
 
-#include <bgfx/bgfx.h>
-#include <bx/bounds.h>
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 

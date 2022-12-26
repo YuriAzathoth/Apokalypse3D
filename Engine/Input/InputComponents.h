@@ -26,8 +26,6 @@ namespace A3D
 {
 namespace Components
 {
-namespace RawInput { enum class Key : unsigned; }
-
 namespace Input
 {
 struct ActionAxis

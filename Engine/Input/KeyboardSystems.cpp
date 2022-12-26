@@ -29,13 +29,12 @@ A3D::KeyboardSystems::KeyboardSystems(flecs::world& world)
 	world.import<InputComponents>();
 	world.import<KeyboardComponents>();
 
-	flecs::query keyActions = world.query<ActionKey, const KeyboardKey>();
-
+	flecs::query actions = world.query<ActionKey, const KeyboardKey>();
 	update_ = world.observer<const Keyboard>("Update")
 			  .event(flecs::OnSet)
-			  .each([keyActions = std::move(keyActions)](const Keyboard& keyboard)
+			  .each([actions = std::move(actions)](const Keyboard& keyboard)
 	{
-		keyActions.each([&keyboard](flecs::entity e, ActionKey& action, const KeyboardKey& key)
+		actions.each([&keyboard](flecs::entity e, ActionKey& action, const KeyboardKey& key)
 		{
 			const unsigned element_id = key.keycode / KEYS_PER_ELEMENT;
 			const unsigned bit_shift = key.keycode % KEYS_PER_ELEMENT;

@@ -20,13 +20,10 @@
 
 using namespace A3D::Components::Cache::Mesh;
 
-namespace A3D
-{
-MeshCacheComponents::MeshCacheComponents(flecs::world& world)
+A3D::MeshCacheComponents::MeshCacheComponents(flecs::world& world)
 {
 	world.module<MeshCacheComponents>("A3D::Components::Cache::Mesh");
 
 	meshStorage_ = world.component<MeshStorage>().add(flecs::Tag);
 	loadModelFile_ = world.component<LoadModelFile>().add(flecs::Tag);
 }
-} // namespace A3D

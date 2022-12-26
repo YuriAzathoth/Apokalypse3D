@@ -20,9 +20,7 @@
 
 using namespace A3D::Components::Cache::GpuProgram;
 
-namespace A3D
-{
-GpuProgramCacheComponents::GpuProgramCacheComponents(flecs::world& world)
+A3D::GpuProgramCacheComponents::GpuProgramCacheComponents(flecs::world& world)
 {
 	world.module<GpuProgramCacheComponents>("A3D::Components::Cache::GpuProgram");
 
@@ -33,4 +31,3 @@ GpuProgramCacheComponents::GpuProgramCacheComponents(flecs::world& world)
 	shaderStorage_ = world.component<ShaderStorage>().add(flecs::Tag);
 	shaderVertex_ = world.component<ShaderVertex>().add(flecs::Tag);
 }
-} // namespace A3D

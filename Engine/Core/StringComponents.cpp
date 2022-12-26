@@ -20,11 +20,8 @@
 
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
-StringComponents::StringComponents(flecs::world& world)
+A3D::StringComponents::StringComponents(flecs::world& world)
 {
 	world.module<StringComponents>("A3D::Components::Str");
 	stringView_ = world.component<StringView>().member<const char*>("str");
 }
-} // namespace A3D

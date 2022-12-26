@@ -20,9 +20,7 @@
 
 using namespace A3D::Components::Camera;
 
-namespace A3D
-{
-CameraComponents::CameraComponents(flecs::world& world)
+A3D::CameraComponents::CameraComponents(flecs::world& world)
 {
 	world.module<CameraComponents>("A3D::Components::Camera");
 
@@ -30,4 +28,3 @@ CameraComponents::CameraComponents(flecs::world& world)
 	perspective_ = world.component<Perspective>();
 	viewport_ = world.component<Viewport>();
 }
-} // namespace A3D

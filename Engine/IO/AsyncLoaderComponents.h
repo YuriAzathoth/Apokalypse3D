@@ -19,11 +19,8 @@
 #ifndef ASYNCLOADERCOMPONENTS_H
 #define ASYNCLOADERCOMPONENTS_H
 
-#include <bgfx/bgfx.h>
-#include <bx/bounds.h>
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
-#include "Core/StringComponents.h"
 
 namespace A3D
 {

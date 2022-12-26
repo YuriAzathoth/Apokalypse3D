@@ -20,13 +20,10 @@
 
 using namespace A3D::Components::Cache::Image;
 
-namespace A3D
-{
-ImageCacheComponents::ImageCacheComponents(flecs::world& world)
+A3D::ImageCacheComponents::ImageCacheComponents(flecs::world& world)
 {
 	world.module<ImageCacheComponents>("A3D::Components::Cache::Image");
 
 	loadTextureFile_ = world.component<LoadTextureFile>().add(flecs::Tag);
 	textureStorage_ = world.component<TextureStorage>().add(flecs::Tag);
 }
-} // namespace A3D

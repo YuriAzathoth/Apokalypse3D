@@ -33,8 +33,6 @@ using namespace A3D::Components::Cache::GpuProgram;
 using namespace A3D::Components::GpuProgram;
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
 inline static void get_program_name(char* program, const char* vertex, const char* fragment)
 {
 	const size_t vertex_name_size = strlen(vertex);
@@ -95,7 +93,7 @@ static void clear_shaders(flecs::entity e)
 		.each(destroy_shader);
 }
 
-GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
+A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 {
 	world.module<GpuProgramCacheSystems>("A3D::Systems::Cache::GpuProgram");
 	world.import<AsyncLoaderComponents>();
@@ -281,4 +279,3 @@ GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 	world.entity().add<ProgramStorage>();
 	world.entity().add<ShaderStorage>();
 }
-} // namespace A3D

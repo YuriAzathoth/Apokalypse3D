@@ -19,7 +19,6 @@
 #ifndef IMAGECACHECOMPONENTS_H
 #define IMAGECACHECOMPONENTS_H
 
-#include <bgfx/bgfx.h>
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 

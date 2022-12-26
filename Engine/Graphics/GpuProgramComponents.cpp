@@ -21,9 +21,7 @@
 using namespace A3D::Components::GpuProgram;
 using namespace A3D::Components::Str;
 
-namespace A3D
-{
-GpuProgramComponents::GpuProgramComponents(flecs::world& world)
+A3D::GpuProgramComponents::GpuProgramComponents(flecs::world& world)
 {
 	world.module<GpuProgramComponents>("A3D::Components::GpuProgram");
 	world.import<StringComponents>();
@@ -33,4 +31,3 @@ GpuProgramComponents::GpuProgramComponents(flecs::world& world)
 	program_ = world.component<Program>().member<uint16_t>("handle");
 	shader_ = world.component<Shader>().member<uint16_t>("handle");
 }
-} // namespace A3D
