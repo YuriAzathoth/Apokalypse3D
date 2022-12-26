@@ -37,13 +37,11 @@ namespace A3D
 {
 static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Program& program)
 {
-	LogTrace("Drawing model from main thread...");
 	e.children([&program, &wt](flecs::entity c)
 	{
 		const MeshGroup* mesh = c.get<MeshGroup>();
 		if (mesh)
 		{
-			LogTrace("Drawing static mesh...");
 			Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 			Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 			Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
@@ -56,24 +54,17 @@ static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Pr
 	});
 }
 
-static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Program& program)
+static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Program& program, const Renderer& renderer)
 {
-	LogTrace("Drawing model from thread %d...", std::this_thread::get_id());
-
-	flecs::world w = e.world();
-	const Renderer* renderer = w.get<Renderer>();
-
-	const unsigned thread_id = w.get_stage_id();
-	Assert(thread_id <= renderer->threads.size(), "Render called from thread \"%d\" that not registered.");
-
-	bgfx::Encoder* queue = renderer->threads[thread_id].queue;
+	const unsigned thread_id = e.world().get_stage_id();
+	Assert(thread_id <= renderer.threads.size(), "Render called from thread \"%d\" that not registered.");
+	bgfx::Encoder* queue = renderer.threads[thread_id].queue;
 	if (queue)
-		e.children([&program, queue, &w, &wt](flecs::entity c)
+		e.children([&program, queue, &wt](flecs::entity c)
 		{
 			const MeshGroup* mesh = c.get<MeshGroup>();
 			if (mesh)
 			{
-				LogTrace("Drawing static mesh...");
 				Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 				Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 				Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
@@ -101,7 +92,8 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 		.kind(flecs::PreStore)
 		.each(draw_geometry_st);
 
-	drawMultiThreaded_ = world.system<const WorldTransform, const Program>("DrawMultiThread")
+	drawMultiThreaded_ = world.system<const WorldTransform, const Program, const Renderer>("DrawMultiThread")
+		.arg(3).singleton()
 		.term<const Model>()
 		.term<const MultiThreaded>().singleton()
 		.kind(flecs::PreStore)
