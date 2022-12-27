@@ -37,10 +37,5 @@ int main()
 	world.import<EventSystems>();
 	world.import<RendererSystems>();
 	world.import<WindowSystems>();
-	world.add<Renderer::RendererConfig>();
-	world.add<Window::WindowConfig>();
-	create_video(world);
-	create_window(world);
-	create_renderer(world);
 	return engine.Run();
 }

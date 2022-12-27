@@ -134,12 +134,6 @@ int main()
 	world.set<Graphics::RendererType>({Graphics::RendererType::OpenGL});
 	world.set<Graphics::WindowMode>({Graphics::WindowMode::Windowed});
 
-	/*world.set<Renderer::RendererConfig>(renderer);
-	world.set<Window::WindowConfig>({window});
-	create_video(world);
-	create_window(world);
-	create_renderer(world);*/
-
 	world.component<CamControl>().add(flecs::Tag).add(flecs::Acyclic);
 	world.component<Rotate>();
 
