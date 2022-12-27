@@ -17,7 +17,9 @@
 */
 
 #include <bgfx/bgfx.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <SDL3/SDL.h>
+#include "CameraComponents.h"
 #include "GraphicsComponents.h"
 #include "GraphicsPlatform.h"
 #include "IO/Log.h"
@@ -27,6 +29,7 @@
 #include "RendererSystems.h"
 #include "WindowComponents.h"
 
+using namespace A3D::Components::Camera;
 using namespace A3D::Components::Graphics;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Window;
@@ -293,6 +296,12 @@ static void threads_end(flecs::iter& it, size_t, const Renderer& renderer)
 	LogTrace("Render threads end finish...");
 }
 
+static void update_camera(const Eye& eye)
+{
+	LogTrace("Send camera transform...");
+	bgfx::setViewTransform(0, glm::value_ptr(eye.view), glm::value_ptr(eye.proj));
+}
+
 static void update_aspect(flecs::iter& it, size_t, const Resolution& resolution)
 {
 	it.world().set<Aspect>({(float)resolution.width / (float)resolution.height});
@@ -315,6 +324,7 @@ RendererSystems::RendererSystems(flecs::world& world)
 	using Startup = A3D::Components::Renderer::Startup;
 
 	world.module<RendererSystems>("A3D::Systems::Renderer");
+	world.import<CameraComponents>();
 	world.import<GraphicsComponents>();
 	world.import<RendererComponents>();
 	world.import<WindowComponents>();
@@ -373,6 +383,11 @@ RendererSystems::RendererSystems(flecs::world& world)
 				.with<Renderer>().singleton()
 				.kind(flecs::OnStore)
 				.each(frame_end);
+
+	updateCameraView_ = world.system<const Eye>("UpdateCameraView")
+						.term<const Renderer>().singleton()
+						.kind(flecs::OnStore)
+						.each(update_camera);
 
 	updateAspect_ = world.observer<const Resolution>("UpdateAspect")
 					.arg(1).singleton()

@@ -49,6 +49,8 @@ A3D::GraphicsComponents::GraphicsComponents(flecs::world& world)
 		.constant("Fullscreen", (int)WindowMode::Fullscreen)
 		.constant("Borderless", (int)WindowMode::Borderless);
 
+	aspect_ = world.component<Aspect>().member<float>("ratio");
+
 	multiThreaded_ = world.component<MultiThreaded>().add(flecs::Tag);
 	resizeable_ = world.component<Resizeable>().add(flecs::Tag);
 

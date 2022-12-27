@@ -59,6 +59,11 @@ enum class WindowMode : unsigned
 	Borderless
 };
 
+struct Aspect
+{
+	float ratio;
+};
+
 struct MultiThreaded {};
 struct Resizeable {};
 
@@ -76,6 +81,7 @@ struct APOKALYPSE3DAPI_EXPORT GraphicsComponents
 {
 	GraphicsComponents(flecs::world& world);
 
+	flecs::entity aspect_;
 	flecs::entity multiThreaded_;
 	flecs::entity msaaLevel_;
 	flecs::entity rendererType_;

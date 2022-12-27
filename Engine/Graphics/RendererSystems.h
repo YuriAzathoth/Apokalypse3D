@@ -35,6 +35,8 @@ struct APOKALYPSE3DAPI_EXPORT RendererSystems
 	flecs::entity frameEnd_;
 	flecs::entity threadsBegin_;
 	flecs::entity threadsEnd_;
+	flecs::entity updateCameraView_;
+
 	flecs::entity updateAspect_;
 	flecs::entity createThreads_;
 	flecs::entity destroyThreads_;

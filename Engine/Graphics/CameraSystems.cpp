@@ -16,27 +16,23 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <bgfx/bgfx.h>
-#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include "CameraComponents.h"
 #include "CameraSystems.h"
+#include "GraphicsComponents.h"
 #include "IO/Log.h"
-#include "RendererComponents.h"
 #include "Scene/SceneComponents.h"
 
-using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Camera;
+using namespace A3D::Components::Graphics;
 using namespace A3D::Components::Scene;
 
-namespace A3D
-{
-CameraSystems::CameraSystems(flecs::world& world)
+A3D::CameraSystems::CameraSystems(flecs::world& world)
 {
 	world.module<CameraSystems>("A3D::Systems::Camera");
 	world.import<CameraComponents>();
-	world.import<RendererComponents>();
+	world.import<GraphicsComponents>();
 	world.import<SceneComponents>();
 
 	view_ = world.system<Eye, const WorldTransform>("View")
@@ -67,14 +63,4 @@ CameraSystems::CameraSystems(flecs::world& world)
 		LogTrace("Set camera perspective...");
 		eye.proj = glm::perspective(persp.fov, aspect.ratio, persp.nearest, persp.farthest);
 	});
-
-	update_ = world.system<const Eye>("CameraUpdate")
-			  .term<const Renderer>().singleton()
-			  .kind(flecs::OnStore)
-			  .each([](const Eye& eye)
-	{
-		LogTrace("Send camera transform...");
-		bgfx::setViewTransform(0, glm::value_ptr(eye.view), glm::value_ptr(eye.proj));
-	});
 }
-} // namespace A3D

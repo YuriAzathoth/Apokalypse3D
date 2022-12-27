@@ -27,8 +27,6 @@ RendererComponents::RendererComponents(flecs::world& world)
 {
 	world.module<RendererComponents>("A3D::Components::Renderer");
 
-	aspect_ = world.component<Aspect>().member<float>("ratio");
-
 	device_ = world.component<Device>()
 		.member<uint16_t>("device")
 		.member<uint16_t>("vendor");

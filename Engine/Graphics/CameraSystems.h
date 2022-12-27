@@ -29,7 +29,6 @@ struct APOKALYPSE3DAPI_EXPORT CameraSystems
 	CameraSystems(flecs::world& world);
 
 	flecs::entity perspective_;
-	flecs::entity update_;
 	flecs::entity view_;
 };
 } // namespace A3D

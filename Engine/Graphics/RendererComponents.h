@@ -37,11 +37,6 @@ struct Thread
 	mutable bgfx::Encoder* queue;
 };
 
-struct Aspect
-{
-	float ratio;
-};
-
 struct Device
 {
 	uint16_t device;
@@ -62,7 +57,6 @@ struct APOKALYPSE3DAPI_EXPORT RendererComponents
 {
 	RendererComponents(flecs::world& world);
 
-	flecs::entity aspect_;
 	flecs::entity device_;
 	flecs::entity renderer_;
 	flecs::entity startup_;
