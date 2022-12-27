@@ -37,7 +37,7 @@ inline static unsigned parse_flags(WindowMode mode, bool resizeable) noexcept
 	return flags;
 }
 
-inline static void select_hightest_resolution(uint8_t display, uint16_t& width, uint16_t& height) noexcept
+inline static int select_hightest_resolution(uint8_t display, uint16_t& width, uint16_t& height) noexcept
 {
 	const int count = SDL_GetNumDisplayModes(display);
 	SDL_DisplayMode mode;
@@ -50,46 +50,48 @@ inline static void select_hightest_resolution(uint8_t display, uint16_t& width, 
 			height = (uint16_t)mode.h;
 		}
 	}
+	return count;
 }
 
-static void init_default(flecs::iter it,
-						 size_t,
-						 const Resolution* resolution,
-						 const Title* title,
-						 const WindowMode* mode)
+static void init_default(flecs::iter it, size_t, const Title* title, const WindowMode* mode)
 {
 	LogDebug("Initializing SDL video default config...");
 	flecs::world w = it.world();
-	w.add<Startup>();
 	if (mode == nullptr)
 		w.set<WindowMode>(WindowMode::Windowed);
-	if (resolution == nullptr)
-	{
-		uint16_t width;
-		uint16_t height;
-		select_hightest_resolution(0, width, height);
-		w.set<Resolution>({width, height});
-		LogInfo("Resolution is not set: using maximum possible.");
-	}
 	if (title == nullptr)
 		w.set<Title>({"Untitled"});
+	w.add<Startup>();
 	LogDebug("Default SDL window config initialized.");
 }
 
-static void init_sdl_video(flecs::iter& it)
+static void init_sdl_video(flecs::iter it, size_t, const Resolution* resolution)
 {
 	LogDebug("Initializing SDL video...");
 	flecs::world w = it.world();
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO) >= 0)
-	{
-		LogInfo("SDL video initialized.");
-		w.add<Video>();
-	}
-	else
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 	{
 		LogError("Failed to initialize SDL Video: %s.", SDL_GetError());
 		w.quit();
+		return;
 	}
+
+	if (resolution == nullptr) // Available ONLY after SDL video subsystem has been initialized
+	{
+		uint16_t width;
+		uint16_t height;
+		if (select_hightest_resolution(0, width, height) < 1)
+		{
+			LogError("Could not get available SDL window video modes for display %u: %s.", 0, SDL_GetError());
+			w.quit();
+			return;
+		}
+		w.set<Resolution>({width, height});
+		LogInfo("Resolution is not set. Using maximum possible: %ux%u.", width, height);
+	}
+
+	w.add<Video>();
+	LogInfo("SDL video initialized.");
 }
 
 static void init_sdl_window(flecs::iter it,
@@ -147,18 +149,18 @@ A3D::WindowSystems::WindowSystems(flecs::world& world)
 	world.import<GraphicsComponents>();
 	world.import<WindowComponents>();
 
-	initDefault_ = world.system<const Resolution*, const Title*, const WindowMode*>("InitDefault")
+	initDefault_ = world.system<const Title*, const WindowMode*>("InitDefault")
 		.arg(1).singleton()
 		.arg(2).singleton()
-		.arg(3).singleton()
 		.kind(flecs::OnStart)
 		.each(init_default);
 
-	initSdlVideo_ = world.system<>("InitSdlVideo")
+	initSdlVideo_ = world.system<const Resolution*>("InitSdlVideo")
+		.arg(1).singleton()
 		.with<Startup>().singleton()
 		.with<Video>().singleton().not_()
 		.kind(flecs::OnLoad)
-		.iter(init_sdl_video);
+		.each(init_sdl_video);
 
 	initWindow_ = world.system<const Resolution, const Title, const WindowMode>("InitWindow")
 		.with<Video>().singleton()
