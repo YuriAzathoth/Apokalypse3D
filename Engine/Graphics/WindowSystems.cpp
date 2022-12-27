@@ -65,7 +65,7 @@ static void init_default(flecs::iter it, size_t, const Title* title, const Windo
 	LogDebug("Default SDL window config initialized.");
 }
 
-static void init_sdl_video(flecs::iter it, size_t, const Resolution* resolution)
+static void init_video(flecs::iter it, size_t, const Resolution* resolution)
 {
 	LogDebug("Initializing SDL video...");
 	flecs::world w = it.world();
@@ -94,11 +94,11 @@ static void init_sdl_video(flecs::iter it, size_t, const Resolution* resolution)
 	LogInfo("SDL video initialized.");
 }
 
-static void init_sdl_window(flecs::iter it,
-							size_t,
-							const Resolution& resolution,
-							const Title& title,
-							const WindowMode mode)
+static void init_window(flecs::iter it,
+						size_t,
+						const Resolution& resolution,
+						const Title& title,
+						const WindowMode mode)
 {
 	LogDebug("Initializing SDL window...");
 
@@ -131,13 +131,13 @@ static void init_sdl_window(flecs::iter it,
 	free(modeName);
 }
 
-static void destroy_sdl_video(flecs::entity e)
+static void destroy_video(flecs::entity e)
 {
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	LogInfo("SDL video destroyed...");
 }
 
-static void destroy_sdl_window(Window& window)
+static void destroy_window(Window& window)
 {
 	SDL_DestroyWindow(window.window);
 	LogInfo("SDL window destroyed...");
@@ -155,12 +155,12 @@ A3D::WindowSystems::WindowSystems(flecs::world& world)
 		.kind(flecs::OnStart)
 		.each(init_default);
 
-	initSdlVideo_ = world.system<const Resolution*>("InitSdlVideo")
+	initVideo_ = world.system<const Resolution*>("InitVideo")
 		.arg(1).singleton()
 		.with<Startup>().singleton()
 		.with<Video>().singleton().not_()
 		.kind(flecs::OnLoad)
-		.each(init_sdl_video);
+		.each(init_video);
 
 	initWindow_ = world.system<const Resolution, const Title, const WindowMode>("InitWindow")
 		.with<Video>().singleton()
@@ -170,15 +170,15 @@ A3D::WindowSystems::WindowSystems(flecs::world& world)
 		.arg(2).singleton()
 		.arg(3).singleton()
 		.kind(flecs::OnLoad)
-		.each(init_sdl_window);
+		.each(init_window);
 
 	destroyWindow_ = world.observer<Window>("DestroyWindow")
 		.arg(1).singleton()
 		.event(flecs::UnSet)
-		.each(destroy_sdl_window);
+		.each(destroy_window);
 
-	destroySdlVideo_ = world.observer<>("DestroySdlVideo")
+	destroyVideo_ = world.observer<>("DestroyVideo")
 		.term<const Video>().singleton()
 		.event(flecs::UnSet)
-		.each(destroy_sdl_video);
+		.each(destroy_video);
 }

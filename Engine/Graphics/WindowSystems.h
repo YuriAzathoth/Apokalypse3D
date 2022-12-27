@@ -29,10 +29,10 @@ struct APOKALYPSE3DAPI_EXPORT WindowSystems
 	WindowSystems(flecs::world& world);
 
 	flecs::entity initDefault_;
-	flecs::entity initSdlVideo_;
+	flecs::entity initVideo_;
 	flecs::entity initWindow_;
 	flecs::entity destroyWindow_;
-	flecs::entity destroySdlVideo_;
+	flecs::entity destroyVideo_;
 };
 } // namespace A3D
 
