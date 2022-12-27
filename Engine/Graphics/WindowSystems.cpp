@@ -27,7 +27,7 @@ using namespace A3D::Components::Window;
 
 inline static unsigned parse_flags(WindowMode mode, bool resizeable) noexcept
 {
-	unsigned flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_SHOWN;
+	unsigned flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN;
 	if (mode == WindowMode::Fullscreen)
 		flags |= SDL_WINDOW_BORDERLESS;
 	else if (mode == WindowMode::Borderless)
@@ -115,8 +115,8 @@ static void init_sdl_window(flecs::iter it,
 		return;
 	}
 
-	/*if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
-		SDL_SetWindowGrab(window, SDL_TRUE);*/
+	if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
+		SDL_SetWindowGrab(window, SDL_TRUE);
 
 	w.set<Window>({window});
 	w.remove<Startup>();
