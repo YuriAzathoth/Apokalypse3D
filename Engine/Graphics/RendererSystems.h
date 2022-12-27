@@ -31,10 +31,10 @@ struct APOKALYPSE3DAPI_EXPORT RendererSystems
 	flecs::entity initDefault_;
 	flecs::entity initRenderer_;
 	flecs::entity destroy_;
-	flecs::entity frameBeginSingleThreaded_;
-	flecs::entity frameEndSingleThreaded_;
-	flecs::entity frameBeginMultiThreaded_;
-	flecs::entity frameEndMultiThreaded_;
+	flecs::entity frameBegin_;
+	flecs::entity frameEnd_;
+	flecs::entity threadsBegin_;
+	flecs::entity threadsEnd_;
 	flecs::entity updateAspect_;
 	flecs::entity createThreads_;
 	flecs::entity destroyThreads_;

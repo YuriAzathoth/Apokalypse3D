@@ -246,7 +246,7 @@ static void init_renderer(flecs::iter it,
 
 static void destroy_renderer(Renderer&) { bgfx::shutdown(); }
 
-static void frame_begin_st(const Resolution& resolution)
+static void frame_begin(const Resolution& resolution)
 {
 	LogTrace("Render frame begin start...");
 
@@ -256,7 +256,7 @@ static void frame_begin_st(const Resolution& resolution)
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end_st(flecs::iter&, size_t)
+static void frame_end(flecs::iter, size_t)
 {
 	LogTrace("Render frame end start...");
 
@@ -265,12 +265,9 @@ static void frame_end_st(flecs::iter&, size_t)
 	LogTrace("Render frame end finish...");
 }
 
-static void frame_begin_mt(flecs::iter& it, size_t, const Renderer& renderer, const Resolution& resolution)
+static void threads_begin(flecs::iter& it, size_t, const Renderer& renderer)
 {
-	LogTrace("Render frame begin start...");
-
-	bgfx::setViewRect(0, 0, 0, resolution.width, resolution.height);
-	bgfx::touch(0);
+	LogTrace("Render threads begin start...");
 
 	flecs::world w = it.world();
 	for (unsigned i = 0; i < w.get_threads(); ++i)
@@ -279,12 +276,12 @@ static void frame_begin_mt(flecs::iter& it, size_t, const Renderer& renderer, co
 		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
 	}
 
-	LogTrace("Render frame begin finish...");
+	LogTrace("Render threads begin finish...");
 }
 
-static void frame_end_mt(flecs::iter& it, size_t, const Renderer& renderer)
+static void threads_end(flecs::iter& it, size_t, const Renderer& renderer)
 {
-	LogTrace("Render frame end start...");
+	LogTrace("Render threads end start...");
 
 	flecs::world w = it.world();
 	for (unsigned i = 0; i < w.get_threads(); ++i)
@@ -293,9 +290,7 @@ static void frame_end_mt(flecs::iter& it, size_t, const Renderer& renderer)
 		bgfx::end(renderer.threads[i].queue);
 	}
 
-	bgfx::frame();
-
-	LogTrace("Render frame end finish...");
+	LogTrace("Render threads end finish...");
 }
 
 static void update_aspect(flecs::iter& it, size_t, const Resolution& resolution)
@@ -353,32 +348,31 @@ RendererSystems::RendererSystems(flecs::world& world)
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
-	frameBeginSingleThreaded_ = world.system<const Resolution>("FrameBeginSingleThreaded")
-								.arg(1).singleton()
-								.with<Renderer>().singleton()
-								.with<MultiThreaded>().singleton().not_()
-								.kind(flecs::PostUpdate)
-								.each(frame_begin_st);
+	frameBegin_ = world.system<const Resolution>("FrameBegin")
+				  .arg(1).singleton()
+				  .with<Renderer>().singleton()
+				  .kind(flecs::PostUpdate)
+				  .each(frame_begin);
 
-	frameEndSingleThreaded_ = world.system<>("FrameEndSingleThreaded")
-							  .term<const Resolution>().singleton()
-							  .with<Renderer>().singleton()
-							  .with<MultiThreaded>().singleton().not_()
-							  .kind(flecs::OnStore)
-							  .each(frame_end_st);
+	threadsBegin_ = world.system<const Renderer>("ThreadsBegin")
+					.arg(1).singleton()
+					.term<const Resolution>().singleton()
+					.with<MultiThreaded>().singleton()
+					.kind(flecs::PostUpdate)
+					.each(threads_begin);
 
-	frameBeginMultiThreaded_ = world.system<const Renderer, const Resolution>("FramBeginMultiThreaded")
-							   .arg(1).singleton()
-							   .arg(2).singleton()
-							   .with<MultiThreaded>().singleton()
-							   .kind(flecs::PostUpdate)
-							   .each(frame_begin_mt);
+	threadsEnd_ = world.system<const Renderer>("ThreadsEnd")
+				  .arg(1).singleton()
+				  .term<const Resolution>().singleton()
+				  .with<MultiThreaded>().singleton()
+				  .kind(flecs::OnStore)
+				  .each(threads_end);
 
-	frameEndMultiThreaded_ = world.system<const Renderer>("FramEndMultiThreaded")
-							 .arg(1).singleton()
-							 .with<MultiThreaded>().singleton()
-							 .kind(flecs::OnStore)
-							 .each(frame_end_mt);
+	frameEnd_ = world.system<>("FrameEnd")
+				.term<const Resolution>().singleton()
+				.with<Renderer>().singleton()
+				.kind(flecs::OnStore)
+				.each(frame_end);
 
 	updateAspect_ = world.observer<const Resolution>("UpdateAspect")
 					.arg(1).singleton()
