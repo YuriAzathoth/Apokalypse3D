@@ -22,6 +22,7 @@
 #include "DebugModelRendererSystems.h"
 #include "Graphics/GeometryComponents.h"
 #include "Graphics/GpuProgramComponents.h"
+#include "Graphics/GraphicsComponents.h"
 #include "Graphics/MeshComponents.h"
 #include "Graphics/RendererComponents.h"
 #include "IO/Log.h"
@@ -29,6 +30,7 @@
 
 using namespace A3D::Components::Geometry;
 using namespace A3D::Components::GpuProgram;
+using namespace A3D::Components::Graphics;
 using namespace A3D::Components::Mesh;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Scene;
@@ -82,6 +84,7 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 	world.module<DebugModelRendererSystems>("A3D::Systems::DebugRenderer");
 	world.import<GpuProgramComponents>();
 	world.import<GeometryComponents>();
+	world.import<GraphicsComponents>();
 	world.import<MeshComponents>();
 	world.import<RendererComponents>();
 	world.import<SceneComponents>();

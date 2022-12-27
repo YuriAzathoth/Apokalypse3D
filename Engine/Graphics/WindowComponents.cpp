@@ -24,14 +24,8 @@ A3D::WindowComponents::WindowComponents(flecs::world& world)
 {
 	world.module<WindowComponents>("A3D::Components::Window");
 
+	startup_ = world.component<Startup>().add(flecs::Tag);
+	title_ = world.component<Title>().member<const char*>("Title");
 	video_ = world.component<Video>().add(flecs::Tag);
 	window_ = world.component<Window>();
-
-	windowConfig_ = world.component<WindowConfig>()
-		.member<const char*>("Title")
-		.member<uint16_t>("width")
-		.member<uint16_t>("height")
-		.member<bool>("fullscreen")
-		.member<bool>("borderless")
-		.member<bool>("resizeable");
 }

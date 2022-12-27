@@ -69,6 +69,7 @@ CameraSystems::CameraSystems(flecs::world& world)
 	});
 
 	update_ = world.system<const Eye>("CameraUpdate")
+			  .term<const Renderer>().singleton()
 			  .kind(flecs::OnStore)
 			  .each([](const Eye& eye)
 	{

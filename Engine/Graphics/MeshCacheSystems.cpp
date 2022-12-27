@@ -27,6 +27,7 @@
 #include "MeshCacheSystems.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
+#include "RendererComponents.h"
 
 #define BUFFER_SIZE 256
 
@@ -34,6 +35,7 @@ using namespace A3D::Components::AsyncLoader;
 using namespace A3D::Components::Cache::Mesh;
 using namespace A3D::Components::Geometry;
 using namespace A3D::Components::Mesh;
+using namespace A3D::Components::Renderer;
 
 namespace bgfx
 {
@@ -66,6 +68,7 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 	world.import<AsyncLoaderComponents>();
 	world.import<MeshCacheComponents>();
 	world.import<MeshComponents>();
+	world.import<RendererComponents>();
 
 	meshes_ = world.query_builder<>().term<const MeshStorage>().build();
 
@@ -90,6 +93,7 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 
 	loadFile_ = world.system<>("LoadFile")
 				.term<const LoadModelFile>()
+				.term<const Renderer>().singleton()
 				.kind(flecs::PostLoad)
 				.multi_threaded()
 				.each([this](flecs::entity e)

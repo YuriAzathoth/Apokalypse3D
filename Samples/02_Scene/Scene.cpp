@@ -25,6 +25,7 @@
 #include "Graphics/GpuProgramCacheComponents.h"
 #include "Graphics/GpuProgramCacheSystems.h"
 #include "Graphics/GpuProgramComponents.h"
+#include "Graphics/GraphicsComponents.h"
 #include "Graphics/ImageCacheComponents.h"
 #include "Graphics/ImageCacheSystems.h"
 #include "Graphics/ImageComponents.h"
@@ -123,26 +124,21 @@ int main()
 	world.import<GpuProgramCacheSystems>();
 	world.import<ImageCacheSystems>();
 	world.import<MeshCacheSystems>();
-	world.import<RendererSystems>();
 	world.import<WindowSystems>();
+	world.import<RendererSystems>();
 	world.import<SceneSystems>();
 	world.import<DebugModelRendererSystems>();
 
-	Renderer::RendererConfig renderer{};
-	renderer.fullscreen = false;
-	renderer.width = 800;
-	renderer.height = 600;
-	renderer.multi_threaded = true;
-	renderer.type = Renderer::RendererType::OpenGL;
-	Window::WindowConfig window{};
-	window.width = 800;
-	window.height = 600;
-	window.fullscreen = false;
-	world.set<Renderer::RendererConfig>(renderer);
+	world.add<Graphics::MultiThreaded>();
+	world.set<Graphics::Resolution>({1024, 768});
+	world.set<Graphics::RendererType>({Graphics::RendererType::OpenGL});
+	world.set<Graphics::WindowMode>({Graphics::WindowMode::Windowed});
+
+	/*world.set<Renderer::RendererConfig>(renderer);
 	world.set<Window::WindowConfig>({window});
 	create_video(world);
 	create_window(world);
-	create_renderer(world);
+	create_renderer(world);*/
 
 	world.component<CamControl>().add(flecs::Tag).add(flecs::Acyclic);
 	world.component<Rotate>();

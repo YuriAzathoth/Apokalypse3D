@@ -16,45 +16,74 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef WINDOWCOMPONENTS_H
-#define WINDOWCOMPONENTS_H
+#ifndef GRAPHICSCOMPONENTS_H
+#define GRAPHICSCOMPONENTS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
-
-struct SDL_Window;
 
 namespace A3D
 {
 namespace Components
 {
-namespace Window
+namespace Graphics
 {
-struct Startup {};
-
-struct Title
+enum class MsaaLevel : unsigned
 {
-	const char* title;
+	NONE,
+	X2,
+	X4,
+	X8,
+	X16
 };
 
-struct Video {};
-
-struct Window
+enum class RendererType : unsigned
 {
-	SDL_Window* window;
+	Auto,
+	OpenGL,
+	Vulkan,
+#if defined(__WIN32__)
+	Direct3D9,
+	Direct3D11,
+	Direct3D12,
+#elif defined(OSX)
+	Metal,
+#endif // defined
+	None
 };
-} // namespace Window
+
+enum class WindowMode : unsigned
+{
+	Windowed,
+	Fullscreen,
+	Borderless
+};
+
+struct MultiThreaded {};
+struct Resizeable {};
+
+struct Resolution
+{
+	uint16_t width;
+	uint16_t height;
+};
+
+struct VSync {};
+} // namespace Graphics
 } // namespace Components
 
-struct APOKALYPSE3DAPI_EXPORT WindowComponents
+struct APOKALYPSE3DAPI_EXPORT GraphicsComponents
 {
-	WindowComponents(flecs::world& world);
+	GraphicsComponents(flecs::world& world);
 
-	flecs::entity startup_;
-	flecs::entity title_;
-	flecs::entity video_;
-	flecs::entity window_;
+	flecs::entity multiThreaded_;
+	flecs::entity msaaLevel_;
+	flecs::entity rendererType_;
+	flecs::entity resizeable_;
+	flecs::entity resolution_;
+	flecs::entity vsync_;
+	flecs::entity windowMode_;
 };
 } // namespace A3D
 
-#endif // WINDOWCOMPONENTS_H
+#endif // GRAPHICSCOMPONENTS_H

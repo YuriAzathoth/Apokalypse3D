@@ -25,12 +25,14 @@
 #include "GpuProgramComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
+#include "RendererComponents.h"
 
 #define BUFFER_SIZE 256
 
 using namespace A3D::Components::AsyncLoader;
 using namespace A3D::Components::Cache::GpuProgram;
 using namespace A3D::Components::GpuProgram;
+using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Str;
 
 inline static void get_program_name(char* program, const char* vertex, const char* fragment)
@@ -99,6 +101,7 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 	world.import<AsyncLoaderComponents>();
 	world.import<GpuProgramCacheComponents>();
 	world.import<GpuProgramComponents>();
+	world.import<RendererComponents>();
 
 	programs_ = world.query_builder<>().term<const ProgramStorage>().build();
 	shaders_ = world.query_builder<>().term<const ShaderStorage>().build();
@@ -154,6 +157,7 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 
 	loadShaderFile_ = world.system<>("LoadShaderFile")
 					.term<const LoadShaderFile>()
+					.term<const Renderer>().singleton()
 					.kind(flecs::PostUpdate)
 					.multi_threaded()
 					.each([this](flecs::entity e)
@@ -204,6 +208,7 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 				   .term<const ShaderVertex>(flecs::Wildcard)
 				   .term<const ShaderFragment>(flecs::Wildcard)
 				   .term<const LinkProgram>()
+				   .term<const Renderer>().singleton()
 				   .kind(flecs::OnStore)
 				   .each([this](flecs::iter& it, size_t i)
 	{

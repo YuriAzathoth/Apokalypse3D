@@ -19,8 +19,6 @@
 #ifndef RENDERERCOMPONENTS_H
 #define RENDERERCOMPONENTS_H
 
-#include <bgfx/bgfx.h>
-#include <bx/allocator.h>
 #include <bx/file.h>
 #include <flecs.h>
 #include <vector>
@@ -34,79 +32,6 @@ namespace Components
 {
 namespace Renderer
 {
-enum class MsaaLevel : unsigned
-{
-	NONE,
-	X2,
-	X4,
-	X8,
-	X16
-};
-
-enum class RendererType : unsigned
-{
-	Auto,
-	OpenGL,
-	Vulkan,
-#if defined(__WIN32__)
-	Direct3D9,
-	Direct3D11,
-	Direct3D12,
-#elif defined(OSX)
-	Metal,
-#endif // defined
-	None
-};
-
-struct APOKALYPSE3DAPI_EXPORT RendererAllocator : public bx::AllocatorI
-{
-	~RendererAllocator();
-	void* realloc(void* _ptr,
-				  size_t _size,
-				  size_t _align,
-				  const char* _file,
-				  uint32_t _line) override;
-};
-
-struct APOKALYPSE3DAPI_EXPORT RendererCallback : public bgfx::CallbackI
-{
-	~RendererCallback();
-	void fatal(const char* _filePath,
-			   uint16_t _line,
-			   bgfx::Fatal::Enum _code,
-			   const char* _str) override;
-	void traceVargs(const char* _filePath,
-					uint16_t _line,
-					const char* _format,
-					va_list _argList) override;
-	void profilerBegin(const char* _name,
-					   uint32_t _abgr,
-					   const char* _filePath,
-					   uint16_t _line) override;
-	void profilerBeginLiteral(const char* _name,
-							  uint32_t _abgr,
-							  const char* _filePath,
-							  uint16_t _line) override;
-	void profilerEnd() override;
-	uint32_t cacheReadSize(uint64_t _id) override;
-	bool cacheRead(uint64_t _id, void* _data, uint32_t _size) override;
-	void cacheWrite(uint64_t _id, const void* _data, uint32_t _size) override;
-	void screenShot(const char* _filePath,
-					uint32_t _width,
-					uint32_t _height,
-					uint32_t _pitch,
-					const void* _data,
-					uint32_t _size,
-					bool _yflip) override;
-	void captureBegin(uint32_t _width,
-					  uint32_t _height,
-					  uint32_t _pitch,
-					  bgfx::TextureFormat::Enum _format,
-					  bool _yflip) override;
-	void captureEnd() override;
-	void captureFrame(const void* _data, uint32_t _size) override;
-};
-
 struct Thread
 {
 	mutable bgfx::Encoder* queue;
@@ -117,18 +42,10 @@ struct Aspect
 	float ratio;
 };
 
-struct RendererConfig
+struct Device
 {
-	uint32_t clear_color;
-	uint16_t width;
-	uint16_t height;
-	uint16_t deviceId;
-	uint16_t vendorId;
-	enum RendererType type;
-	enum MsaaLevel msaa;
-	bool multi_threaded;
-	bool fullscreen;
-	bool vsync;
+	uint16_t device;
+	uint16_t vendor;
 };
 
 struct Renderer
@@ -137,7 +54,7 @@ struct Renderer
 	bx::DefaultAllocator alloc;
 };
 
-struct MultiThreaded {};
+struct Startup {};
 } // namespace Renderer
 } // namespace Components
 
@@ -145,15 +62,10 @@ struct APOKALYPSE3DAPI_EXPORT RendererComponents
 {
 	RendererComponents(flecs::world& world);
 
-	flecs::entity msaaLevel_;
-	flecs::entity rendererType_;
-
 	flecs::entity aspect_;
-	flecs::entity rendererConfig_;
-
+	flecs::entity device_;
 	flecs::entity renderer_;
-
-	flecs::entity multiThreaded_;
+	flecs::entity startup_;
 };
 } // namespace A3D
 

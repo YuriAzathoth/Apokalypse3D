@@ -24,18 +24,15 @@
 
 namespace A3D
 {
-namespace Components { namespace Window { struct WindowConfig; }}
-
-APOKALYPSE3DAPI_EXPORT bool create_video(flecs::world& world);
-APOKALYPSE3DAPI_EXPORT bool create_window(flecs::world& world);
-APOKALYPSE3DAPI_EXPORT bool create_window(flecs::world& world, Components::Window::WindowConfig& config);
-
 struct APOKALYPSE3DAPI_EXPORT WindowSystems
 {
 	WindowSystems(flecs::world& world);
 
-	flecs::entity unSetVideo_;
-	flecs::entity unSetWindow_;
+	flecs::entity initDefault_;
+	flecs::entity initSdlVideo_;
+	flecs::entity initWindow_;
+	flecs::entity destroyWindow_;
+	flecs::entity destroySdlVideo_;
 };
 } // namespace A3D
 

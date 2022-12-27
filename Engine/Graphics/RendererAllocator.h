@@ -16,29 +16,23 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RENDERERSYSTEMS_H
-#define RENDERERSYSTEMS_H
+#ifndef RENDERERALLOCATOR_H
+#define RENDERERALLOCATOR_H
 
-#include <flecs.h>
+#include <bx/allocator.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT RendererSystems
+struct APOKALYPSE3DAPI_EXPORT RendererAllocator : public bx::AllocatorI
 {
-	RendererSystems(flecs::world& world);
-
-	flecs::entity initDefault_;
-	flecs::entity initRenderer_;
-	flecs::entity destroy_;
-	flecs::entity frameBeginSingleThreaded_;
-	flecs::entity frameEndSingleThreaded_;
-	flecs::entity frameBeginMultiThreaded_;
-	flecs::entity frameEndMultiThreaded_;
-	flecs::entity updateAspect_;
-	flecs::entity createThreads_;
-	flecs::entity destroyThreads_;
+	~RendererAllocator();
+	void* realloc(void* _ptr,
+				  size_t _size,
+				  size_t _align,
+				  const char* _file,
+				  uint32_t _line) override;
 };
 } // namespace A3D
 
-#endif // RENDERERSYSTEMS
+#endif // RENDERERALLOCATOR_H

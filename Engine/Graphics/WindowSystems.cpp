@@ -17,15 +17,173 @@
 */
 
 #include <SDL3/SDL.h>
+#include "GraphicsComponents.h"
 #include "IO/Log.h"
 #include "WindowComponents.h"
 #include "WindowSystems.h"
 
+using namespace A3D::Components::Graphics;
 using namespace A3D::Components::Window;
+
+inline static unsigned parse_flags(WindowMode mode, bool resizeable) noexcept
+{
+	unsigned flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_SHOWN;
+	if (mode == WindowMode::Fullscreen)
+		flags |= SDL_WINDOW_BORDERLESS;
+	else if (mode == WindowMode::Borderless)
+		flags |= SDL_WINDOW_FULLSCREEN;
+	if (resizeable)
+		flags |= SDL_WINDOW_RESIZABLE;
+	return flags;
+}
+
+inline static void select_hightest_resolution(uint8_t display, uint16_t& width, uint16_t& height) noexcept
+{
+	const int count = SDL_GetNumDisplayModes(display);
+	SDL_DisplayMode mode;
+	for (int i = 0; i < count; ++i)
+	{
+		SDL_GetDisplayMode(display, i, &mode);
+		if (width < (uint16_t)mode.w || height < (uint16_t)mode.h)
+		{
+			width = (uint16_t)mode.w;
+			height = (uint16_t)mode.h;
+		}
+	}
+}
+
+static void init_default(flecs::iter it,
+						 size_t,
+						 const Resolution* resolution,
+						 const Title* title,
+						 const WindowMode* mode)
+{
+	LogDebug("Initializing SDL video default config...");
+	flecs::world w = it.world();
+	w.add<Startup>();
+	if (mode == nullptr)
+		w.set<WindowMode>(WindowMode::Windowed);
+	if (resolution == nullptr)
+	{
+		uint16_t width;
+		uint16_t height;
+		select_hightest_resolution(0, width, height);
+		w.set<Resolution>({width, height});
+		LogInfo("Resolution is not set: using maximum possible.");
+	}
+	if (title == nullptr)
+		w.set<Title>({"Untitled"});
+	LogDebug("Default SDL window config initialized.");
+}
+
+static void init_sdl_video(flecs::iter& it)
+{
+	LogDebug("Initializing SDL video...");
+	flecs::world w = it.world();
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) >= 0)
+	{
+		LogInfo("SDL video initialized.");
+		w.add<Video>();
+	}
+	else
+	{
+		LogError("Failed to initialize SDL Video: %s.", SDL_GetError());
+		w.quit();
+	}
+}
+
+static void init_sdl_window(flecs::iter it,
+							size_t,
+							const Resolution& resolution,
+							const Title& title,
+							const WindowMode mode)
+{
+	LogDebug("Initializing SDL window...");
+
+	flecs::world w = it.world();
+
+	SDL_Window* window = SDL_CreateWindow(title.title,
+										  SDL_WINDOWPOS_CENTERED,
+										  SDL_WINDOWPOS_CENTERED,
+										  resolution.width,
+										  resolution.height,
+										  parse_flags(mode, w.has<Resizeable>()));
+	if (window == nullptr)
+	{
+		LogError("Failed to create SDL window: %s.", SDL_GetError());
+		w.quit();
+		return;
+	}
+
+	/*if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
+		SDL_SetWindowGrab(window, SDL_TRUE);*/
+
+	w.set<Window>({window});
+	w.remove<Startup>();
+
+	LogInfo("SDL Window initialized.");
+	LogInfo("\tWindow size: %ux%u;", resolution.width, resolution.height);
+	char* modeName = strdup(w.to_json(&mode).c_str());
+	modeName[strlen(modeName) - 1] = '\0';
+	LogInfo("\tWindow mode: %s.", &modeName[1]);
+	free(modeName);
+}
+
+static void destroy_sdl_video(flecs::entity e)
+{
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	LogInfo("SDL video destroyed...");
+}
+
+static void destroy_sdl_window(Window& window)
+{
+	SDL_DestroyWindow(window.window);
+	LogInfo("SDL window destroyed...");
+}
 
 namespace A3D
 {
-using Window = A3D::Components::Window::Window;
+WindowSystems::WindowSystems(flecs::world& world)
+{
+	world.module<WindowSystems>("A3D::Systems::Window");
+	world.import<GraphicsComponents>();
+	world.import<WindowComponents>();
+
+	initDefault_ = world.system<const Resolution*, const Title*, const WindowMode*>("InitDefault")
+		.arg(1).singleton()
+		.arg(2).singleton()
+		.arg(3).singleton()
+		.kind(flecs::OnStart)
+		.each(init_default);
+
+	initSdlVideo_ = world.system<>("InitSdlVideo")
+		.with<Startup>().singleton()
+		.with<Video>().singleton().not_()
+		.kind(flecs::OnLoad)
+		.iter(init_sdl_video);
+
+	initWindow_ = world.system<const Resolution, const Title, const WindowMode>("InitWindow")
+		.with<Video>().singleton()
+		.with<Startup>().singleton()
+		.with<Window>().singleton().not_()
+		.arg(1).singleton()
+		.arg(2).singleton()
+		.arg(3).singleton()
+		.kind(flecs::OnLoad)
+		.each(init_sdl_window);
+
+	destroyWindow_ = world.observer<Window>("DestroyWindow")
+		.arg(1).singleton()
+		.event(flecs::UnSet)
+		.each(destroy_sdl_window);
+
+	destroySdlVideo_ = world.observer<>("DestroySdlVideo")
+		.term<const Video>().singleton()
+		.event(flecs::UnSet)
+		.each(destroy_sdl_video);
+}
+
+/*using Window = A3D::Components::Window::Window;
 
 inline static bool normalize_config(WindowConfig& config) noexcept;
 inline static unsigned parse_flags(const WindowConfig& config) noexcept;
@@ -137,6 +295,7 @@ inline static void select_hightest_resolution(uint8_t display, uint16_t& width, 
 WindowSystems::WindowSystems(flecs::world& world)
 {
 	world.module<WindowSystems>("A3D::Systems::Window");
+	world.import<GraphicsComponents>();
 
 	unSetWindow_ = world.observer<Window>("DestroyWindow")
 		.arg(1).singleton()
@@ -148,5 +307,5 @@ WindowSystems::WindowSystems(flecs::world& world)
 		.term<Window>().singleton()
 		.event(flecs::UnSet)
 		.each(destroy_video);
-}
+}*/
 } // namespace A3D
