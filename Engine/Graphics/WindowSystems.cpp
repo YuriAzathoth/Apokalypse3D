@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <SDL3/SDL_video.h>
 #include <SDL3/SDL.h>
 #include "GraphicsComponents.h"
 #include "IO/Log.h"
@@ -27,7 +28,7 @@ using namespace A3D::Components::Window;
 
 inline static unsigned parse_flags(WindowMode mode, bool resizeable) noexcept
 {
-	unsigned flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN;
+	unsigned flags = SDL_WINDOW_ALLOW_HIGHDPI;
 	if (mode == WindowMode::Fullscreen)
 		flags |= SDL_WINDOW_BORDERLESS;
 	else if (mode == WindowMode::Borderless)

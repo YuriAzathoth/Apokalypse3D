@@ -56,11 +56,11 @@ static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Pr
 	});
 }
 
-static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Program& program, const Renderer& renderer)
+static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Program& program, const RendererThreads& threads)
 {
 	const unsigned thread_id = e.world().get_stage_id();
-	Assert(thread_id <= renderer.threads.size(), "Render called from thread \"%d\" that not registered.");
-	bgfx::Encoder* queue = renderer.threads[thread_id].queue;
+	Assert(thread_id <= threads.count, "Render called from thread \"%d\" that not registered.");
+	bgfx::Encoder* queue = threads.queues[thread_id];
 	if (queue)
 		e.children([&program, queue, &wt](flecs::entity c)
 		{
@@ -90,15 +90,17 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 	world.import<SceneComponents>();
 
 	drawSingleThreaded_ = world.system<const WorldTransform, const Program>("DrawSingleThread")
-		.term<const Model>()
-		.term<const MultiThreaded>().not_().singleton()
+		.with<MultiThreaded>().singleton().not_()
+		.with<Renderer>().singleton()
+		.with<Model>()
 		.kind(flecs::PreStore)
 		.each(draw_geometry_st);
 
-	drawMultiThreaded_ = world.system<const WorldTransform, const Program, const Renderer>("DrawMultiThread")
+	drawMultiThreaded_ = world.system<const WorldTransform, const Program, const RendererThreads>("DrawMultiThread")
 		.arg(3).singleton()
-		.term<const Model>()
-		.term<const MultiThreaded>().singleton()
+		.with<MultiThreaded>().singleton()
+		.with<Renderer>().singleton()
+		.with<Model>()
 		.kind(flecs::PreStore)
 		.multi_threaded()
 		.each(draw_geometry_mt);

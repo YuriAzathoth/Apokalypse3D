@@ -247,7 +247,7 @@ static void init_renderer(flecs::iter it,
 	w.remove<Startup>();
 }
 
-static void destroy_renderer(Renderer&) { bgfx::shutdown(); }
+static void destroy_renderer(flecs::entity e) { bgfx::shutdown(); }
 
 static void frame_begin(const Resolution& resolution)
 {
@@ -259,7 +259,7 @@ static void frame_begin(const Resolution& resolution)
 	LogTrace("Render frame begin finish...");
 }
 
-static void frame_end(flecs::iter, size_t)
+static void frame_end(flecs::iter&, size_t)
 {
 	LogTrace("Render frame end start...");
 
@@ -268,29 +268,29 @@ static void frame_end(flecs::iter, size_t)
 	LogTrace("Render frame end finish...");
 }
 
-static void threads_begin(flecs::iter& it, size_t, const Renderer& renderer)
+static void threads_begin(flecs::iter& it, size_t, const RendererThreads& threads)
 {
 	LogTrace("Render threads begin start...");
 
 	flecs::world w = it.world();
 	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
-		renderer.threads[i].queue = bgfx::begin(i != 0);
-		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
+		threads.queues[i] = bgfx::begin(i != 0);
+		Assert(threads.queues[i], "Renderer threads' queue is NULL.");
 	}
 
 	LogTrace("Render threads begin finish...");
 }
 
-static void threads_end(flecs::iter& it, size_t, const Renderer& renderer)
+static void threads_end(flecs::iter& it, size_t, const RendererThreads& threads)
 {
 	LogTrace("Render threads end start...");
 
 	flecs::world w = it.world();
 	for (unsigned i = 0; i < w.get_threads(); ++i)
 	{
-		Assert(renderer.threads[i].queue, "Renderer threads' queue is NULL.");
-		bgfx::end(renderer.threads[i].queue);
+		Assert(threads.queues[i], "Renderer threads' queue is NULL.");
+		bgfx::end(threads.queues[i]);
 	}
 
 	LogTrace("Render threads end finish...");
@@ -307,14 +307,18 @@ static void update_aspect(flecs::iter& it, size_t, const Resolution& resolution)
 	it.world().set<Aspect>({(float)resolution.width / (float)resolution.height});
 }
 
-static void create_threads(flecs::entity e, Renderer& renderer)
+static void add_threads(flecs::iter& it, size_t)
 {
-	renderer.threads.resize(e.world().get_threads());
+	flecs::world w = it.world();
+	RendererThreads threads;
+	threads.count = w.get_stage_count();
+	threads.queues = (bgfx::Encoder**)malloc(threads.count * sizeof(bgfx::Encoder*));
+	w.set<RendererThreads>(threads);
 }
 
-static void destroy_threads(Renderer& renderer)
+static void remove_threads(flecs::iter& it, size_t)
 {
-	renderer.threads.resize(0);
+	it.world().remove<RendererThreads>();
 }
 
 A3D::RendererSystems::RendererSystems(flecs::world& world)
@@ -351,8 +355,8 @@ A3D::RendererSystems::RendererSystems(flecs::world& world)
 		.no_readonly()
 		.each(init_renderer);
 
-	destroy_ = world.observer<Renderer>("DestroyRenderer")
-		.arg(1).singleton()
+	destroy_ = world.observer<>("DestroyRenderer")
+		.term<Renderer>().singleton()
 		.event(flecs::UnSet)
 		.each(destroy_renderer);
 
@@ -362,17 +366,19 @@ A3D::RendererSystems::RendererSystems(flecs::world& world)
 				  .kind(flecs::PostUpdate)
 				  .each(frame_begin);
 
-	threadsBegin_ = world.system<const Renderer>("ThreadsBegin")
+	threadsBegin_ = world.system<const RendererThreads>("ThreadsBegin")
 					.arg(1).singleton()
 					.term<const Resolution>().singleton()
 					.with<MultiThreaded>().singleton()
+					.with<Renderer>().singleton()
 					.kind(flecs::PostUpdate)
 					.each(threads_begin);
 
-	threadsEnd_ = world.system<const Renderer>("ThreadsEnd")
+	threadsEnd_ = world.system<const RendererThreads>("ThreadsEnd")
 				  .arg(1).singleton()
 				  .term<const Resolution>().singleton()
 				  .with<MultiThreaded>().singleton()
+				  .with<Renderer>().singleton()
 				  .kind(flecs::OnStore)
 				  .each(threads_end);
 
@@ -392,13 +398,13 @@ A3D::RendererSystems::RendererSystems(flecs::world& world)
 					.event(flecs::OnSet)
 					.each(update_aspect);
 
-	createThreads_ = world.observer<Renderer>("CreateThreads")
-					 .term<MultiThreaded>().singleton()
-					 .event(flecs::OnAdd)
-					 .each(create_threads);
+	addThreads_ = world.observer<>("AddThreads")
+					.term<MultiThreaded>().singleton()
+					.event(flecs::OnSet)
+					.each(add_threads);
 
-	destroyThreads_ = world.observer<Renderer>("DestroyThreads")
-					  .term<MultiThreaded>().singleton()
-					  .event(flecs::UnSet)
-					  .each(destroy_threads);
+	removeThreads_ = world.observer<>("RemoveThreads")
+					.term<MultiThreaded>().singleton()
+					.event(flecs::OnRemove)
+					.each(remove_threads);
 }

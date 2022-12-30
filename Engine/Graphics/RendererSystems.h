@@ -38,8 +38,8 @@ struct APOKALYPSE3DAPI_EXPORT RendererSystems
 	flecs::entity updateCameraView_;
 
 	flecs::entity updateAspect_;
-	flecs::entity createThreads_;
-	flecs::entity destroyThreads_;
+	flecs::entity addThreads_;
+	flecs::entity removeThreads_;
 };
 } // namespace A3D
 

@@ -31,7 +31,20 @@ RendererComponents::RendererComponents(flecs::world& world)
 		.member<uint16_t>("device")
 		.member<uint16_t>("vendor");
 
-	renderer_ = world.component<Renderer>();
+	renderer_ = world.component<Renderer>().add(flecs::Tag);
+	rendererAllocator_ = world.component<Renderer>();
+	rendererThreads_ = world.component<RendererThreads>()
+		.on_add([](RendererThreads& threads)
+		{
+			threads.queues = nullptr;
+			threads.count = 0;
+		})
+		.on_remove([](RendererThreads& threads)
+		{
+			if (threads.queues)
+				free(threads.queues);
+		});
+
 	startup_ = world.component<Startup>().add(flecs::Tag);
 }
 } // namespace A3D

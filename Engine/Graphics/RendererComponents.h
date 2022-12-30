@@ -19,9 +19,8 @@
 #ifndef RENDERERCOMPONENTS_H
 #define RENDERERCOMPONENTS_H
 
-#include <bx/file.h>
+#include <bx/allocator.h>
 #include <flecs.h>
-#include <vector>
 #include "Apokalypse3DAPI.h"
 
 namespace bgfx { struct Encoder; }
@@ -32,21 +31,23 @@ namespace Components
 {
 namespace Renderer
 {
-struct Thread
-{
-	mutable bgfx::Encoder* queue;
-};
-
 struct Device
 {
 	uint16_t device;
 	uint16_t vendor;
 };
 
-struct Renderer
+struct Renderer {};
+
+struct RendererAllocator
 {
-	std::vector<Thread> threads;
 	bx::DefaultAllocator alloc;
+};
+
+struct RendererThreads
+{
+	mutable bgfx::Encoder** queues;
+	unsigned count;
 };
 
 struct Startup {};
@@ -59,6 +60,8 @@ struct APOKALYPSE3DAPI_EXPORT RendererComponents
 
 	flecs::entity device_;
 	flecs::entity renderer_;
+	flecs::entity rendererAllocator_;
+	flecs::entity rendererThreads_;
 	flecs::entity startup_;
 };
 } // namespace A3D
