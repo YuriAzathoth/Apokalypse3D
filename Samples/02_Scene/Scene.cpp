@@ -18,25 +18,20 @@
 
 #include <glm/gtx/quaternion.hpp>
 #include <glm/glm.hpp>
+#include <SDL3/SDL_scancode.h>
 #include "Core/Engine.h"
 #include "Debug/DebugModelRendererSystems.h"
 #include "Graphics/CameraComponents.h"
 #include "Graphics/CameraSystems.h"
-#include "Graphics/GpuProgramCacheComponents.h"
 #include "Graphics/GpuProgramCacheSystems.h"
 #include "Graphics/GpuProgramComponents.h"
 #include "Graphics/GraphicsComponents.h"
-#include "Graphics/ImageCacheComponents.h"
-#include "Graphics/ImageCacheSystems.h"
-#include "Graphics/ImageComponents.h"
-#include "Graphics/MeshCacheComponents.h"
 #include "Graphics/MeshCacheSystems.h"
 #include "Graphics/MeshComponents.h"
 #include "Graphics/RendererComponents.h"
 #include "Graphics/RendererSystems.h"
 #include "Graphics/WindowComponents.h"
 #include "Graphics/WindowSystems.h"
-#include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
 #include "Input/InputComponents.h"
 #include "Input/InputSystems.h"
@@ -44,7 +39,6 @@
 #include "Input/KeyboardSystems.h"
 #include "Input/MouseComponents.h"
 #include "Input/MouseSystems.h"
-#include "IO/AsyncLoaderComponents.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
 
@@ -103,26 +97,12 @@ int main()
 {
 	Engine engine;
 	flecs::world& world = engine.get_world();
-	world.import<AsyncLoaderComponents>();
-	world.import<CameraComponents>();
-	world.import<EventComponents>();
-	world.import<InputComponents>();
-	world.import<GpuProgramComponents>();
-	world.import<GpuProgramCacheComponents>();
-	world.import<ImageComponents>();
-	world.import<ImageCacheComponents>();
-	world.import<MeshComponents>();
-	world.import<MeshCacheComponents>();
-	world.import<SceneComponents>();
-	world.import<RendererComponents>();
-	world.import<WindowComponents>();
 	world.import<CameraSystems>();
 	world.import<EventSystems>();
 	world.import<InputSystems>();
 	world.import<KeyboardSystems>();
 	world.import<MouseSystems>();
 	world.import<GpuProgramCacheSystems>();
-	world.import<ImageCacheSystems>();
 	world.import<MeshCacheSystems>();
 	world.import<WindowSystems>();
 	world.import<RendererSystems>();

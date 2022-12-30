@@ -17,23 +17,16 @@
 */
 
 #include "Core/Engine.h"
-#include "Graphics/RendererComponents.h"
 #include "Graphics/RendererSystems.h"
-#include "Graphics/WindowComponents.h"
 #include "Graphics/WindowSystems.h"
-#include "Input/EventComponents.h"
 #include "Input/EventSystems.h"
 
 using namespace A3D;
-using namespace A3D::Components;
 
 int main()
 {
 	Engine engine;
 	flecs::world& world = engine.get_world();
-	world.import<EventComponents>();
-	world.import<RendererComponents>();
-	world.import<WindowComponents>();
 	world.import<EventSystems>();
 	world.import<RendererSystems>();
 	world.import<WindowSystems>();
