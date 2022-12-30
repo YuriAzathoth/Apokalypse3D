@@ -142,6 +142,7 @@ int main()
 	flecs::entity camera = world.entity().child_of(scene)
 						   .add<Scene::Node>()
 						   .set<Scene::Position>({{0.0f, 0.0f, 50.0f}})
+						   .add<Scene::Rotation>()
 						   .add<Camera::Eye>()
 						   .set<Camera::Perspective>({glm::radians(45.0f), 0.01f, 1000.0f})
 						   .add<Camera::Viewport>();
@@ -213,28 +214,37 @@ int main()
 		.set<Input::Sensitivity>({-1.0f})
 		.set<Keyboard::KeyboardKey>({SDL_SCANCODE_LCTRL});
 
-	world.system<Scene::Position, const Input::ControllerAxis>()
+	world.system<Scene::Position, const Scene::Rotation, const Input::ControllerAxis>()
 		.arg(1).up<CamControl>()
+		.arg(2).up<CamControl>()
 		.term(forward_back)
-		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+		.each([](flecs::entity e, Scene::Position& pos, const Scene::Rotation& rot, const Input::ControllerAxis& axis)
 	{
-		pos.position.z += axis.delta * e.delta_time() * 50.0f;
+		glm::vec3 forward(0.0f, 0.0f, 1.0f);
+		forward *= axis.delta * e.delta_time() * 50.0f;
+		pos.position += rot.quat * forward;
 	});
 
-	world.system<Scene::Position, const Input::ControllerAxis>()
+	world.system<Scene::Position, const Scene::Rotation, const Input::ControllerAxis>()
 		.arg(1).up<CamControl>()
+		.arg(2).up<CamControl>()
 		.term(left_right)
-		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+		.each([](flecs::entity e, Scene::Position& pos, const Scene::Rotation& rot, const Input::ControllerAxis& axis)
 	{
-		pos.position.x += axis.delta * e.delta_time() * 50.0f;
+		glm::vec3 right(1.0f, 0.0f, 0.0f);
+		right *= axis.delta * e.delta_time() * 50.0f;
+		pos.position += rot.quat * right;
 	});
 
-	world.system<Scene::Position, const Input::ControllerAxis>()
+	world.system<Scene::Position, const Scene::Rotation, const Input::ControllerAxis>()
 		.arg(1).up<CamControl>()
+		.arg(2).up<CamControl>()
 		.term(up_down)
-		.each([](flecs::entity e, Scene::Position& pos, const Input::ControllerAxis& axis)
+		.each([](flecs::entity e, Scene::Position& pos, const Scene::Rotation& rot, const Input::ControllerAxis& axis)
 	{
-		pos.position.y += axis.delta * e.delta_time() * 50.0f;
+		glm::vec3 up(0.0f, 1.0f, 0.0f);
+		up *= axis.delta * e.delta_time() * 50.0f;
+		pos.position += rot.quat * up;
 	});
 
 	flecs::entity look_pitch = world.entity();
