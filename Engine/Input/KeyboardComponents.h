@@ -35,7 +35,7 @@ constexpr const unsigned KEYS_ARR_SIZE = KEYS_COUNT / KEYS_PER_ELEMENT;
 
 struct Keyboard
 {
-	unsigned down[KEYS_ARR_SIZE];
+	mutable unsigned* down; // Singlethread only. No need to copy 64 ints every frame.
 };
 
 struct KeyboardKey

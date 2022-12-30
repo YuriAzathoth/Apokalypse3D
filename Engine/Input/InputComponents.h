@@ -31,12 +31,20 @@ namespace Input
 struct ActionAxis
 {
 	float delta;
+
+	ActionAxis() : delta(0.0f) {}
+	ActionAxis(const ActionAxis& src) : delta(src.delta) {}
+	void operator=(const ActionAxis& src) { delta = src.delta; }
 };
 
 struct ActionKey
 {
 	bool current;
 	bool previous;
+
+	ActionKey() : current(false), previous(false) {}
+	ActionKey(const ActionKey& src) : current(src.current), previous(src.previous) {}
+	void operator=(const ActionKey& src) { current = src.current; previous = src.previous; }
 };
 
 struct Controller {};
@@ -44,11 +52,20 @@ struct Controller {};
 struct ControllerAxis
 {
 	float delta;
+
+	ControllerAxis() : delta(0.0f) {}
+	ControllerAxis(const ControllerAxis& src) : delta(src.delta) {}
+	void operator=(const ControllerAxis& src) { delta = src.delta; }
 };
 
 struct Sensitivity
 {
 	float sensitivity;
+
+	Sensitivity() : sensitivity(1.0f) {}
+	Sensitivity(float s) : sensitivity(s) {}
+	Sensitivity(const Sensitivity& src) : sensitivity(src.sensitivity) {}
+	void operator=(const Sensitivity& src) { sensitivity = src.sensitivity; }
 };
 
 struct IsAxisOf {};

@@ -46,7 +46,7 @@ A3D::CameraSystems::CameraSystems(flecs::world& world)
 		glm::vec3 position;
 		glm::vec3 skew;
 		glm::vec4 perspective;
-		glm::decompose(wt.transform, scale, rotation, position, skew, perspective);
+		glm::decompose(wt.global, scale, rotation, position, skew, perspective);
 		const glm::vec3 FRONT_VEC(0.0f, 0.0f, -1.0f);
 		const glm::vec3 UP_VEC(0.0f, 1.0f, 0.0f);
 		const glm::vec3 front = glm::normalize(rotation * FRONT_VEC);

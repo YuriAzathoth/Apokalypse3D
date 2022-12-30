@@ -33,11 +33,6 @@ struct APOKALYPSE3DAPI_EXPORT SceneSystems
 	flecs::entity setRotation_;
 	flecs::entity setScale_;
 	flecs::entity buildTransform_;
-
-	flecs::entity initPosition_;
-	flecs::entity initRotate_;
-	flecs::entity initScale_;
-	flecs::entity initRoot_;
 };
 } // namespace A3D
 

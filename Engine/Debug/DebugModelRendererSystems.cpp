@@ -47,7 +47,7 @@ static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Pr
 			Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 			Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 			Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
-			bgfx::setTransform(glm::value_ptr(wt.transform));
+			bgfx::setTransform(glm::value_ptr(wt.global));
 			bgfx::setVertexBuffer(0, mesh->vbo);
 			bgfx::setIndexBuffer(mesh->ebo);
 			bgfx::setState(BGFX_STATE_DEFAULT);
@@ -70,7 +70,7 @@ static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Pr
 				Assert(bgfx::isValid(mesh->vbo), "Failed to render node: invalid vertex buffer handle.");
 				Assert(bgfx::isValid(mesh->ebo), "Failed to render node: invalid elements buffer handle.");
 				Assert(bgfx::isValid(program.handle), "Failed to render node: invalid GPU program handle.");
-				queue->setTransform(glm::value_ptr(wt.transform));
+				queue->setTransform(glm::value_ptr(wt.global));
 				queue->setVertexBuffer(0, mesh->vbo);
 				queue->setIndexBuffer(mesh->ebo);
 				queue->setState(BGFX_STATE_DEFAULT);

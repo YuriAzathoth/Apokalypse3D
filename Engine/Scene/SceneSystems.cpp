@@ -41,7 +41,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt)
 		{
-			rt.transform = glm::mat4{1.0f};
+			rt.local = glm::mat4{1.0f};
 		});
 
 	setPosition_ = world.system<RelativeTransform, const Position>("SetPosition")
@@ -50,7 +50,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Position& pos)
 		{
-			rt.transform = glm::translate(rt.transform, pos.position);
+			rt.local = glm::translate(rt.local, pos.position);
 		});
 
 	setRotation_ = world.system<RelativeTransform, const Rotation>("SetRotation")
@@ -59,7 +59,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Rotation& rot)
 		{
-			rt.transform *= glm::toMat4(rot.quat);
+			rt.local *= glm::toMat4(rot.quat);
 		});
 
 	setScale_ = world.system<RelativeTransform, const Scale>("SetScale")
@@ -68,7 +68,7 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.multi_threaded()
 		.each([](RelativeTransform& rt, const Scale& scale)
 		{
-			rt.transform = glm::scale(rt.transform, scale.scale);
+			rt.local = glm::scale(rt.local, scale.scale);
 		});
 
 	buildTransform_ = world.system<WorldTransform, const RelativeTransform, const WorldTransform>("BuildTransform")
@@ -76,45 +76,9 @@ SceneSystems::SceneSystems(flecs::world& world)
 		.without<Static>()
 		.kind(flecs::PostUpdate)
 		.multi_threaded()
-		.each([](WorldTransform& current, const RelativeTransform& relative, const WorldTransform& parent)
+		.each([](WorldTransform& wt, const RelativeTransform& rt, const WorldTransform& parent)
 		{
-			current.transform = parent.transform * relative.transform;
-		});
-
-	initPosition_ = world.observer<Position>("InitPosition")
-		.event(flecs::OnAdd)
-		.each([](Position& pos)
-		{
-			pos.position.x = 0.0f;
-			pos.position.y = 0.0f;
-			pos.position.z = 0.0f;
-		});
-
-	initRotate_ = world.observer<Rotation>("InitRotate")
-		.event(flecs::OnAdd)
-		.each([](Rotation& rot)
-		{
-			rot.quat.w = 1.0f;
-			rot.quat.x = 0.0f;
-			rot.quat.y = 0.0f;
-			rot.quat.z = 0.0f;
-		});
-
-	initScale_ = world.observer<Scale>("InitScale")
-		.event(flecs::OnAdd)
-		.each([](Scale& scale)
-		{
-			scale.scale.x = 1.0f;
-			scale.scale.y = 1.0f;
-			scale.scale.z = 1.0f;
-		});
-
-	initRoot_ = world.observer<WorldTransform>("InitRoot")
-		.term<const Root>()
-		.event(flecs::OnAdd)
-		.each([](WorldTransform& wt)
-		{
-			wt.transform = glm::mat4{1.0f};
+			wt.global = parent.global * rt.local;
 		});
 }
 } // namespace A3D

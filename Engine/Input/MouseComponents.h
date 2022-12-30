@@ -40,19 +40,29 @@ struct Button
 struct ButtonsState
 {
 	unsigned char down;
+
+	ButtonsState() : down(0) {}
+	ButtonsState(const ButtonsState& src) : down(src.down) {}
+	void operator=(const ButtonsState& src) { down = src.down; }
 };
 
 struct Movement
 {
-	int x;
-	int y;
 	float dx;
 	float dy;
+
+	Movement() : dx(0.0f), dy(0.0f) {}
+	Movement(const Movement& src) : dx(src.dx), dy(src.dy) {}
+	void operator=(const Movement& src) { dx = src.dx; dy = src.dy; }
 };
 
 struct WheelState
 {
 	float delta;
+
+	WheelState() : delta(0.0f) {}
+	WheelState(const WheelState& src) : delta(src.delta) {}
+	void operator=(const WheelState& src) { delta = src.delta; }
 };
 } // namespace Mouse
 } // namespace Components

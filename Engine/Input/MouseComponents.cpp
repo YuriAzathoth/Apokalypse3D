@@ -30,12 +30,6 @@ A3D::MouseComponents::MouseComponents(flecs::world& world)
 	button_ = world.component<Button>().member<unsigned char>("code");
 
 	buttonsState_ = world.component<ButtonsState>().member<unsigned char>("down");
-
-	movement_ = world.component<Movement>()
-		.member<int>("x")
-		.member<int>("y")
-		.member<float>("dx")
-		.member<float>("dy");
-
+	movement_ = world.component<Movement>().member<float>("dx").member<float>("dy");
 	wheelState_ = world.component<WheelState>().member<int>("delta");
 }

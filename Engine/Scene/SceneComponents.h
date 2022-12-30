@@ -34,26 +34,54 @@ namespace Scene
 struct Position
 {
 	glm::vec3 position;
+
+	Position() : position(0.0f, 0.0f, 0.0f) {}
+	Position(const glm::vec3& p) : position(p) {}
+	Position(float x, float y, float z) : position(x, y, z) {}
+	Position(const Position& src) : position(src.position) {}
+	void operator=(const Position& src) { position = src.position; }
 };
 
 struct Rotation
 {
 	glm::quat quat;
+
+	Rotation() : quat(1.0f, 0.0f, 0.0f, 0.0f) {}
+	Rotation(const glm::quat& q) : quat(q) {}
+	Rotation(float angle, const glm::vec3& axis) : quat(glm::angleAxis(angle, axis)) {}
+	Rotation(const Rotation& src) : quat(src.quat) {}
+	void operator=(const Rotation& src) { quat = src.quat; }
 };
 
 struct Scale
 {
 	glm::vec3 scale;
+
+	Scale() : scale(1.0f, 1.0f, 1.0f) {}
+	Scale(const glm::vec3& s) : scale(s) {}
+	Scale(float x, float y, float z) : scale(x, y, z) {}
+	Scale(const Scale& src) : scale(src.scale) {}
+	void operator=(const Scale& src) { scale = src.scale; }
 };
 
 struct RelativeTransform
 {
-	glm::mat4 transform;
+	glm::mat4 local;
+
+	RelativeTransform() : local(1.0f) {}
+	RelativeTransform(const glm::mat4& t) : local(t) {}
+	RelativeTransform(const RelativeTransform& src) : local(src.local) {}
+	void operator=(const RelativeTransform& src) { local = src.local; }
 };
 
 struct WorldTransform
 {
-	glm::mat4 transform;
+	glm::mat4 global;
+
+	WorldTransform() : global(1.0f) {}
+	WorldTransform(const glm::mat4& t) : global(t) {}
+	WorldTransform(const WorldTransform& src) : global(src.global) {}
+	void operator=(const WorldTransform& src) { global = src.global; }
 };
 
 struct Node {};

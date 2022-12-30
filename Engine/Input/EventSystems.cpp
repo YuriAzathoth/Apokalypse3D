@@ -67,8 +67,6 @@ static void poll_events(flecs::entity e, Process& process)
 		case SDL_MOUSEMOTION:
 			{
 				Movement* movement = w.get_mut<Movement>();
-				movement->x = process.event.motion.x;
-				movement->y = process.event.motion.y;
 				movement->dx = process.event.motion.xrel;
 				movement->dy = process.event.motion.yrel;
 				w.modified<Movement>();

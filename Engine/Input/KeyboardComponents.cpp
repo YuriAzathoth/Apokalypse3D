@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
 #include "KeyboardComponents.h"
 
 using namespace A3D::Components::Keyboard;
@@ -27,9 +28,11 @@ A3D::KeyboardComponents::KeyboardComponents(flecs::world& world)
 	keyboard_ = world.component<Keyboard>()
 				.on_add([](Keyboard& keyboard)
 				{
-					constexpr const unsigned size = static_cast<unsigned>(sizeof(keyboard.down) / sizeof(unsigned));
-					for (unsigned i = 0; i < size; ++i)
-						keyboard.down[i] = 0;
+					keyboard.down = (unsigned*)calloc(KEYS_ARR_SIZE, sizeof(unsigned));
+				})
+				.on_remove([](Keyboard& keyboard)
+				{
+					free(keyboard.down);
 				});
 
 	keyboardKey_ = world.component<KeyboardKey>().member<unsigned>("keycode");
