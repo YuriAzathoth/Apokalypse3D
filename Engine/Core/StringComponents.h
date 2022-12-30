@@ -31,6 +31,7 @@ namespace Str
 struct StringView
 {
 	char* value;
+	int* refs;
 
 	StringView();
 	StringView(const char* _value);
@@ -42,36 +43,92 @@ struct StringView
 	StringView& operator=(StringView&& src) noexcept;
 };
 
-inline StringView::StringView() : value(nullptr) {}
-inline StringView::StringView(const char* _value) : value(ecs_os_strdup(_value)) {}
-inline StringView::~StringView() { ecs_os_free(value); }
-inline StringView::StringView(const StringView& src) : value(ecs_os_strdup(src.value)) {}
+inline StringView::StringView() : value(nullptr), refs(nullptr) {}
 
-inline StringView::StringView(StringView&& src) noexcept
-	: value(src.value)
+inline StringView::StringView(const char* _value) :
+	value(ecs_os_strdup(_value)),
+	refs((int*)ecs_os_malloc(sizeof(int)))
+{
+	*refs = 1;
+}
+
+inline StringView::~StringView()
+{
+	if (refs)
+	{
+		--*refs;
+		if (*refs == 0)
+		{
+			ecs_os_free(value);
+			ecs_os_free(refs);
+		}
+	}
+}
+
+inline StringView::StringView(const StringView& src) :
+	value(src.value),
+	refs(src.refs)
+{
+	++*refs;
+}
+
+inline StringView::StringView(StringView&& src) noexcept :
+	value(src.value),
+	refs(src.refs)
 {
 	src.value = nullptr;
+	src.refs = nullptr;
 }
 
 inline StringView& StringView::operator=(const char* _value)
 {
-	ecs_os_free(value);
+	if (refs)
+	{
+		--*refs;
+		if (*refs == 0)
+		{
+			ecs_os_free(value);
+			ecs_os_free(refs);
+		}
+	}
 	value = ecs_os_strdup(_value);
+	refs = (int*)ecs_os_malloc(sizeof(int));
+	*refs = 1;
 	return *this;
 }
 
 inline StringView& StringView::operator=(const StringView& src)
 {
-	ecs_os_free(value);
-	value = ecs_os_strdup(src.value);
+	if (refs)
+	{
+		--*refs;
+		if (*refs == 0)
+		{
+			ecs_os_free(value);
+			ecs_os_free(refs);
+		}
+	}
+	value = src.value;
+	refs = src.refs;
+	++*refs;
 	return *this;
 }
 
 inline StringView& StringView::operator=(StringView&& src) noexcept
 {
-	ecs_os_free(value);
+	if (refs)
+	{
+		--*refs;
+		if (*refs == 0)
+		{
+			ecs_os_free(value);
+			ecs_os_free(refs);
+		}
+	}
 	value = src.value;
+	refs = src.refs;
 	src.value = nullptr;
+	src.refs = nullptr;
 	return *this;
 }
 } // namespace Str
