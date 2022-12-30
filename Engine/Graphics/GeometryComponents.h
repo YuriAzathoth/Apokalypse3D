@@ -53,8 +53,6 @@ struct APOKALYPSE3DAPI_EXPORT GeometryComponents
 	GeometryComponents(flecs::world& world);
 
 	flecs::entity aabb_;
-	flecs::entity loadData_;
-	flecs::entity loadFile_;
 	flecs::entity model_;
 	flecs::entity obb_;
 	flecs::entity sphere_;
