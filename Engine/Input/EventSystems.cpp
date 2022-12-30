@@ -96,44 +96,20 @@ static void poll_events(flecs::iter& it,
 	LogTrace("SDL events processing end...");
 }
 
-namespace A3D
-{
-EventSystems::EventSystems(flecs::world& world)
+A3D::EventSystems::EventSystems(flecs::world& world)
 {
 	world.module<EventSystems>("A3D::Systems::Event");
 	world.import<EventComponents>();
 	world.import<KeyboardComponents>();
 	world.import<MouseComponents>();
 
-	onAddProcess_ = world.observer<>("Init")
-					.term<Process>()
-					.event(flecs::OnAdd)
-					.each([](flecs::iter, size_t)
-	{
-		LogDebug("Initializing SDL events...");
-		SDL_InitSubSystem(SDL_INIT_EVENTS);
-		LogInfo("SDL events has been initialized.");
-	});
-
-	onRemoveProcess_ = world.observer<>("Destroy")
-					   .term<Process>()
-					   .event(flecs::OnRemove)
-					   .each([](flecs::iter, size_t)
-	{
-		SDL_QuitSubSystem(SDL_INIT_EVENTS);
-		LogInfo("SDL events shutdowned.");
-	});
-
-	pollEvents_ = world.system<Keyboard*, ButtonsState*, Movement*, WheelState*>("PollEvents")
-				  .with<Process>().singleton()
+	pollEvents_ = world.system<Keyboard*, ButtonsState*, Movement*, WheelState*>("Poll")
+				  .arg(1).singleton()
 				  .arg(2).singleton()
 				  .arg(3).singleton()
 				  .arg(4).singleton()
-				  .arg(5).singleton()
+				  .with<const Process>().singleton()
 				  .kind(flecs::OnLoad)
 				  .no_readonly()
 				  .each(poll_events);
-
-	world.add<Process>();
 }
-} // namespace A3D

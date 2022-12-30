@@ -28,9 +28,6 @@ struct APOKALYPSE3DAPI_EXPORT EventSystems
 {
 	EventSystems(flecs::world& world);
 
-	flecs::entity onAddProcess_;
-	flecs::entity onRemoveProcess_;
-
 	flecs::entity pollEvents_;
 };
 } // namespace A3D
