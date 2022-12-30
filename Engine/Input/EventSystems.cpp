@@ -29,7 +29,6 @@ using namespace A3D::Components::Mouse;
 
 static void poll_events(flecs::iter& it,
 						size_t,
-						Process& process,
 						Keyboard* keyboard,
 						ButtonsState* mouseButtons,
 						Movement* mouseMove,
@@ -37,14 +36,15 @@ static void poll_events(flecs::iter& it,
 {
 	LogTrace("SDL events processing begin...");
 	flecs::world w = it.world();
-	while (SDL_PollEvent(&process.event))
-		switch (process.event.type)
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+		switch (event.type)
 		{
 		case SDL_KEYDOWN:
 			if (keyboard)
 			{
-				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
-				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				const unsigned element_id = static_cast<unsigned>(event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(event.key.keysym.scancode) % KEYS_PER_ELEMENT;
 				keyboard->down[element_id] |= (1 << bit_shift);
 				w.modified<Keyboard>();
 			}
@@ -52,8 +52,8 @@ static void poll_events(flecs::iter& it,
 		case SDL_KEYUP:
 			if (keyboard)
 			{
-				const unsigned element_id = static_cast<unsigned>(process.event.key.keysym.scancode) / KEYS_PER_ELEMENT;
-				const unsigned bit_shift = static_cast<unsigned>(process.event.key.keysym.scancode) % KEYS_PER_ELEMENT;
+				const unsigned element_id = static_cast<unsigned>(event.key.keysym.scancode) / KEYS_PER_ELEMENT;
+				const unsigned bit_shift = static_cast<unsigned>(event.key.keysym.scancode) % KEYS_PER_ELEMENT;
 				keyboard->down[element_id] &= ~(1 << bit_shift);
 				w.modified<Keyboard>();
 			}
@@ -61,7 +61,7 @@ static void poll_events(flecs::iter& it,
 		case SDL_MOUSEBUTTONDOWN:
 			if (mouseButtons)
 			{
-				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				const unsigned bit_shift = static_cast<unsigned>(event.button.button);
 				mouseButtons->down |= (1 << bit_shift);
 				w.modified<ButtonsState>();
 			}
@@ -69,7 +69,7 @@ static void poll_events(flecs::iter& it,
 		case SDL_MOUSEBUTTONUP:
 			if (mouseButtons)
 			{
-				const unsigned bit_shift = static_cast<unsigned>(process.event.button.button);
+				const unsigned bit_shift = static_cast<unsigned>(event.button.button);
 				mouseButtons->down &= ~(1 << bit_shift);
 				w.modified<ButtonsState>();
 			}
@@ -77,15 +77,15 @@ static void poll_events(flecs::iter& it,
 		case SDL_MOUSEMOTION:
 			if (mouseMove)
 			{
-				mouseMove->dx = process.event.motion.xrel;
-				mouseMove->dy = process.event.motion.yrel;
+				mouseMove->dx = event.motion.xrel;
+				mouseMove->dy = event.motion.yrel;
 				w.modified<Movement>();
 			}
 			break;
 		case SDL_MOUSEWHEEL:
 			if (mouseWheel)
 			{
-				mouseWheel->delta = process.event.wheel.y;
+				mouseWheel->delta = event.wheel.y;
 				w.modified<WheelState>();
 			}
 			break;
@@ -105,25 +105,27 @@ EventSystems::EventSystems(flecs::world& world)
 	world.import<KeyboardComponents>();
 	world.import<MouseComponents>();
 
-	onAddProcess_ = world.observer<Process>("Init")
+	onAddProcess_ = world.observer<>("Init")
+					.term<Process>()
 					.event(flecs::OnAdd)
-					.each([](Process&)
+					.each([](flecs::iter, size_t)
 	{
 		LogDebug("Initializing SDL events...");
 		SDL_InitSubSystem(SDL_INIT_EVENTS);
 		LogInfo("SDL events has been initialized.");
 	});
 
-	onRemoveProcess_ = world.observer<Process>("Destroy")
+	onRemoveProcess_ = world.observer<>("Destroy")
+					   .term<Process>()
 					   .event(flecs::OnRemove)
-					   .each([](Process&)
+					   .each([](flecs::iter, size_t)
 	{
 		SDL_QuitSubSystem(SDL_INIT_EVENTS);
 		LogInfo("SDL events shutdowned.");
 	});
 
-	pollEvents_ = world.system<Process, Keyboard*, ButtonsState*, Movement*, WheelState*>("PollEvents")
-				  .arg(1).singleton()
+	pollEvents_ = world.system<Keyboard*, ButtonsState*, Movement*, WheelState*>("PollEvents")
+				  .with<Process>().singleton()
 				  .arg(2).singleton()
 				  .arg(3).singleton()
 				  .arg(4).singleton()

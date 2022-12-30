@@ -30,10 +30,7 @@ namespace Components
 {
 namespace Event
 {
-struct Process
-{
-	SDL_Event event;
-};
+struct Process {};
 } // namespace Event
 } // namespace Components
 

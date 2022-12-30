@@ -24,5 +24,5 @@ A3D::EventComponents::EventComponents(flecs::world& world)
 {
 	world.module<EventComponents>("A3D::Components::Event");
 
-	process_ = world.component<Process>();
+	process_ = world.component<Process>().add(flecs::Tag);
 }
