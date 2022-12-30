@@ -96,9 +96,9 @@ EventSystems::EventSystems(flecs::world& world)
 					.event(flecs::OnAdd)
 					.each([](Process&)
 	{
-		LogInfo("Initializing SDL events...");
+		LogDebug("Initializing SDL events...");
 		SDL_InitSubSystem(SDL_INIT_EVENTS);
-		LogInfo("SDL events has been initialized...");
+		LogInfo("SDL events has been initialized.");
 	});
 
 	onRemoveProcess_ = world.observer<Process>("Destroy")
