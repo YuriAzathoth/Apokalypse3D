@@ -66,6 +66,7 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 {
 	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
 	world.import<AsyncLoaderComponents>();
+	world.import<GeometryComponents>();
 	world.import<MeshCacheComponents>();
 	world.import<MeshComponents>();
 	world.import<RendererComponents>();
