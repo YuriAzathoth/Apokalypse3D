@@ -9,6 +9,7 @@ if %BUILD_TYPE%==Debug (
 
 set PROJECT_NAME=Apokalypse3D
 set SOURCE_DIR=%CD%\..
+set SCRIPTS_DIR=%CD%
 cd ..
 
 if %PLATFORM%==- goto NATIVE
@@ -19,10 +20,10 @@ set BUILD_DIR=%CD%\..\W32\Build\%PROJECT_NAME%%DIR_PREFIX%
 set INSTALL_DIR=%CD%\..\W32\%PROJECT_NAME%%DIR_PREFIX%
 
 mkdir %BUILD_DIR%
-cd %PROJECT_NAME%
+cd %SOURCE_DIR%
 cmake -G "Ninja" -B %BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
 cd %BUILD_DIR%
-ninja all
+cmake --build .
 
 goto END
 
@@ -42,4 +43,4 @@ cmake --build .
 goto END
 
 :END
-pause
+cd %SCRIPTS_DIR%
