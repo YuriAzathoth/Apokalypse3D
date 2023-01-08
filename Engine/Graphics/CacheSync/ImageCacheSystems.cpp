@@ -26,16 +26,16 @@
 #include "../RendererComponents.h"
 #include "ImageCacheComponents.h"
 #include "ImageCacheSystems.h"
-#include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
+#include "IO/SyncCacheComponents.h"
 
 #define BUFFER_SIZE 256
 
-using namespace A3D::Components::AsyncLoader;
 using namespace A3D::Components::Image;
 using namespace A3D::Components::Cache::Image;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Str;
+using namespace A3D::Components::SyncCache;
 
 static void destroy_texture(Texture& texture)
 {
@@ -58,10 +58,10 @@ static void release_image(void*, void* userData)
 A3D::ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 {
 	world.module<ImageCacheSystems>("A3D::Systems::Cache::Image");
-	world.import<AsyncLoaderComponents>();
 	world.import<ImageCacheComponents>();
 	world.import<ImageComponents>();
 	world.import<RendererComponents>();
+	world.import<SyncCacheComponents>();
 
 	findTexture_ = world.system<const GetTexture>("FindTexture")
 					.kind(flecs::PostLoad)

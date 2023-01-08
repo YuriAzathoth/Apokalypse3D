@@ -24,16 +24,16 @@
 #include "../RendererComponents.h"
 #include "GpuProgramCacheComponents.h"
 #include "GpuProgramCacheSystems.h"
-#include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
+#include "IO/SyncCacheComponents.h"
 
 #define BUFFER_SIZE 256
 
-using namespace A3D::Components::AsyncLoader;
 using namespace A3D::Components::Cache::GpuProgram;
 using namespace A3D::Components::GpuProgram;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Str;
+using namespace A3D::Components::SyncCache;
 
 inline static void get_program_name(char* program, const char* vertex, const char* fragment)
 {
@@ -98,10 +98,10 @@ static void clear_shaders(flecs::entity e)
 A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 {
 	world.module<GpuProgramCacheSystems>("A3D::Systems::Cache::GpuProgram");
-	world.import<AsyncLoaderComponents>();
 	world.import<GpuProgramCacheComponents>();
 	world.import<GpuProgramComponents>();
 	world.import<RendererComponents>();
+	world.import<SyncCacheComponents>();
 
 	findProgram_ = world.system<const GetProgram>("FindProgram")
 				   .kind(flecs::OnLoad)

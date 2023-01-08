@@ -26,16 +26,16 @@
 #include "../RendererComponents.h"
 #include "MeshCacheComponents.h"
 #include "MeshCacheSystems.h"
-#include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
+#include "IO/SyncCacheComponents.h"
 
 #define BUFFER_SIZE 256
 
-using namespace A3D::Components::AsyncLoader;
 using namespace A3D::Components::Cache::Mesh;
 using namespace A3D::Components::Geometry;
 using namespace A3D::Components::Mesh;
 using namespace A3D::Components::Renderer;
+using namespace A3D::Components::SyncCache;
 
 namespace bgfx
 {
@@ -65,11 +65,11 @@ static void clear_meshes(flecs::entity e)
 A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 {
 	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
-	world.import<AsyncLoaderComponents>();
 	world.import<GeometryComponents>();
 	world.import<MeshCacheComponents>();
 	world.import<MeshComponents>();
 	world.import<RendererComponents>();
+	world.import<SyncCacheComponents>();
 
 	findFile_ = world.system<const GetModelFile>("FindFile")
 				.kind(flecs::OnLoad)

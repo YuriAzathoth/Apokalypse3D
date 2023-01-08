@@ -16,28 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef ASYNCLOADERCOMPONENTS_H
-#define ASYNCLOADERCOMPONENTS_H
+#include "SyncCacheComponents.h"
 
-#include <flecs.h>
-#include "Apokalypse3DAPI.h"
+using namespace A3D::Components::SyncCache;
 
-namespace A3D
+A3D::SyncCacheComponents::SyncCacheComponents(flecs::world& world)
 {
-namespace Components
-{
-namespace AsyncLoader
-{
-struct SetAfterLoad {};
-} // namespace AsyncLoader
-} // namespace Components
+	world.module<SyncCacheComponents>("A3D::Components::SyncCache");
 
-struct APOKALYPSE3DAPI_EXPORT AsyncLoaderComponents
-{
-	AsyncLoaderComponents(flecs::world& world);
-
-	flecs::entity setAfterLoad_;
-};
-} // namespace A3D
-
-#endif // ASYNCLOADERCOMPONENTS_H
+	setAfterLoad_ = world.component<SetAfterLoad>().add(flecs::Tag);
+}
