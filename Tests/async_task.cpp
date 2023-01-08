@@ -281,10 +281,10 @@ TEST_SUITE("Async Thread")
 		REQUIRE(status->tasks_waiting == 0);
 		REQUIRE(result.count() == tasks);
 	}
-	TEST_CASE("Add 256 tasks 8 threads")
+	TEST_CASE("Add 1024 tasks 8 threads")
 	{
 		const unsigned threads = 1;
-		const unsigned tasks = 256;
+		const unsigned tasks = 1024;
 		using namespace Test;
 		flecs::world w;
 		w.import<AsyncTaskComponents>();
