@@ -82,7 +82,7 @@ bool a3d_async_task_add(flecs::world& world, A3D::Components::Async::TaskFunc ta
 
 static void create_planner(flecs::entity e, const SetThreads& count)
 {
-	// LogTrace("Creating async task planner with threads %u...", count.threads);
+	LogTrace("Creating async task planner with threads %u...", count.threads);
 	flecs::world w = e.world();
 	w.set<Planner>({});
 	w.set<PlannerStatus>({0, 0});
@@ -95,11 +95,11 @@ static void set_threads_count(flecs::entity e, Planner& planner, const SetThread
 	if (planner.threads_count > 0)
 		a3d_async_planner_destroy(planner);
 
-	// LogTrace("Set async task planner threads to %u.", count.threads);
+	LogTrace("Set async task planner threads to %u.", count.threads);
 
 	if (count.threads > 0)
 	{
-		// LogTrace("Creating %u threads...", count.threads);
+		LogTrace("Creating %u threads...", count.threads);
 
 		const size_t threads_size = count.threads * sizeof(Thread);
 
@@ -175,7 +175,6 @@ static void merge_worlds(flecs::iter& it, size_t, Planner& planner)
 	flecs::world w = it.world();
 	ThreadContext* context;
 	unsigned done = 0;
-	w.defer_suspend();
 	for (unsigned i = 0; i < planner.threads_count; ++i)
 	{
 		context = planner.threads[i].context;
@@ -186,8 +185,7 @@ static void merge_worlds(flecs::iter& it, size_t, Planner& planner)
 			++done;
 		}
 	}
-	// LogTrace("Merged %u async task threads' world.", done);
-	w.defer_resume();
+	LogTrace("Merged %u async task threads' world.", done);
 	PlannerStatus* status = w.get_mut<PlannerStatus>();
 	status->tasks_done += done;
 	status->tasks_waiting -= done;
@@ -195,8 +193,8 @@ static void merge_worlds(flecs::iter& it, size_t, Planner& planner)
 
 AsyncTaskSystems::AsyncTaskSystems(flecs::world& world)
 {
-	world.import<AsyncTaskComponents>();
 	world.module<AsyncTaskSystems>("A3D::Systems::Async");
+	world.import<AsyncTaskComponents>();
 
 	createPlanner_ = world.observer<const SetThreads>("CreatePlanner")
 					 .term<const Planner>().singleton().not_()
