@@ -19,10 +19,10 @@
 #ifndef ASYNCTASKCOMPONENTS_H
 #define ASYNCTASKCOMPONENTS_H
 
+#include <atomic>
 #include <bx/thread.h>
 #include <flecs.h>
 #include <functional>
-#include <stdatomic.h>
 #include "Apokalypse3DAPI.h"
 #include "Container/async_queue.h"
 #include "Container/vector.h"
@@ -73,9 +73,9 @@ struct ThreadContext
 	const flecs::world* world;
 	const a3d_async_queue_t* tasks_all;
 	unsigned thread_id;
-	atomic_uint_fast32_t progress;
-	atomic_uint_fast32_t whole;
-	atomic_uint_fast8_t state;
+	std::atomic<unsigned> progress;
+	std::atomic<unsigned> whole;
+	std::atomic<unsigned> state;
 };
 
 struct Planner

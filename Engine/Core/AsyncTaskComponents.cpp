@@ -29,7 +29,7 @@ void A3D::Components::Async::a3d_async_planner_destroy(Planner& planner)
 //		LogDebug("Destroying %u threads...", planner.threads_count);
 		for (Thread* thread = planner.threads; thread < planner.threads + planner.threads_count; ++thread)
 		{
-			atomic_store(&thread->context->state, THREAD_STATE_SHUTDOWNING);
+			thread->context->state.store(THREAD_STATE_SHUTDOWNING);
 			a3d_thread_destroy(thread->thread);
 		}
 		for (Thread* thread = planner.threads; thread < planner.threads + planner.threads_count; ++thread)

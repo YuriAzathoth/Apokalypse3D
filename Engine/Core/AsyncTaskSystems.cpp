@@ -31,22 +31,22 @@ static int thread_process(void* param)
 	Assert(context->world, "Async task world is null.");
 
 	// Wait till all planner threads are created
-	while (atomic_load(&context->state) == THREAD_STATE_WAIT_TO_RUN)
+	while (context->state.load() == THREAD_STATE_WAIT_TO_RUN)
 		;
 
 	Task task;
 	do
 	{
 		// Wait for merging thread's async stage in main world
-		while (atomic_load(&context->state) == THREAD_STATE_READY_TO_MERGE)
+		while (context->state.load() == THREAD_STATE_READY_TO_MERGE)
 			a3d_sleep(0, 100);
 
 		if (a3d_async_queue_pop(const_cast<a3d_async_queue_t*>(context->tasks_all), &task))
 		{
-			atomic_store(&context->state, THREAD_STATE_PROCESSING);
+			context->state.store(THREAD_STATE_PROCESSING);
 			if (task.run(*context->world, context->stage))
 			{
-				atomic_store(&context->state, THREAD_STATE_READY_TO_MERGE);
+				context->state.store(THREAD_STATE_READY_TO_MERGE);
 				// LogTrace("Async task done.");
 			}
 			else
@@ -54,7 +54,7 @@ static int thread_process(void* param)
 		}
 		else
 			a3d_sleep(0, 100);
-	} while (atomic_load(&context->state) != THREAD_STATE_SHUTDOWNING);
+	} while (context->state.load() != THREAD_STATE_SHUTDOWNING);
 	return 0;
 }
 
@@ -130,9 +130,9 @@ static void set_threads_count(flecs::entity e, Planner& planner, const SetThread
 				context->tasks_all = planner.tasks;
 				context->thread_id = i;
 
-				atomic_store(&context->progress, 0);
-				atomic_store(&context->whole, 0);
-				atomic_store(&context->state, THREAD_STATE_WAIT_TO_RUN);
+				context->progress.store(0);
+				context->whole.store(0);
+				context->state.store(THREAD_STATE_WAIT_TO_RUN);
 
 				thread->context = context;
 				thread->thread = a3d_thread_create(thread_process, context);
@@ -165,7 +165,7 @@ static void set_threads_count(flecs::entity e, Planner& planner, const SetThread
 
 	// Launch created threads
 	for (unsigned i = 0; i < planner.threads_count; ++i)
-		atomic_store(&planner.threads[i].context->state, THREAD_STATE_IDLE);
+		planner.threads[i].context->state.store(THREAD_STATE_IDLE);
 
 	e.remove<SetThreads>();
 }
@@ -179,10 +179,10 @@ static void merge_worlds(flecs::iter& it, size_t, Planner& planner)
 	for (unsigned i = 0; i < planner.threads_count; ++i)
 	{
 		context = planner.threads[i].context;
-		if (atomic_load(&context->state) == THREAD_STATE_READY_TO_MERGE)
+		if (context->state.load() == THREAD_STATE_READY_TO_MERGE)
 		{
 			context->stage.merge();
-			atomic_store(&context->state, THREAD_STATE_IDLE);
+			context->state.store(THREAD_STATE_IDLE);
 			++done;
 		}
 	}
