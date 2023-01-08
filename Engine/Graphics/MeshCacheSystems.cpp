@@ -71,16 +71,13 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 	world.import<MeshComponents>();
 	world.import<RendererComponents>();
 
-	meshes_ = world.query_builder<>().term<const MeshStorage>().build();
-
 	findFile_ = world.system<const GetModelFile>("FindFile")
 				.kind(flecs::OnLoad)
 				.no_readonly()
-				.each([this](flecs::entity e, const GetModelFile& file)
+				.each([](flecs::entity e, const GetModelFile& file)
 	{
 		flecs::world w = e.world();
-		flecs::entity storage = meshes_.first();
-		ecs_assert(storage != 0, -1, "MeshStorage component must be created before loading models.");
+		flecs::entity storage = w.singleton<MeshStorage>();
 		flecs::entity cached = storage.lookup(file.filename.value);
 		if (cached == 0)
 		{
@@ -97,7 +94,7 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 				.term<const Renderer>().singleton()
 				.kind(flecs::PostLoad)
 				.multi_threaded()
-				.each([this](flecs::entity e)
+				.each([](flecs::entity e)
 	{
 		bx::DefaultAllocator alloc;
 		bx::FileReader filereader;
@@ -257,5 +254,5 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 			   .event(flecs::UnSet)
 			   .each(clear_meshes);
 
-	world.entity().add<MeshStorage>();
+	world.add<MeshStorage>();
 }

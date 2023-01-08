@@ -63,16 +63,14 @@ A3D::ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 	world.import<ImageComponents>();
 	world.import<RendererComponents>();
 
-	textures_ = world.query_builder<>().term<const TextureStorage>().build();
-
 	findTexture_ = world.system<const GetTexture>("FindTexture")
 					.kind(flecs::PostLoad)
 					.no_readonly()
-					.each([this](flecs::entity e, const GetTexture& file)
+					.each([](flecs::entity e, const GetTexture& file)
 	{
 		LogTrace("Finding texture \"%s\"...", file.filename.value);
 		flecs::world w = e.world();
-		flecs::entity storage = textures_.first();
+		flecs::entity storage = w.singleton<TextureStorage>();
 		ecs_assert(storage != 0, -1, "Textures storage component must be created before loading textures.");
 		flecs::entity cached = storage.lookup(file.filename.value);
 		if (cached == 0)
@@ -88,7 +86,7 @@ A3D::ImageCacheSystems::ImageCacheSystems(flecs::world& world)
 	loadFile_ = world.system<>("LoadFile")
 				.term<const LoadTextureFile>()
 				.kind(flecs::PostUpdate)
-				.each([this](flecs::entity e)
+				.each([](flecs::entity e)
 	{
 		const char* filename = e.name().c_str();
 		LogDebug("Loading texture \"%s\"...", filename);

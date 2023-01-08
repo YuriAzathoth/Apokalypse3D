@@ -28,8 +28,6 @@ struct APOKALYPSE3DAPI_EXPORT ImageCacheSystems
 {
 	ImageCacheSystems(flecs::world& world);
 
-	flecs::query<> textures_;
-
 	flecs::entity clear_;
 	flecs::entity findTexture_;
 	flecs::entity loadFile_;

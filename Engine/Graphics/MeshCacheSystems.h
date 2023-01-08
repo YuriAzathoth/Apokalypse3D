@@ -28,8 +28,6 @@ struct APOKALYPSE3DAPI_EXPORT MeshCacheSystems
 {
 	MeshCacheSystems(flecs::world& world);
 
-	flecs::query<> meshes_;
-
 	flecs::entity clear_;
 	flecs::entity findFile_;
 	flecs::entity loadFile_;

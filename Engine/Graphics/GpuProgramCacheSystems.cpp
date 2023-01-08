@@ -103,21 +103,17 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 	world.import<GpuProgramComponents>();
 	world.import<RendererComponents>();
 
-	programs_ = world.query_builder<>().term<const ProgramStorage>().build();
-	shaders_ = world.query_builder<>().term<const ShaderStorage>().build();
-
 	findProgram_ = world.system<const GetProgram>("FindProgram")
 				   .kind(flecs::OnLoad)
 				   .no_readonly()
-				   .each([this](flecs::entity e, const GetProgram& program)
+				   .each([](flecs::entity e, const GetProgram& program)
 	{
 		// ProgramName = VertexName|FragmentName
 		char program_name[BUFFER_SIZE];
 		get_program_name(program_name, program.vertex.value, program.fragment.value);
 
 		flecs::world w = e.world();
-		flecs::entity storage = programs_.first();
-		ecs_assert(storage != 0, -1, "GPU program storage must be created before loading programs.");
+		flecs::entity storage = w.singleton<ProgramStorage>();
 		flecs::entity cached = storage.lookup(program_name);
 		if (cached == 0)
 		{
@@ -138,12 +134,11 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 	findShader_ = world.system<const GetShader>("FindShader")
 				  .kind(flecs::PostLoad)
 				  .no_readonly()
-				  .each([this](flecs::entity e, const GetShader& file)
+				  .each([](flecs::entity e, const GetShader& file)
 	{
 		LogDebug("Finding compiled shader \"%s\"...", file.filename.value);
 		flecs::world w = e.world();
-		flecs::entity storage = shaders_.first();
-		ecs_assert(storage != 0, -1, "Shader storage must be created before loading models.");
+		flecs::entity storage = w.singleton<ShaderStorage>();
 		flecs::entity cached = storage.lookup(file.filename.value);
 		if (cached == 0)
 		{
@@ -160,7 +155,7 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 					.term<const Renderer>().singleton()
 					.kind(flecs::PostUpdate)
 					.multi_threaded()
-					.each([this](flecs::entity e)
+					.each([](flecs::entity e)
 	{
 		const char* filename = e.name().c_str();
 		LogDebug("Loading shader \"%s\"...", filename);
@@ -210,7 +205,7 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 				   .term<const LinkProgram>()
 				   .term<const Renderer>().singleton()
 				   .kind(flecs::OnStore)
-				   .each([this](flecs::iter& it, size_t i)
+				   .each([](flecs::iter& it, size_t i)
 	{
 		flecs::entity e = it.entity(i);
 		flecs::id vp = it.pair(1);
@@ -281,6 +276,6 @@ A3D::GpuProgramCacheSystems::GpuProgramCacheSystems(flecs::world& world)
 					 .event(flecs::UnSet)
 					 .each(clear_shaders);
 
-	world.entity().add<ProgramStorage>();
-	world.entity().add<ShaderStorage>();
+	world.add<ProgramStorage>();
+	world.add<ShaderStorage>();
 }

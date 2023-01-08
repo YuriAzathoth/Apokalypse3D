@@ -28,9 +28,6 @@ struct APOKALYPSE3DAPI_EXPORT GpuProgramCacheSystems
 {
 	GpuProgramCacheSystems(flecs::world& world);
 
-	flecs::query<> programs_;
-	flecs::query<> shaders_;
-
 	flecs::entity findProgram_;
 	flecs::entity findShader_;
 	flecs::entity loadShaderFile_;
