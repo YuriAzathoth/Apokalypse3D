@@ -20,12 +20,12 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
+#include "../GpuProgramComponents.h"
+#include "../RendererComponents.h"
 #include "GpuProgramCacheComponents.h"
 #include "GpuProgramCacheSystems.h"
-#include "GpuProgramComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
-#include "RendererComponents.h"
 
 #define BUFFER_SIZE 256
 

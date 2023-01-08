@@ -21,13 +21,13 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
-#include "GeometryComponents.h"
+#include "../GeometryComponents.h"
+#include "../ImageComponents.h"
+#include "../RendererComponents.h"
 #include "ImageCacheComponents.h"
 #include "ImageCacheSystems.h"
-#include "ImageComponents.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
-#include "RendererComponents.h"
 
 #define BUFFER_SIZE 256
 

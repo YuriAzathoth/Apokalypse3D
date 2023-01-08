@@ -21,13 +21,13 @@
 #include <bx/file.h>
 #include <bx/readerwriter.h>
 #include <meshoptimizer/src/meshoptimizer.h>
-#include "GeometryComponents.h"
-#include "MeshComponents.h"
+#include "../GeometryComponents.h"
+#include "../MeshComponents.h"
+#include "../RendererComponents.h"
 #include "MeshCacheComponents.h"
 #include "MeshCacheSystems.h"
 #include "IO/AsyncLoaderComponents.h"
 #include "IO/Log.h"
-#include "RendererComponents.h"
 
 #define BUFFER_SIZE 256
 
