@@ -17,42 +17,14 @@
 */
 
 #include "AsyncTaskComponents.h"
-#include "IO/Log.h"
 
 using namespace A3D::Components::Async;
-
-void A3D::Components::Async::a3d_async_planner_destroy(Planner& planner)
-{
-//	LogDebug("Destroy async task planner.");
-	if (planner.threads_count)
-	{
-//		LogDebug("Destroying %u threads...", planner.threads_count);
-		for (Thread* thread = planner.threads; thread < planner.threads + planner.threads_count; ++thread)
-		{
-			thread->context->state.store(THREAD_STATE_SHUTDOWNING);
-			a3d_thread_destroy(thread->thread);
-		}
-		for (Thread* thread = planner.threads; thread < planner.threads + planner.threads_count; ++thread)
-			thread->context->stage.~world();
-		a3d_async_queue_free(planner.tasks);
-		free(planner.bufmem);
-	}
-}
-
-static void destroy_planner(Planner& planner)
-{
-	a3d_async_planner_destroy(planner);
-}
 
 AsyncTaskComponents::AsyncTaskComponents(flecs::world& world)
 {
 	world.module<AsyncTaskComponents>("A3D::Components::Async");
 
-	planner_ = world.component<Planner>();
-	plannerStatus_ = world.component<PlannerStatus>().member<unsigned>("tasks_waiting").member<unsigned>("tasks_done");
-	setThreads_ = world.component<SetThreads>().member<unsigned short>("threads");
-
-	onRemovePlanner_ = world.observer<Planner>("DestroyPlanner")
+	/*destroyPlanner_ = world.observer<Planner>("DestroyPlanner")
 		.event(flecs::UnSet)
-		.each(destroy_planner);
+		.each(destroy_planner);*/
 }

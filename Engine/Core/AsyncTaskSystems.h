@@ -25,27 +25,10 @@
 
 namespace A3D
 {
-namespace Components
-{
-namespace Async
-{
-using TaskFunc = std::function<bool(const flecs::world&, flecs::world&)>;
-}
-}
-}
-
-APOKALYPSE3DAPI_EXPORT void a3d_async_planner_set(flecs::world& world, unsigned short threads);
-APOKALYPSE3DAPI_EXPORT bool a3d_async_planner_is_done(flecs::world& world);
-APOKALYPSE3DAPI_EXPORT bool a3d_async_task_add(flecs::world& world, A3D::Components::Async::TaskFunc task_func);
-
 struct APOKALYPSE3DAPI_EXPORT AsyncTaskSystems
 {
 	AsyncTaskSystems(flecs::world& world);
-
-	flecs::entity createPlanner_;
-	flecs::entity onSetThreadsCount_;
-
-	flecs::entity worldsMerge_;
 };
+} // namespace A3D
 
 #endif // ASYNCTASKSYSTEMS_H

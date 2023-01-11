@@ -22,7 +22,6 @@
 #include <atomic>
 #include <bx/thread.h>
 #include <flecs.h>
-#include <functional>
 #include "Apokalypse3DAPI.h"
 #include "Container/async_queue.h"
 #include "Container/vector.h"
@@ -33,71 +32,6 @@ namespace Components
 {
 namespace Async
 {
-struct ThreadContext;
-
-using TaskFunc = std::function<bool(const flecs::world&, flecs::world&)>;
-
-enum : uint8_t
-{
-	/// Thread is just created and waits till Planner accepted as world singleton
-	THREAD_STATE_WAIT_TO_RUN,
-
-	/// Thread is idle (not processing tasks at the moment)
-	THREAD_STATE_IDLE,
-
-	/// Thread does one task
-	THREAD_STATE_PROCESSING,
-
-	/// Thread is ready to merge
-	THREAD_STATE_READY_TO_MERGE,
-
-	/// Thread is made to shutdown (stops thread inner loop)
-	THREAD_STATE_SHUTDOWNING
-};
-
-struct Task
-{
-	TaskFunc run;
-};
-
-struct Thread
-{
-	ThreadContext* context;
-	a3d_thread_t thread;
-};
-
-struct ThreadContext
-{
-	Task task;
-	flecs::world stage;
-	const flecs::world* world;
-	const a3d_async_queue_t* tasks_all;
-	unsigned thread_id;
-	std::atomic<unsigned> progress;
-	std::atomic<unsigned> whole;
-	std::atomic<unsigned> state;
-};
-
-struct Planner
-{
-	a3d_async_queue_t* tasks;
-	Thread* threads;
-	unsigned char* bufmem;
-	unsigned threads_count;
-};
-
-struct PlannerStatus
-{
-	unsigned tasks_waiting;
-	unsigned tasks_done;
-};
-
-struct SetThreads
-{
-	unsigned short threads;
-};
-
-void a3d_async_planner_destroy(Planner& planner);
 } // namespace Async
 } // namespace Components
 } // namespace A3D
@@ -106,11 +40,7 @@ struct APOKALYPSE3DAPI_EXPORT AsyncTaskComponents
 {
 	AsyncTaskComponents(flecs::world& world);
 
-	flecs::entity planner_;
-	flecs::entity plannerStatus_;
-	flecs::entity setThreads_;
-
-	flecs::entity onRemovePlanner_;
+	flecs::entity destroyPlanner_;
 };
 
 #endif // ASYNCTASKCOMPONENTS_H
