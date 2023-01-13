@@ -16,21 +16,21 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef DEBUGMODELRENDERERSYSTEMS_H
-#define DEBUGMODELRENDERERSYSTEMS_H
+#ifndef BRUTERENDERERSYSTEMS_H
+#define BRUTERENDERERSYSTEMS_H
 
 #include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT DebugModelRendererSystems
+struct APOKALYPSE3DAPI_EXPORT BruteRendererSystems
 {
-	DebugModelRendererSystems(flecs::world& world);
+	BruteRendererSystems(flecs::world& world);
 
 	flecs::entity drawMultiThreaded_;
 	flecs::entity drawSingleThreaded_;
 };
 } // namespace A3D
 
-#endif // DEBUGMODELRENDERERSYSTEMS_H
+#endif // BRUTERENDERERSYSTEMS_H

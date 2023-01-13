@@ -19,7 +19,7 @@
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <thread>
-#include "DebugModelRendererSystems.h"
+#include "BruteRendererSystems.h"
 #include "Graphics/GeometryComponents.h"
 #include "Graphics/GpuProgramComponents.h"
 #include "Graphics/GraphicsComponents.h"
@@ -35,8 +35,6 @@ using namespace A3D::Components::Mesh;
 using namespace A3D::Components::Renderer;
 using namespace A3D::Components::Scene;
 
-namespace A3D
-{
 static void draw_geometry_st(flecs::entity e, const WorldTransform& wt, const Program& program)
 {
 	e.children([&program, &wt](flecs::entity c)
@@ -79,9 +77,9 @@ static void draw_geometry_mt(flecs::entity e, const WorldTransform& wt, const Pr
 		});
 }
 
-DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
+A3D::BruteRendererSystems::BruteRendererSystems(flecs::world& world)
 {
-	world.module<DebugModelRendererSystems>("A3D::Systems::DebugRenderer");
+	world.module<BruteRendererSystems>("A3D::Systems::BruteRenderer");
 	world.import<GpuProgramComponents>();
 	world.import<GeometryComponents>();
 	world.import<GraphicsComponents>();
@@ -105,4 +103,3 @@ DebugModelRendererSystems::DebugModelRendererSystems(flecs::world& world)
 		.multi_threaded()
 		.each(draw_geometry_mt);
 }
-} // namespace A3D
