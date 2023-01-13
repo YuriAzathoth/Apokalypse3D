@@ -1,1 +1,1 @@
-Debug folder contains temporary modules until proper ones are implemented. 
+This folder contains temporary modules until proper ones are implemented. 
