@@ -21,9 +21,9 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
-#include "../GeometryComponents.h"
-#include "../ImageComponents.h"
-#include "../RendererComponents.h"
+#include "Graphics/GeometryComponents.h"
+#include "Graphics/ImageComponents.h"
+#include "Graphics/RendererComponents.h"
 #include "ImageCacheComponents.h"
 #include "ImageCacheSystems.h"
 #include "IO/Log.h"

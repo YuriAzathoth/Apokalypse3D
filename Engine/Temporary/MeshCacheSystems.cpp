@@ -21,9 +21,9 @@
 #include <bx/file.h>
 #include <bx/readerwriter.h>
 #include <meshoptimizer/src/meshoptimizer.h>
-#include "../GeometryComponents.h"
-#include "../MeshComponents.h"
-#include "../RendererComponents.h"
+#include "Graphics/GeometryComponents.h"
+#include "Graphics/MeshComponents.h"
+#include "Graphics/RendererComponents.h"
 #include "MeshCacheComponents.h"
 #include "MeshCacheSystems.h"
 #include "IO/Log.h"

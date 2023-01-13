@@ -20,10 +20,10 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
-#include "../GpuProgramComponents.h"
-#include "../RendererComponents.h"
 #include "GpuProgramCacheComponents.h"
 #include "GpuProgramCacheSystems.h"
+#include "Graphics/GpuProgramComponents.h"
+#include "Graphics/RendererComponents.h"
 #include "IO/Log.h"
 #include "IO/SyncCacheComponents.h"
 

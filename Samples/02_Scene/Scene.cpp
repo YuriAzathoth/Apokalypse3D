@@ -20,9 +20,6 @@
 #include <glm/glm.hpp>
 #include <SDL3/SDL_scancode.h>
 #include "Core/Engine.h"
-#include "Debug/DebugModelRendererSystems.h"
-#include "Graphics/CacheSync/GpuProgramCacheSystems.h"
-#include "Graphics/CacheSync/MeshCacheSystems.h"
 #include "Graphics/CameraComponents.h"
 #include "Graphics/CameraSystems.h"
 #include "Graphics/GpuProgramComponents.h"
@@ -41,6 +38,9 @@
 #include "Input/MouseSystems.h"
 #include "Scene/SceneComponents.h"
 #include "Scene/SceneSystems.h"
+#include "Temporary/BruteRendererSystems.h"
+#include "Temporary/GpuProgramCacheSystems.h"
+#include "Temporary/MeshCacheSystems.h"
 
 using namespace A3D;
 using namespace A3D::Components;
@@ -107,7 +107,7 @@ int main()
 	world.import<WindowSystems>();
 	world.import<RendererSystems>();
 	world.import<SceneSystems>();
-	world.import<DebugModelRendererSystems>();
+	world.import<BruteRendererSystems>();
 
 	world.add<Graphics::MultiThreaded>();
 	world.set<Graphics::Resolution>({1024, 768});
