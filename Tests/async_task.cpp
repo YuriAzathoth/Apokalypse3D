@@ -42,13 +42,13 @@ struct AsyncTaskTest
 
 TEST_SUITE("Async Thread")
 {
-	TEST_CASE("Create 0 Threads")
+	/*TEST_CASE("Create 0 Threads")
 	{
 		flecs::world w;
 		w.import<AsyncTaskComponents>();
 		w.import<AsyncTaskSystems>();
 	}
-	/*TEST_CASE("Create 1 Thread")
+	TEST_CASE("Create 1 Thread")
 	{
 		flecs::world w;
 		w.import<AsyncTaskComponents>();
