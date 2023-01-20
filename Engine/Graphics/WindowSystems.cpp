@@ -40,6 +40,8 @@ inline static unsigned parse_flags(WindowMode mode, bool resizeable) noexcept
 
 inline static int select_hightest_resolution(uint8_t display, uint16_t& width, uint16_t& height) noexcept
 {
+	width = 0;
+	height = 0;
 	const int count = SDL_GetNumDisplayModes(display);
 	SDL_DisplayMode mode;
 	for (int i = 0; i < count; ++i)
