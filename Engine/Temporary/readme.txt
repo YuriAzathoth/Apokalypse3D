@@ -1,1 +1,1 @@
-This folder contains temporary modules until proper ones are implemented. 
+These modules are for engine development purposes only and will be removed after better implementations.
