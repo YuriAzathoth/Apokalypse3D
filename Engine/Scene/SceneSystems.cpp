@@ -24,9 +24,7 @@
 
 using namespace A3D::Components::Scene;
 
-namespace A3D
-{
-SceneSystems::SceneSystems(flecs::world& world)
+A3D::SceneSystems::SceneSystems(flecs::world& world)
 {
 	world.module<SceneSystems>("A3D::Systems::Scene");
 	world.import<SceneComponents>();
@@ -81,4 +79,3 @@ SceneSystems::SceneSystems(flecs::world& world)
 			wt.global = parent.global * rt.local;
 		});
 }
-} // namespace A3D

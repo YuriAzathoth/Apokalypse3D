@@ -21,9 +21,7 @@
 
 using namespace A3D::Components::Scene;
 
-namespace A3D
-{
-SceneComponents::SceneComponents(flecs::world& world)
+A3D::SceneComponents::SceneComponents(flecs::world& world)
 {
 	world.module<SceneComponents>("A3D::Components::Scene");
 	world.import<GlmComponents>();
@@ -48,4 +46,3 @@ SceneComponents::SceneComponents(flecs::world& world)
 		.add(flecs::With, node_)
 		.add(flecs::With, static_);
 }
-} // namespace A3D
