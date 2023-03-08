@@ -30,11 +30,7 @@
 static a3d_mutex_t g_mutex = 0;
 
 static char* g_filename = nullptr;
-#ifdef NDEBUG
-static enum LogLevel g_level = LogLevel::LOG_LEVEL_ERROR;
-#else // NDEBUG
-static enum LogLevel g_level = LogLevel::LOG_LEVEL_TRACE;
-#endif // NDEBUG
+static enum LogLevel g_level = LogLevel::APOKALYPSE_LOG_LEVEL;
 
 inline static const char* GetDate() noexcept
 {
@@ -64,11 +60,11 @@ void LogDestroy() noexcept
 	free(g_filename);
 }
 
-#ifdef NDEBUG
-void LogWrite(LogLevel level, const char* format, ...) noexcept
-#else // NDEBUG
+#ifdef APOKALYPSE_LOG_FILELINE
 void LogWrite(LogLevel level, const char* file, unsigned line, const char* format, ...) noexcept
-#endif // NDEBUG
+#else // APOKALYPSE_LOG_FILELINE
+void LogWrite(LogLevel level, const char* format, ...) noexcept
+#endif // APOKALYPSE_LOG_FILELINE
 {
 	if (level < g_level)
 		return;
@@ -76,19 +72,19 @@ void LogWrite(LogLevel level, const char* file, unsigned line, const char* forma
 	const char* type;
 	switch (level)
 	{
-	case LOG_LEVEL_TRACE:
+	case LogLevel::TRACE:
 		type = "TRACE";
 		break;
-	case LOG_LEVEL_DEBUG:
+	case LogLevel::DEBUG:
 		type = "DEBUG";
 		break;
-	case LOG_LEVEL_INFO:
+	case LogLevel::INFO:
 		type = "INFO";
 		break;
-	case LOG_LEVEL_WARNING:
+	case LogLevel::WARNING:
 		type = "WARNING";
 		break;
-	case LOG_LEVEL_ERROR:
+	case LogLevel::ERROR:
 		type = "ERROR";
 		break;
 	default:
@@ -97,9 +93,9 @@ void LogWrite(LogLevel level, const char* file, unsigned line, const char* forma
 	char message[BUFFER_SIZE];
 	char* messagetop = message + sprintf(message, "%s: %s: ", GetDate(), type);
 
-#ifndef NDEBUG
+#ifndef APOKALYPSE_LOG_FILELINE
 	messagetop += sprintf(messagetop, "FILE %s LINE %u: ", file, line);
-#endif // NDEBUG
+#endif // APOKALYPSE_LOG_FILELINE
 
 	va_list args;
 	va_start(args, format);
@@ -122,7 +118,9 @@ void LogWrite(LogLevel level, const char* file, unsigned line, const char* forma
 	a3d_mutex_unlock(g_mutex);
 
 #ifndef NDEBUG
-	if (level >= LOG_LEVEL_ERROR)
+	if (level >= LogLevel::ERROR)
 		bx::debugBreak();
+#else // NDEBUG
+	std::terminate();
 #endif // NDEBUG
 }
