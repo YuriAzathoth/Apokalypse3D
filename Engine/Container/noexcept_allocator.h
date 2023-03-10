@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef CONTAINER_DETAIL_NOEXCEPT_ALLOCATOR_H
-#define CONTAINER_DETAIL_NOEXCEPT_ALLOCATOR_H
+#ifndef CONTAINER_NOEXCEPT_ALLOCATOR_H
+#define CONTAINER_NOEXCEPT_ALLOCATOR_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -25,8 +25,6 @@
 #include <type_traits>
 
 namespace A3D
-{
-namespace detail
 {
 template <typename T>
 struct noexcept_allocator
@@ -58,7 +56,6 @@ struct noexcept_allocator
 		free(p);
 	}
 };
-} // namespace detail
 } // namespace A3D
 
-#endif // CONTAINER_DETAIL_NOEXCEPT_ALLOCATOR_H
+#endif // CONTAINER_NOEXCEPT_ALLOCATOR_H

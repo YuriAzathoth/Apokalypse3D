@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <unordered_map>
 #include "Apokalypse3DAPI.h"
+#include "Container/noexcept_allocator.h"
 
 union SDL_Event;
 
@@ -37,7 +38,13 @@ struct SystemEventCallback
 
 struct SystemEventListener
 {
-	std::unordered_multimap<uint32_t, SystemEventCallback> callbacks;
+	std::unordered_multimap<
+		uint32_t,
+		SystemEventCallback,
+		std::hash<uint32_t>,
+		std::equal_to<uint32_t>,
+		A3D::noexcept_allocator<std::pair<const uint32_t, SystemEventCallback>>
+	> callbacks;
 };
 
 APOKALYPSE3DAPI_EXPORT bool CreateSystemEventListener();
