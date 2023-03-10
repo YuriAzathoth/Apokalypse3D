@@ -47,7 +47,7 @@ int main()
 	GetWindowPlatformData(wpd, wnd);
 
 	RendererGpu gpu{};
-	RendererResolution rres{800, 600};
+	RendererResolution rres{wres.width, wres.height};
 	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
 
 	const uint8_t threads_count = 4;
