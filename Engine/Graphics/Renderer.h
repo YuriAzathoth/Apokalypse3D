@@ -73,7 +73,7 @@ APOKALYPSE3DAPI_EXPORT void DestroyRenderer();
 APOKALYPSE3DAPI_EXPORT void BeginRendererFrame(const RendererResolution& resolution);
 APOKALYPSE3DAPI_EXPORT void EndRendererFrame();
 
-APOKALYPSE3DAPI_EXPORT struct RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
+APOKALYPSE3DAPI_EXPORT RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
 APOKALYPSE3DAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
 APOKALYPSE3DAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 APOKALYPSE3DAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);

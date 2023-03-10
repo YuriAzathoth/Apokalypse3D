@@ -38,13 +38,19 @@ int main()
 	RendererResolution rres{800, 600};
 	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
 
+	const uint8_t threads_count = 4;
+	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
+
 	while (true)
 	{
 		PollSystemEvents();
 		BeginRendererFrame(rres);
+		BeginRendererThreadContextsFrame(contexts, threads_count);
+		EndRendererThreadContextsFrame(contexts, threads_count);
 		EndRendererFrame();
 	}
 
+	DestroyRendererThreadContexts(contexts);
 	DestroyRenderer();
 	DestroyWindow(wnd);
 	DestroyVideo();
