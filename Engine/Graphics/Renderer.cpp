@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include "IO/Log.h"
 #include "Renderer.h"
+#include "RendererAllocator.h"
+#include "RendererCallback.h"
 
 namespace A3D
 {
@@ -28,6 +30,9 @@ inline static const char* GetRendererName(RendererType type);
 inline static RendererType GetRendererTypeFromBgfx(bgfx::RendererType::Enum type);
 inline static bgfx::RendererType::Enum GetRendererTypeToBgfx(RendererType type);
 static bool SelectBestGpu(RendererGpu& gpu);
+
+static RendererAllocator g_alloc;
+static RendererCallback g_callback;
 
 bool CreateRenderer(RendererGpu& gpu,
 					void* window,
@@ -61,8 +66,8 @@ bool CreateRenderer(RendererGpu& gpu,
 	bgfxInfo.deviceId = gpu.device;
 	bgfxInfo.vendorId = gpu.vendor;
 	bgfxInfo.debug = BGFX_DEBUG_NONE;
-	/*bgfxInfo.allocator = &g_alloc;
-	bgfxInfo.callback = &g_callback;*/
+	bgfxInfo.allocator = &g_alloc;
+	bgfxInfo.callback = &g_callback;
 	bgfxInfo.platformData.ndt = display;
 	bgfxInfo.platformData.nwh = window;
 

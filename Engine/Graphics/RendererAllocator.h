@@ -16,15 +16,14 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RENDERERALLOCATOR_H
-#define RENDERERALLOCATOR_H
+#ifndef GRAPHICS_RENDERER_ALLOCATOR_H
+#define GRAPHICS_RENDERER_ALLOCATOR_H
 
 #include <bx/allocator.h>
-#include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT RendererAllocator : public bx::AllocatorI
+struct RendererAllocator : public bx::AllocatorI
 {
 	~RendererAllocator();
 	void* realloc(void* _ptr,
@@ -35,4 +34,4 @@ struct APOKALYPSE3DAPI_EXPORT RendererAllocator : public bx::AllocatorI
 };
 } // namespace A3D
 
-#endif // RENDERERALLOCATOR_H
+#endif // GRAPHICS_RENDERER_ALLOCATOR_H

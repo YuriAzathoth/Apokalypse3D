@@ -35,7 +35,7 @@ void RendererCallback::fatal(const char* _filePath,
 							 bgfx::Fatal::Enum _code,
 							 const char* _str)
 {
-	LogError("Renderer error: %s", _str);
+	LogFatal("Renderer error: %s", _str);
 }
 
 void RendererCallback::traceVargs(const char* _filePath,
