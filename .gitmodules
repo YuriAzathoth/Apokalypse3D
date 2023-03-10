@@ -13,9 +13,6 @@
 [submodule "ThirdParty/Celero"]
 	path = ThirdParty/Celero
 	url = https://github.com/DigitalInBlue/Celero
-[submodule "ThirdParty/flecs"]
-	path = ThirdParty/flecs
-	url = https://github.com/SanderMertens/flecs
 [submodule "ThirdParty/rapidxml"]
 	path = ThirdParty/rapidxml
 	url = https://github.com/CodeFinder2/rapidxml
