@@ -45,10 +45,12 @@ APOKALYPSE3DAPI_EXPORT void LogWrite(LogLevel level, const char* format, ...) no
 #endif // APOKALYPSE_LOG_FILELINE
 
 #ifdef APOKALYPSE_LOG_FILELINE
+#define LogFatal(FORMAT, ...) LogWrite(LogLevel::FATAL, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 #define LogError(FORMAT, ...) LogWrite(LogLevel::ERROR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 #define LogWarning(FORMAT, ...) LogWrite(LogLevel::WARNING, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 #define LogInfo(FORMAT, ...) LogWrite(LogLevel::INFO, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 #else // APOKALYPSE_LOG_FILELINE
+#define LogFatal(FORMAT, ...) LogWrite(LogLevel::FATAL, FORMAT, ##__VA_ARGS__)
 #define LogError(FORMAT, ...) LogWrite(LogLevel::ERROR, FORMAT, ##__VA_ARGS__)
 #define LogWarning(FORMAT, ...) LogWrite(LogLevel::WARNING, FORMAT, ##__VA_ARGS__)
 #define LogInfo(FORMAT, ...) LogWrite(LogLevel::INFO, FORMAT, ##__VA_ARGS__)

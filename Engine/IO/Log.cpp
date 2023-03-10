@@ -119,7 +119,7 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 	}
 
 #ifndef NDEBUG
-	if (level >= LogLevel::ERROR)
+	if (level >= LogLevel::FATAL)
 		bx::debugBreak();
 #else // NDEBUG
 		std::terminate();

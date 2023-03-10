@@ -16,7 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Graphics/Window.h"
+
+using namespace A3D;
+
 int main()
 {
+	CreateVideo();
+
+	Window wnd;
+	WindowResolution res { 800, 600 };
+	CreateWindow(wnd, "Hello, World!", res, WindowMode::WINDOWED, false);
+	DestroyWindow(wnd);
+
+	DestroyVideo();
+
 	return 0;
 }
