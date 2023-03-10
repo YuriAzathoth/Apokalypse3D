@@ -16,39 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Graphics/Window.h"
-#include "Graphics/Renderer.h"
-#include "System/SystemEventListener.h"
+#ifndef SYSTEM_SYSTEM_EVENT_H
+#define SYSTEM_SYSTEM_EVENT_H
 
-using namespace A3D;
+#include <stdint.h>
+#include "Apokalypse3DAPI.h"
 
-int main()
+namespace A3D
 {
-	CreateSystemEventListener();
-	CreateVideo();
+APOKALYPSE3DAPI_EXPORT bool CreateSystemEventListener();
+APOKALYPSE3DAPI_EXPORT void DestroySystemEventListener();
+APOKALYPSE3DAPI_EXPORT uint32_t PollSystemEvents();
+} // namespace A3D
 
-	Window wnd;
-	WindowResolution wres{800, 600};
-	CreateWindow(wnd, "Hello, World!", wres, WindowMode::WINDOWED, false);
-
-	WindowPlatformData wpd;
-	GetWindowPlatformData(wpd, wnd);
-
-	RendererGpu gpu{};
-	RendererResolution rres{800, 600};
-	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
-
-	while (true)
-	{
-		PollSystemEvents();
-		BeginRendererFrame(rres);
-		EndRendererFrame();
-	}
-
-	DestroyRenderer();
-	DestroyWindow(wnd);
-	DestroyVideo();
-	DestroySystemEventListener();
-
-	return 0;
-}
+#endif // SYSTEM_SYSTEM_EVENT_H

@@ -16,20 +16,48 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef EVENTSYSTEMS_H
-#define EVENTSYSTEMS_H
-
-#include <flecs.h>
-#include "Apokalypse3DAPI.h"
+#include <SDL2/SDL.h>
+#include "IO/Log.h"
+#include "SystemEventListener.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT EventSystems
+bool CreateSystemEventListener()
 {
-	EventSystems(flecs::world& world);
+	LogDebug("Initializing SDL events...");
+	if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0)
+	{
+		LogFatal("Failed to initialize SDL Video: %s.", SDL_GetError());
+		return false;
+	}
+	LogInfo("SDL events initialized.");
+	return true;
+}
 
-	flecs::entity pollEvents_;
-};
+void DestroySystemEventListener()
+{
+	SDL_QuitSubSystem(SDL_INIT_EVENTS);
+	LogInfo("SDL events destroyed.");
+}
+
+uint32_t PollSystemEvents()
+{
+	LogTrace("SDL events processing begin...");
+
+	SDL_Event event;
+	uint32_t count = 0;
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			break;
+		}
+		++count;
+	}
+
+	LogTrace("SDL events processing end...");
+
+	return count;
+}
 } // namespace A3D
-
-#endif // EVENTSYSTEMS_H
