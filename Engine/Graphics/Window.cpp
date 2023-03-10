@@ -121,7 +121,10 @@ bool GetWindowPlatformData(WindowPlatformData& pd, const Window& window)
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window.window, &wmi))
+	{
+		LogFatal("Failed to get SDL Window WM info: %s.", SDL_GetError());
 		return false;
+	}
 #endif // !BX_PLATFORM_EMSCRIPTEN
 
 #if SDL_VIDEO_DRIVER_WINDOWS
