@@ -115,6 +115,26 @@ void DestroyWindow(Window& window)
 	LogInfo("SDL window destroyed.");
 }
 
+bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id)
+{
+	const int modes_count = SDL_GetNumDisplayModes(display_id);
+	if (modes_count < 1)
+	{
+		LogFatal("Failed to get display modes for display %u: %s.", display_id, SDL_GetError());
+		return false;
+	}
+	SDL_DisplayMode mode;
+	if (SDL_GetDisplayMode(display_id, 0, &mode) < 0)
+	{
+		LogFatal("Failed to get maximum display mode for display %u: %s.", display_id, SDL_GetError());
+		return false;
+	}
+	resolution.width = mode.w;
+	resolution.height = mode.h;
+	resolution.refresh_rate = mode.refresh_rate;
+	return true;
+}
+
 bool GetWindowPlatformData(WindowPlatformData& pd, const Window& window)
 {
 #if !BX_PLATFORM_EMSCRIPTEN

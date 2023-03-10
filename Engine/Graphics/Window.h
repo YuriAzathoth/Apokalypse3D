@@ -62,6 +62,7 @@ APOKALYPSE3DAPI_EXPORT bool CreateWindow(Window& window,
 
 APOKALYPSE3DAPI_EXPORT void DestroyWindow(Window& window);
 
+APOKALYPSE3DAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id);
 APOKALYPSE3DAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd, const Window& window);
 } // namespace A3D
 
