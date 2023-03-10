@@ -16,19 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Engine.h"
-#include "Graphics/RendererSystems.h"
-#include "Graphics/WindowSystems.h"
-#include "Input/EventSystems.h"
-
-using namespace A3D;
-
 int main()
 {
-	Engine engine;
-	flecs::world& world = engine.get_world();
-	world.import<EventSystems>();
-	world.import<RendererSystems>();
-	world.import<WindowSystems>();
-	return engine.Run();
+	return 0;
 }
