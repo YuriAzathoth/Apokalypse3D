@@ -16,15 +16,27 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <SDL2/SDL_events.h>
+
 #include "Graphics/Window.h"
 #include "Graphics/Renderer.h"
 #include "System/SystemEventListener.h"
 
 using namespace A3D;
 
+static void OnQuit(const SDL_Event& event, void* run)
+{
+	*reinterpret_cast<bool*>(run) = false;
+}
+
 int main()
 {
+	bool run = true;
+
+	SystemEventListener listener;
 	CreateSystemEventListener();
+	BindSystemEvent(listener, SDL_QUIT, OnQuit, &run);
+
 	CreateVideo();
 
 	Window wnd;
@@ -41,9 +53,9 @@ int main()
 	const uint8_t threads_count = 4;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
 
-	while (true)
+	while (run)
 	{
-		PollSystemEvents();
+		PollSystemEvents(listener);
 		BeginRendererFrame(rres);
 		BeginRendererThreadContextsFrame(contexts, threads_count);
 		EndRendererThreadContextsFrame(contexts, threads_count);

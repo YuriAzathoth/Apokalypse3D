@@ -20,13 +20,30 @@
 #define SYSTEM_SYSTEM_EVENT_H
 
 #include <stdint.h>
+#include <unordered_map>
 #include "Apokalypse3DAPI.h"
+
+union SDL_Event;
 
 namespace A3D
 {
+using SystemEventCallbackFunction = void(const SDL_Event&, void*);
+
+struct SystemEventCallback
+{
+	SystemEventCallbackFunction* func;
+	void* data;
+};
+
+struct SystemEventListener
+{
+	std::unordered_multimap<uint32_t, SystemEventCallback> callbacks;
+};
+
 APOKALYPSE3DAPI_EXPORT bool CreateSystemEventListener();
 APOKALYPSE3DAPI_EXPORT void DestroySystemEventListener();
-APOKALYPSE3DAPI_EXPORT uint32_t PollSystemEvents();
+APOKALYPSE3DAPI_EXPORT void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data);
+APOKALYPSE3DAPI_EXPORT uint32_t PollSystemEvents(const SystemEventListener& listener);
 } // namespace A3D
 
 #endif // SYSTEM_SYSTEM_EVENT_H

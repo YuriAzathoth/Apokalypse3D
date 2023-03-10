@@ -40,19 +40,23 @@ void DestroySystemEventListener()
 	LogInfo("SDL events destroyed.");
 }
 
-uint32_t PollSystemEvents()
+void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data)
+{
+	listener.callbacks.emplace(event, SystemEventCallback{cb, data});
+}
+
+uint32_t PollSystemEvents(const SystemEventListener& listener)
 {
 	LogTrace("SDL events processing begin...");
 
+	decltype(listener.callbacks)::const_iterator begin, end;
 	SDL_Event event;
 	uint32_t count = 0;
 	while (SDL_PollEvent(&event))
 	{
-		switch (event.type)
-		{
-		case SDL_QUIT:
-			break;
-		}
+		auto[begin, end] = listener.callbacks.equal_range(event.type);
+		for (; begin != end; ++begin)
+			begin->second.func(event, begin->second.data);
 		++count;
 	}
 
