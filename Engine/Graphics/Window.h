@@ -41,7 +41,7 @@ enum WindowMode : uint8_t
 struct WindowPlatformData
 {
 	void* window;
-	void* desplay;
+	void* display;
 };
 
 struct WindowResolution

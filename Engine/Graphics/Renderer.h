@@ -16,31 +16,52 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RENDERERSYSTEMS_H
-#define RENDERERSYSTEMS_H
+#ifndef GRAPHICS_RENDERER_H
+#define GRAPHICS_RENDERER_H
 
-#include <flecs.h>
+#include <stdint.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT RendererSystems
+struct RendererGpu
 {
-	RendererSystems(flecs::world& world);
-
-	flecs::entity initDefault_;
-	flecs::entity initRenderer_;
-	flecs::entity destroy_;
-	flecs::entity frameBegin_;
-	flecs::entity frameEnd_;
-	flecs::entity threadsBegin_;
-	flecs::entity threadsEnd_;
-	flecs::entity updateCameraView_;
-
-	flecs::entity updateAspect_;
-	flecs::entity addThreads_;
-	flecs::entity removeThreads_;
+	uint16_t device;
+	uint16_t vendor;
 };
+
+struct RendererResolution
+{
+	uint16_t width;
+	uint16_t height;
+};
+
+enum class RendererType : unsigned
+{
+	Auto,
+	OpenGL,
+	Vulkan,
+#if defined(__WIN32__)
+	Direct3D9,
+	Direct3D11,
+	Direct3D12,
+#elif defined(OSX)
+	Metal,
+#endif // defined
+	None
+};
+
+APOKALYPSE3DAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
+										   void* window,
+										   void* display,
+										   const RendererResolution& resolution,
+										   RendererType type,
+										   uint8_t anisotropy,
+										   uint8_t msaa,
+										   bool fullscreen,
+										   bool vsync);
+
+APOKALYPSE3DAPI_EXPORT void DestroyRenderer();
 } // namespace A3D
 
-#endif // RENDERERSYSTEMS
+#endif // GRAPHICS_RENDERER_H

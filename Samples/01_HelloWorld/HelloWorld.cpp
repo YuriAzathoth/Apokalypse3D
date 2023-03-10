@@ -17,6 +17,7 @@
 */
 
 #include "Graphics/Window.h"
+#include "Graphics/Renderer.h"
 
 using namespace A3D;
 
@@ -25,10 +26,18 @@ int main()
 	CreateVideo();
 
 	Window wnd;
-	WindowResolution res { 800, 600 };
-	CreateWindow(wnd, "Hello, World!", res, WindowMode::WINDOWED, false);
-	DestroyWindow(wnd);
+	WindowResolution wres { 800, 600 };
+	CreateWindow(wnd, "Hello, World!", wres, WindowMode::WINDOWED, false);
 
+	WindowPlatformData wpd;
+	GetWindowPlatformData(wpd, wnd);
+
+	RendererGpu gpu;
+	RendererResolution rres { 800, 600 };
+	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
+
+	DestroyRenderer();
+	DestroyWindow(wnd);
 	DestroyVideo();
 
 	return 0;
