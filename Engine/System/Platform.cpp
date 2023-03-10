@@ -20,18 +20,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "platform.h"
+#include "Platform.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #define MKDIR(DIR) CreateDirectory(DIR, NULL)
 #else // _WIN32
-#include <pthread.h>
 #include <sys/stat.h>
 #define MKDIR(DIR) mkdir(DIR, 0774)
 #endif // _WIN32
 
-void a3d_mkdir(const char* path)
+namespace A3D
+{
+void Mkdir(const char* path)
 {
 	char* buffer = (char*)alloca(strlen(path) + 1);
 	strcpy(buffer, path);
@@ -45,81 +46,7 @@ void a3d_mkdir(const char* path)
 	MKDIR(buffer);
 }
 
-a3d_thread_t a3d_thread_create(a3d_thread_func func, void* param)
-{
-#ifdef __WIN32__
-	HANDLE* pThread = (HANDLE*)malloc(sizeof(HANDLE));
-	*pThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, param, 0, NULL);
-#else // __WIN32__
-	pthread_t* pThread = (pthread_t*)malloc(sizeof(pthread_t));
-	*pThread = pthread_create(pThread, NULL, func, param);
-#endif // __WIN32__
-	return (a3d_thread_t)pThread;
-}
-
-void a3d_thread_destroy(a3d_thread_t thread)
-{
-	a3d_thread_wait(thread);
-#ifdef __WIN32__
-	CloseHandle(*(HANDLE*)thread);
-#endif // __WIN32__
-	free((void*)thread);
-}
-
-void a3d_thread_wait(a3d_thread_t thread)
-{
-#ifdef __WIN32__
-	WaitForSingleObject(*(HANDLE*)thread, INFINITE);
-#else // __WIN32__
-    pthread_join(*(pthread_t*)thread, NULL);
-#endif // __WIN32__
-}
-
-a3d_mutex_t a3d_mutex_create()
-{
-#ifdef __WIN32__
-	CRITICAL_SECTION* pMutex = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection(pMutex);
-	return (a3d_mutex_t)pMutex;
-#else // __WIN32__
-	pthread_mutex_t* pMutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-	pthread_mutex_init(pMutex, NULL);
-	return (a3d_mutex_t)pMutex;
-#endif // __WIN32__
-}
-
-void a3d_mutex_destroy(a3d_mutex_t mutex)
-{
-#ifdef __WIN32__
-	CRITICAL_SECTION* pMutex = (CRITICAL_SECTION*)mutex;
-	DeleteCriticalSection(pMutex);
-	free(pMutex);
-#else // __WIN32__
-	pthread_mutex_t* pMutex = (pthread_mutex_t*)mutex;
-	pthread_mutex_destroy(pMutex);
-	free(pMutex);
-#endif // __WIN32__
-}
-
-void a3d_mutex_lock(a3d_mutex_t mutex)
-{
-#ifdef __WIN32__
-	EnterCriticalSection((CRITICAL_SECTION*)mutex);
-#else // __WIN32__
-	pthread_mutex_lock((pthread_mutex_t*)mutex);
-#endif // __WIN32__
-}
-
-void a3d_mutex_unlock(a3d_mutex_t mutex)
-{
-#ifdef __WIN32__
-	LeaveCriticalSection((CRITICAL_SECTION*)mutex);
-#else // __WIN32__
-	pthread_mutex_unlock((pthread_mutex_t*)mutex);
-#endif // __WIN32__
-}
-
-void a3d_sleep(int sec, int nanosec)
+void Sleep(int sec, int nanosec)
 {
 #ifdef __WIN32__
 	LARGE_INTEGER sleep_time;
@@ -137,7 +64,7 @@ void a3d_sleep(int sec, int nanosec)
 }
 
 #if __WIN32__
-void a3d_disable_high_dpi()
+void DisableHighDpi()
 {
 	typedef enum D3_PROCESS_DPI_AWARENESS {
 		D3_PROCESS_DPI_UNAWARE = 0,
@@ -168,3 +95,5 @@ void a3d_disable_high_dpi()
 	}
 }
 #endif // __WIN32__
+
+} // namespace A3D

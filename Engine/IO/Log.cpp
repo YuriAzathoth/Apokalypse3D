@@ -22,12 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "Core/platform.h"
+#include <mutex>
 #include "Log.h"
+#include "System/Platform.h"
 
 #define BUFFER_SIZE 1024
 
-static a3d_mutex_t g_mutex = 0;
+namespace A3D
+{
+static std::mutex g_mutex;
 
 static char* g_filename = nullptr;
 static enum LogLevel g_level = LogLevel::APOKALYPSE_LOG_LEVEL;
@@ -43,7 +46,7 @@ inline static const char* GetDate() noexcept
 
 bool LogInit(const char* filepath, LogLevel logLevel) noexcept
 {
-	a3d_mkdir(filepath);
+	Mkdir(filepath);
 	char filename[BUFFER_SIZE];
 	sprintf(filename, "%s/%s.log", filepath, GetDate());
 	for (char* chr = filename; *chr; ++chr)
@@ -104,23 +107,22 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 
 	sprintf(messagetop, "\n");
 
-	if (g_mutex == 0)
-		g_mutex = a3d_mutex_create();
-
-	a3d_mutex_lock(g_mutex);
-	printf(message);
-	if (g_filename)
 	{
-		FILE* file = fopen(g_filename, "a");
-		fprintf(file, message);
-		fclose(file);
+		std::lock_guard<std::mutex> lock(g_mutex);
+		printf(message);
+		if (g_filename)
+		{
+			FILE* file = fopen(g_filename, "a");
+			fprintf(file, message);
+			fclose(file);
+		}
 	}
-	a3d_mutex_unlock(g_mutex);
 
 #ifndef NDEBUG
 	if (level >= LogLevel::ERROR)
 		bx::debugBreak();
 #else // NDEBUG
-	std::terminate();
+		std::terminate();
 #endif // NDEBUG
 }
+} // namespace A3D

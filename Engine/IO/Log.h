@@ -22,6 +22,8 @@
 #include "Apokalypse3DAPI.h"
 #include "Apokalypse3DConfig.h"
 
+namespace A3D
+{
 enum class LogLevel
 {
 	TRACE,
@@ -63,7 +65,7 @@ if (!(CONT)) \
 #define Assert(CONT, FORMAT, ...) \
 if (!(CONT)) \
 { \
-	LogWrite(LogLevel::ERROR, __FILE__, __LINE__, FORMAT "%s:", ##__VA_ARGS__, #CONT); \
+	LogWrite(LogLevel::ERROR, FORMAT "%s:", ##__VA_ARGS__, #CONT); \
 }
 #endif // APOKALYPSE_LOG_FILELINE
 #else // APOKALYPSE_ASSERTIONS
@@ -93,5 +95,6 @@ if (!(CONT)) \
 #define LogTrace(...)
 #define LogTraceBody(BODY)
 #endif // APOKALYPSE_LOG_TRACE
+} // namespace A3D
 
 #endif // IO_LOG_H
