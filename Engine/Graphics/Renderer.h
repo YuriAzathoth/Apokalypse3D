@@ -22,6 +22,8 @@
 #include <stdint.h>
 #include "Apokalypse3DAPI.h"
 
+namespace bgfx { struct Encoder; }
+
 namespace A3D
 {
 struct RendererGpu
@@ -51,6 +53,11 @@ enum class RendererType : unsigned
 	None
 };
 
+struct RendererThreadContext
+{
+	bgfx::Encoder* queue;
+};
+
 APOKALYPSE3DAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
 										   void* window,
 										   void* display,
@@ -62,6 +69,14 @@ APOKALYPSE3DAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
 										   bool vsync);
 
 APOKALYPSE3DAPI_EXPORT void DestroyRenderer();
+
+APOKALYPSE3DAPI_EXPORT void BeginRendererFrame(const RendererResolution& resolution);
+APOKALYPSE3DAPI_EXPORT void EndRendererFrame();
+
+APOKALYPSE3DAPI_EXPORT struct RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
+APOKALYPSE3DAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
+APOKALYPSE3DAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
+APOKALYPSE3DAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 } // namespace A3D
 
 #endif // GRAPHICS_RENDERER_H

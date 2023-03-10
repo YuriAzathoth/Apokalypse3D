@@ -26,15 +26,18 @@ int main()
 	CreateVideo();
 
 	Window wnd;
-	WindowResolution wres { 800, 600 };
+	WindowResolution wres{800, 600};
 	CreateWindow(wnd, "Hello, World!", wres, WindowMode::WINDOWED, false);
 
 	WindowPlatformData wpd;
 	GetWindowPlatformData(wpd, wnd);
 
-	RendererGpu gpu;
-	RendererResolution rres { 800, 600 };
+	RendererGpu gpu{};
+	RendererResolution rres{800, 600};
 	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
+
+	BeginRendererFrame(rres);
+	EndRendererFrame();
 
 	DestroyRenderer();
 	DestroyWindow(wnd);

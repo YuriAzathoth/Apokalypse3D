@@ -17,6 +17,7 @@
 */
 
 #include <bgfx/bgfx.h>
+#include <stdlib.h>
 #include "IO/Log.h"
 #include "Renderer.h"
 
@@ -107,6 +108,68 @@ void DestroyRenderer()
 {
 	bgfx::shutdown();
 	LogInfo("BGFX Renderer destroyed.");
+}
+
+void BeginRendererFrame(const RendererResolution& resolution)
+{
+	LogTrace("Render frame begin start...");
+	bgfx::setViewRect(0, 0, 0, resolution.width, resolution.height);
+	bgfx::touch(0);
+	LogTrace("Render frame begin finish...");
+}
+
+void EndRendererFrame()
+{
+	LogTrace("Render frame end start...");
+	bgfx::frame();
+	LogTrace("Render frame end finish...");
+}
+
+RendererThreadContext* CreateRendererThreadContexts(uint8_t count)
+{
+	LogDebug("Creating %u BGFX Renderer contexts...", count);
+	RendererThreadContext* ret = (RendererThreadContext*)malloc(count * sizeof(RendererThreadContext));
+	if (ret != nullptr)
+		LogDebug("%u BGFX Renderer contexts created.", count);
+	else
+		LogFatal("Failed to create %u BGFX Renderer contexts: out of memory.", count);
+	return ret;
+};
+
+void DestroyRendererThreadContexts(struct RendererThreadContext* contexts)
+{
+	free(contexts);
+	LogDebug("BGFX Renderer contexts destroyed.");
+}
+
+void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count)
+{
+	LogTrace("Render threads frame begin start...");
+
+	const RendererThreadContext* end = contexts + count;
+	uint8_t id = 0;
+	for (RendererThreadContext* c = contexts; c < end; ++c, ++id)
+	{
+		c->queue = bgfx::begin(id != 0);
+		Assert(c->queue != nullptr, "Renderer thread's %u queue is NULL.", id);
+	}
+
+	LogTrace("Render threads frame begin finish...");
+}
+
+void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count)
+{
+	LogTrace("Render threads frame end start...");
+
+	const RendererThreadContext* end = contexts + count;
+	uint8_t id = 0;
+	for (RendererThreadContext* c = contexts; c < end; ++c, ++id)
+	{
+		Assert(c->queue != nullptr, "Renderer thread's %u queue is NULL.", id);
+		bgfx::end(c->queue);
+	}
+
+	LogTrace("Render threads frame end finish...");
 }
 
 inline static const char* GetGpuVendorName(uint16_t vendor_id)
@@ -213,184 +276,3 @@ static bool SelectBestGpu(RendererGpu& gpu)
 	return true;
 }
 } // namespace A3D
-
-/*#include <bgfx/bgfx.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <SDL3/SDL.h>
-#include "CameraComponents.h"
-#include "GraphicsComponents.h"
-#include "GraphicsPlatform.h"
-#include "IO/Log.h"
-#include "RendererAllocator.h"
-#include "RendererCallback.h"
-#include "RendererComponents.h"
-#include "RendererSystems.h"
-#include "WindowComponents.h"
-
-using namespace A3D::Components::Camera;
-using namespace A3D::Components::Graphics;
-using namespace A3D::Components::Renderer;
-using namespace A3D::Components::Window;
-
-static A3D::RendererAllocator g_alloc;
-static A3D::RendererCallback g_callback;
-
-static void frame_begin(const Resolution& resolution)
-{
-	LogTrace("Render frame begin start...");
-
-	bgfx::setViewRect(0, 0, 0, resolution.width, resolution.height);
-	bgfx::touch(0);
-
-	LogTrace("Render frame begin finish...");
-}
-
-static void frame_end(flecs::iter&, size_t)
-{
-	LogTrace("Render frame end start...");
-
-	bgfx::frame();
-
-	LogTrace("Render frame end finish...");
-}
-
-static void threads_begin(flecs::iter& it, size_t, const RendererThreads& threads)
-{
-	LogTrace("Render threads begin start...");
-
-	flecs::world w = it.world();
-	for (unsigned i = 0; i < w.get_threads(); ++i)
-	{
-		threads.queues[i] = bgfx::begin(i != 0);
-		Assert(threads.queues[i], "Renderer threads' queue is NULL.");
-	}
-
-	LogTrace("Render threads begin finish...");
-}
-
-static void threads_end(flecs::iter& it, size_t, const RendererThreads& threads)
-{
-	LogTrace("Render threads end start...");
-
-	flecs::world w = it.world();
-	for (unsigned i = 0; i < w.get_threads(); ++i)
-	{
-		Assert(threads.queues[i], "Renderer threads' queue is NULL.");
-		bgfx::end(threads.queues[i]);
-	}
-
-	LogTrace("Render threads end finish...");
-}
-
-static void update_camera(const Eye& eye)
-{
-	LogTrace("Send camera transform...");
-	bgfx::setViewTransform(0, glm::value_ptr(eye.view), glm::value_ptr(eye.proj));
-}
-
-static void update_aspect(flecs::iter& it, size_t, const Resolution& resolution)
-{
-	it.world().set<Aspect>({(float)resolution.width / (float)resolution.height});
-}
-
-static void add_threads(flecs::iter& it, size_t)
-{
-	flecs::world w = it.world();
-	RendererThreads threads;
-	threads.count = w.get_stage_count();
-	threads.queues = (bgfx::Encoder**)malloc(threads.count * sizeof(bgfx::Encoder*));
-	w.set<RendererThreads>(threads);
-}
-
-static void remove_threads(flecs::iter& it, size_t)
-{
-	it.world().remove<RendererThreads>();
-}
-
-A3D::RendererSystems::RendererSystems(flecs::world& world)
-{
-	using Startup = A3D::Components::Renderer::Startup;
-
-	world.module<RendererSystems>("A3D::Systems::Renderer");
-	world.import<CameraComponents>();
-	world.import<GraphicsComponents>();
-	world.import<RendererComponents>();
-	world.import<WindowComponents>();
-
-	initDefault_ = world.system<const Device*, const MsaaLevel*, const RendererType*>("InitDefault")
-		.arg(1).singleton()
-		.arg(2).singleton()
-		.arg(3).singleton()
-		.kind(flecs::OnStart)
-		.each(init_default);
-
-	initRenderer_ = world.system<Device,
-								 const Window,
-								 const Resolution,
-								 const MsaaLevel,
-								 const RendererType,
-								 const WindowMode>("InitRenderer")
-		.arg(1).singleton()
-		.arg(2).singleton()
-		.arg(3).singleton()
-		.arg(4).singleton()
-		.arg(5).singleton()
-		.arg(6).singleton()
-		.with<Startup>().singleton()
-		.kind(flecs::OnLoad)
-		.no_readonly()
-		.each(init_renderer);
-
-	destroy_ = world.observer<>("DestroyRenderer")
-		.term<Renderer>().singleton()
-		.event(flecs::UnSet)
-		.each(destroy_renderer);
-
-	frameBegin_ = world.system<const Resolution>("FrameBegin")
-				  .arg(1).singleton()
-				  .with<Renderer>().singleton()
-				  .kind(flecs::PostUpdate)
-				  .each(frame_begin);
-
-	threadsBegin_ = world.system<const RendererThreads>("ThreadsBegin")
-					.arg(1).singleton()
-					.term<const Resolution>().singleton()
-					.with<MultiThreaded>().singleton()
-					.with<Renderer>().singleton()
-					.kind(flecs::PostUpdate)
-					.each(threads_begin);
-
-	threadsEnd_ = world.system<const RendererThreads>("ThreadsEnd")
-				  .arg(1).singleton()
-				  .term<const Resolution>().singleton()
-				  .with<MultiThreaded>().singleton()
-				  .with<Renderer>().singleton()
-				  .kind(flecs::OnStore)
-				  .each(threads_end);
-
-	frameEnd_ = world.system<>("FrameEnd")
-				.term<const Resolution>().singleton()
-				.with<Renderer>().singleton()
-				.kind(flecs::OnStore)
-				.each(frame_end);
-
-	updateCameraView_ = world.system<const Eye>("UpdateCameraView")
-						.term<const Renderer>().singleton()
-						.kind(flecs::OnStore)
-						.each(update_camera);
-
-	updateAspect_ = world.observer<const Resolution>("UpdateAspect")
-					.arg(1).singleton()
-					.event(flecs::OnSet)
-					.each(update_aspect);
-
-	addThreads_ = world.observer<>("AddThreads")
-					.term<MultiThreaded>().singleton()
-					.event(flecs::OnSet)
-					.each(add_threads);
-
-	removeThreads_ = world.observer<>("RemoveThreads")
-					.term<MultiThreaded>().singleton()
-					.event(flecs::OnRemove)
-					.each(remove_threads);
-}*/
