@@ -16,27 +16,26 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GPUPROGRAMCACHESYSTEMS_H
-#define GPUPROGRAMCACHESYSTEMS_H
+#ifndef RESOURCE_GPU_PROGRAM_H
+#define RESOURCE_GPU_PROGRAM_H
 
-#include <flecs.h>
 #include "Apokalypse3DAPI.h"
+
+namespace bgfx
+{
+struct ShaderHandle;
+struct ProgramHandle;
+}
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT GpuProgramCacheSystems
-{
-	GpuProgramCacheSystems(flecs::world& world);
+APOKALYPSE3DAPI_EXPORT const char* GetShaderPrefix();
 
-	flecs::entity findProgram_;
-	flecs::entity findShader_;
-	flecs::entity loadShaderFile_;
-	flecs::entity linkProgram_;
-	flecs::entity setProgramAfterLoad_;
-	flecs::entity setShaderAfterLoad_;
-	flecs::entity clearPrograms_;
-	flecs::entity clearShaders_;
-};
+APOKALYPSE3DAPI_EXPORT bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename);
+APOKALYPSE3DAPI_EXPORT void DestroyShader(bgfx::ShaderHandle shader);
+
+APOKALYPSE3DAPI_EXPORT bool LinkGpuProgram(bgfx::ProgramHandle& program, bgfx::ShaderHandle vertex, bgfx::ShaderHandle fragment);
+APOKALYPSE3DAPI_EXPORT void DestroyGpuProgram(bgfx::ProgramHandle program);
 } // namespace A3D
 
-#endif // GPUPROGRAMCACHESYSTEMS_H
+#endif // RESOURCE_GPU_PROGRAM_H
