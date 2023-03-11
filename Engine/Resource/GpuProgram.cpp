@@ -87,9 +87,9 @@ bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename)
 	}
 }
 
-void DestroyShader(bgfx::ShaderHandle shader) { bgfx::destroy(shader); }
+void DestroyShader(bgfx::ShaderHandle& shader) { bgfx::destroy(shader); }
 
-bool LinkGpuProgram(bgfx::ProgramHandle& program, bgfx::ShaderHandle vertex, bgfx::ShaderHandle fragment)
+bool LinkGpuProgram(bgfx::ProgramHandle& program, const bgfx::ShaderHandle& vertex, const bgfx::ShaderHandle& fragment)
 {
 	LogDebug("Begin linking GPU program...");
 	Assert(vertex.idx != fragment.idx, "Could not link program to same vertex and fragment shader.");
@@ -107,5 +107,5 @@ bool LinkGpuProgram(bgfx::ProgramHandle& program, bgfx::ShaderHandle vertex, bgf
 	}
 }
 
-void DestroyGpuProgram(bgfx::ProgramHandle program) { bgfx::destroy(program); }
+void DestroyGpuProgram(bgfx::ProgramHandle& program) { bgfx::destroy(program); }
 } // namespace A3D

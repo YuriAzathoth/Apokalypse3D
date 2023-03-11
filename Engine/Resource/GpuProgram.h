@@ -32,10 +32,10 @@ namespace A3D
 APOKALYPSE3DAPI_EXPORT const char* GetShaderPrefix();
 
 APOKALYPSE3DAPI_EXPORT bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename);
-APOKALYPSE3DAPI_EXPORT void DestroyShader(bgfx::ShaderHandle shader);
+APOKALYPSE3DAPI_EXPORT void DestroyShader(bgfx::ShaderHandle& shader);
 
-APOKALYPSE3DAPI_EXPORT bool LinkGpuProgram(bgfx::ProgramHandle& program, bgfx::ShaderHandle vertex, bgfx::ShaderHandle fragment);
-APOKALYPSE3DAPI_EXPORT void DestroyGpuProgram(bgfx::ProgramHandle program);
+APOKALYPSE3DAPI_EXPORT bool LinkGpuProgram(bgfx::ProgramHandle& program, const bgfx::ShaderHandle& vertex, const bgfx::ShaderHandle& fragment);
+APOKALYPSE3DAPI_EXPORT void DestroyGpuProgram(bgfx::ProgramHandle& program);
 } // namespace A3D
 
 #endif // RESOURCE_GPU_PROGRAM_H
