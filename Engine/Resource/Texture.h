@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef ENGINE_TEXTURE_H
-#define ENGINE_TEXTURE_H
+#ifndef RESOURCE_TEXTURE_H
+#define RESOURCE_TEXTURE_H
 
 #include "Apokalypse3DAPI.h"
 
@@ -29,4 +29,4 @@ APOKALYPSE3DAPI_EXPORT bool LoadTextureFromFile(bgfx::TextureHandle& texture, co
 APOKALYPSE3DAPI_EXPORT void DestroyTexture(const bgfx::TextureHandle& texture);
 } // namespace A3D
 
-#endif // ENGINE_TEXTURE_H
+#endif // RESOURCE_TEXTURE_H
