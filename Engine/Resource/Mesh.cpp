@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <bgfx/bgfx.h>
+/*#include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
@@ -255,4 +255,4 @@ A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
 			   .each(clear_meshes);
 
 	world.add<MeshStorage>();
-}
+}*/

@@ -16,23 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef MESHCACHESYSTEMS_H
-#define MESHCACHESYSTEMS_H
+#ifndef RESOURCE_MESH_H
+#define RESOURCE_MESH_H
 
-#include <flecs.h>
 #include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT MeshCacheSystems
-{
-	MeshCacheSystems(flecs::world& world);
-
-	flecs::entity clear_;
-	flecs::entity findFile_;
-	flecs::entity loadFile_;
-	flecs::entity setAfterLoad_;
-};
 } // namespace A3D
 
-#endif // MESHCACHESYSTEMS_H
+#endif // RESOURCE_MESH_H
