@@ -16,23 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef IMAGECACHESYSTEMS_H
-#define IMAGECACHESYSTEMS_H
+#ifndef ENGINE_TEXTURE_H
+#define ENGINE_TEXTURE_H
 
-#include <flecs.h>
 #include "Apokalypse3DAPI.h"
+
+namespace bgfx { struct TextureHandle; }
 
 namespace A3D
 {
-struct APOKALYPSE3DAPI_EXPORT ImageCacheSystems
-{
-	ImageCacheSystems(flecs::world& world);
-
-	flecs::entity clear_;
-	flecs::entity findTexture_;
-	flecs::entity loadFile_;
-	flecs::entity setAfterLoad_;
-};
+APOKALYPSE3DAPI_EXPORT bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename);
+APOKALYPSE3DAPI_EXPORT void DestroyTexture(const bgfx::TextureHandle& texture);
 } // namespace A3D
 
-#endif // IMAGECACHESYSTEMS_H
+#endif // ENGINE_TEXTURE_H
