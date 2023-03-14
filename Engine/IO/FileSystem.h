@@ -16,31 +16,34 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef IO_FILESYSTEM_H
+#define IO_FILESYSTEM_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include "Apokalypse3DAPI.h"
 
 namespace A3D
 {
-enum class FileType : uint8_t
+struct File
 {
-	NONE,
-	FILE,
-	DIRECTORY
+	FILE* handler;
+	uint32_t offset;
+	uint32_t size;
 };
 
-FileType GetFileAttribute(const char* filepath);
-void Mkdir(const char* path);
-void Rmdir(const char* path);
-bool Rmrf(const char* path);
-void Sleep(int sec, int nanosec);
+enum class FileMode : uint8_t { READ, WRITE };
 
-#ifdef __WIN32__
-void DisableHighDpi();
-#else // __WIN32__
-#define DisableHighDpi()
-#endif // __WIN32__
+APOKALYPSE3DAPI_EXPORT bool MakeDir(const char* path);
+APOKALYPSE3DAPI_EXPORT bool RemoveDir(const char* path);
+
+APOKALYPSE3DAPI_EXPORT bool IsDirExists(const char* path);
+APOKALYPSE3DAPI_EXPORT bool IsFileExists(const char* path);
+
+APOKALYPSE3DAPI_EXPORT bool OpenFile(File& file, const char* filename, FileMode mode);
+APOKALYPSE3DAPI_EXPORT void CloseFile(File& file);
+APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer);
+APOKALYPSE3DAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
 } // namespace A3D
 
-#endif // PLATFORM_H
+#endif // IO_FILESYSTEM_H

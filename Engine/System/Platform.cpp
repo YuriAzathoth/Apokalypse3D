@@ -16,34 +16,66 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <alloca.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <filesystem>
 #include "Platform.h"
 
-#ifdef _WIN32
+#ifdef __WIN32__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define MKDIR(DIR) CreateDirectory(DIR, NULL)
-#else // _WIN32
+#else // __WIN32__
 #include <sys/stat.h>
-#define MKDIR(DIR) mkdir(DIR, 0774)
-#endif // _WIN32
+#endif // __WIN32__
 
 namespace A3D
 {
+FileType GetFileAttribute(const char* filepath)
+{
+#ifdef __WIN32__
+	const DWORD attrib = GetFileAttributes(filepath);
+	if (attrib & FILE_ATTRIBUTE_NORMAL)
+		return FileType::FILE;
+	else if (attrib & FILE_ATTRIBUTE_DIRECTORY)
+		return FileType::DIRECTORY;
+	else
+		return FileType::NONE;
+#else // __WIN32__
+	struct stat sb;
+	if (stat(filename, &sb) == 0)
+		return FileType::NONE;
+	else if (S_ISREG(sb.st_mode))
+		return FileType::FILE;
+	else if (S_ISDIR(sb.st_mode))
+		return FileType::DIRECTORY;
+	else
+		return FileType::NONE;
+#endif // __WIN32__
+}
+
 void Mkdir(const char* path)
 {
-	char* buffer = (char*)alloca(strlen(path) + 1);
-	strcpy(buffer, path);
-	for (char* end = buffer; *end; ++end)
-		if (*end == '/')
-		{
-			*end = '\0';
-			MKDIR(buffer);
-			*end = '/';
-		}
-	MKDIR(buffer);
+#ifdef __WIN32__
+	CreateDirectory(path, nullptr);
+#else // __WIN32__
+	mkdir(path, 0774);
+#endif // __WIN32__
+}
+
+void Rmdir(const char* path)
+{
+#ifdef __WIN32__
+	RemoveDirectory(path);
+#else // __WIN32__
+	rmdir(path);
+#endif // __WIN32__
+}
+
+bool Rmrf(const char* path)
+{
+	// TODO
+	return std::filesystem::remove_all(path);
 }
 
 void Sleep(int sec, int nanosec)
@@ -54,19 +86,20 @@ void Sleep(int sec, int nanosec)
 	HANDLE hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
 	SetWaitableTimer(hTimer, &sleep_time, 0, NULL, NULL, FALSE);
 	WaitForSingleObject(hTimer, INFINITE);
-    CloseHandle(hTimer);
+	CloseHandle(hTimer);
 #else // __WIN32__
 	struct timespec sleep_time;
-    sleep_time.tv_sec = sec;
-    sleep_time.tv_nsec = nsec;
-    nanosleep(&sleep_time, NULL);
+	sleep_time.tv_sec = sec;
+	sleep_time.tv_nsec = nsec;
+	nanosleep(&sleep_time, NULL);
 #endif // __WIN32__
 }
 
 #if __WIN32__
 void DisableHighDpi()
 {
-	typedef enum D3_PROCESS_DPI_AWARENESS {
+	typedef enum D3_PROCESS_DPI_AWARENESS
+	{
 		D3_PROCESS_DPI_UNAWARE = 0,
 		D3_PROCESS_SYSTEM_DPI_AWARE = 1,
 		D3_PROCESS_PER_MONITOR_DPI_AWARE = 2
@@ -76,7 +109,7 @@ void DisableHighDpi()
 	if (shcoreDll)
 	{
 		SetProcessDpiAwareness = (HRESULT(WINAPI*)(YQ2_PROCESS_DPI_AWARENESS))
-			GetProcAddress(shcoreDll, "SetProcessDpiAwareness");
+								 GetProcAddress(shcoreDll, "SetProcessDpiAwareness");
 		if (SetProcessDpiAwareness)
 		{
 			SetProcessDpiAwareness(D3_PROCESS_PER_MONITOR_DPI_AWARE);
