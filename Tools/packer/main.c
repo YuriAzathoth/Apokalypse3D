@@ -86,14 +86,14 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 	FILE* package = fopen(package_name, "wb");
 	if (package == NULL)
 	{
-		fprintf(stderr, "Failed to create package \"%s\": access denied.", package_name);
+		fprintf(stderr, "Failed to create package \"%s\": access denied.\n", package_name);
 		return -1;
 	}
 
 	char* buffer = (char*)malloc(block_size);
 	if (buffer == NULL)
 	{
-		fprintf(stderr, "Failed to allocate \"%u\" bytes for read buffer: out of memory.", block_size);
+		fprintf(stderr, "Failed to allocate \"%u\" bytes for read buffer: out of memory.\n", block_size);
 		fclose(package);
 		return -1;
 	}
@@ -112,15 +112,20 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 	fwrite(&ZERO, sizeof(ZERO), body_pos, package);
 
 	const char** filename;
+	const char* filename_trim;
 	for (filename = files; filename < files + files_count; ++filename)
 	{
-		fnm.size = (uint32_t)strlen(*filename);
+		filename_trim = *filename;
+		while (*filename_trim == '.' || *filename_trim == '/')
+			++filename_trim;
+
+		fnm.size = (uint32_t)strlen(filename_trim);
 		fnm.offset = body_pos;
 		fbm.size = 0xFFFFFFFF;
 		fbm.offset = 0xFFFFFFFF;
 
 		fseek(package, (long)body_pos, SEEK_SET);
-		fwrite(*filename, fnm.size, 1, package);
+		fwrite(filename_trim, fnm.size, 1, package);
 		body_pos = (uint32_t)ftell(package);
 
 		fseek(package, (long)header_pos, SEEK_SET);
@@ -140,7 +145,7 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 		file = fopen(*filename, "rb");
 		if (file == NULL)
 		{
-			fprintf(stderr, "Failed to open file \"%s\" for reading: file not found.", *filename);
+			fprintf(stderr, "Failed to open file \"%s\" for reading: file not found.\n", *filename);
 			fclose(package);
 			free(buffer);
 			return -1;
@@ -166,7 +171,7 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 
 			if (fread(buffer, size_read, 1, file) != 1)
 			{
-				fprintf(stderr, "Failed to read %u bytes from file \"%s\".", size_read, *filename);
+				fprintf(stderr, "Failed to read %u bytes from file \"%s\".\n", size_read, *filename);
 				fclose(file);
 				fclose(package);
 				free(buffer);
@@ -175,7 +180,7 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 
 			if (fwrite(buffer, size_read, 1, package) != 1)
 			{
-				fprintf(stderr, "Failed to write %u bytes to package \"%s\".", size_read, package_name);
+				fprintf(stderr, "Failed to write %u bytes to package \"%s\".\n", size_read, package_name);
 				fclose(file);
 				fclose(package);
 				free(buffer);
@@ -191,9 +196,9 @@ static int pack_files(const char* package_name, const char** files, unsigned fil
 	free(buffer);
 	fclose(package);
 
-	printf("%u files are successfully packed to package \"%s\".", files_count, package_name);
+	printf("Successfully packed %u files to package \"%s\".\n", files_count, package_name);
 
-	return files_count;
+	return 0;
 }
 
 static int unpack_files(const char* package_name, const char* directory, unsigned block_size)
@@ -201,7 +206,7 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 	FILE* package = fopen(package_name, "rb");
 	if (package == NULL)
 	{
-		fprintf(stderr, "Failed to open package \"%s\": file does not exist.", package_name);
+		fprintf(stderr, "Failed to open package \"%s\": file does not exist.\n", package_name);
 		return -1;
 	}
 
@@ -209,7 +214,7 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 	fread(&ph, sizeof(ph), 1, package);
 	if (ph.magic_number != MAGIC_NUMBER || ph.files_count == 0)
 	{
-		fprintf(stderr, "Failed to open package \"%s\": file is not a package.", package_name);
+		fprintf(stderr, "Failed to open package \"%s\": file is not a package.\n", package_name);
 		fclose(package);
 		return -1;
 	}
@@ -217,15 +222,18 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 	char* buffer = (char*)malloc(block_size);
 	if (buffer == NULL)
 	{
-		fprintf(stderr, "Failed to allocate \"%u\" bytes for read buffer: out of memory.", block_size);
+		fprintf(stderr, "Failed to allocate \"%u\" bytes for read buffer: out of memory.\n", block_size);
 		fclose(package);
 		return -1;
 	}
 
+	char filepath[FILEPATH_BUFFER_SIZE];
+	char* filepath_internal = strcpy(filepath, directory);
+	char* filename = NULL;
+	char* chr;
+
 	struct file_name_meta_t fnm;
 	struct file_body_meta_t fbm;
-	char filepath[FILEPATH_BUFFER_SIZE];
-	char* filepath_delim = strcpy(filepath, directory);
 	FILE* file;
 	uint32_t header_pos;
 	uint32_t size_remains;
@@ -237,14 +245,26 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 		header_pos = (uint32_t)ftell(package);
 
 		fseek(package, (long)fnm.offset, SEEK_SET);
-		fread(filepath_delim, fnm.size, 1, package);
-		filepath_delim[fnm.size] = '\0';
+		fread(filepath_internal, fnm.size, 1, package);
 		fseek(package, (long)fbm.offset, SEEK_SET);
+		filepath_internal[fnm.size] = '\0';
+
+		for (chr = filepath_internal; *chr != '\0'; ++chr)
+			if (*chr == '/')
+				filename = chr;
+
+		if (filename != NULL)
+		{
+			*filename = '\0';
+			mkdirr(filepath);
+			*filename = '/';
+			++filename;
+		}
 
 		file = fopen(filepath, "wb");
 		if (file == NULL)
 		{
-			fprintf(stderr, "Failed to open file \"%s\" for writting: access denied.", filepath);
+			fprintf(stderr, "Failed to open file \"%s\" for writting: access denied.\n", filepath);
 			fclose(package);
 			free(buffer);
 			return -1;
@@ -258,7 +278,7 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 
 			if (fread(buffer, size_read, 1, package) != 1)
 			{
-				fprintf(stderr, "Failed to read %u bytes from package \"%s\".", size_read, package_name);
+				fprintf(stderr, "Failed to read %u bytes from package \"%s\".\n", size_read, package_name);
 				fclose(file);
 				fclose(package);
 				free(buffer);
@@ -267,7 +287,7 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 
 			if (fwrite(buffer, size_read, 1, file) != 1)
 			{
-				fprintf(stderr, "Failed to write %u bytes to file \"%s\".", size_read, filepath);
+				fprintf(stderr, "Failed to write %u bytes to file \"%s\".\n", size_read, filepath);
 				fclose(file);
 				fclose(package);
 				free(buffer);
@@ -275,15 +295,16 @@ static int unpack_files(const char* package_name, const char* directory, unsigne
 			}
 		}
 
-		*filepath_delim = '\0';
 		fclose(file);
-
 		fseek(package, (long)header_pos, SEEK_SET);
 	}
 
 	fclose(package);
 	free(buffer);
-	return 1;
+
+	printf("Successfully unpacked %u files from package \"%s\".\n", ph.files_count, package_name);
+
+	return 0;
 }
 
 void print_help()
@@ -329,8 +350,6 @@ int main(int argc, char** argv)
 		print_help();
 		return 1;
 	}
-
-	//for (const char** argp = argv; argp < argv + )
 
 	return 0;
 }
