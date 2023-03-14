@@ -90,6 +90,9 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 	case LogLevel::ERROR:
 		type = "ERROR";
 		break;
+	case LogLevel::FATAL:
+		type = "FATAL ERROR";
+		break;
 	default:
 		type = nullptr;
 	}
