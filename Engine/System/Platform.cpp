@@ -35,12 +35,12 @@ FileType GetFileAttribute(const char* filepath)
 {
 #ifdef __WIN32__
 	const DWORD attrib = GetFileAttributes(filepath);
-	if (attrib & FILE_ATTRIBUTE_NORMAL)
-		return FileType::FILE;
+	if (attrib == INVALID_FILE_ATTRIBUTES)
+		return FileType::NONE;
 	else if (attrib & FILE_ATTRIBUTE_DIRECTORY)
 		return FileType::DIRECTORY;
 	else
-		return FileType::NONE;
+		return FileType::FILE;
 #else // __WIN32__
 	struct stat sb;
 	if (stat(filename, &sb) == 0)

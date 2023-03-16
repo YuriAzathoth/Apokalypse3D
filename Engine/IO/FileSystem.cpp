@@ -21,12 +21,11 @@
 #include "IO/Log.h"
 #include "System/Platform.h"
 
-#define BUFFER_SIZE 256
 #define PACKAGE_EXTENSION ".pak"
 
 #define STR_TO_I32(A, B, C, D) ((uint32_t)(D) << 24 | (uint32_t)(C) << 16U | (uint32_t)(B) << 8U | (uint32_t)(A))
 
-#define FILEPATH_BUFFER_SIZE 1024
+#define FILEPATH_BUFFER_SIZE 512
 #define DEFAULT_BLOCK_SIZE 2048
 #define MAGIC_NUMBER STR_TO_I32('.', 'P', 'A', 'K')
 
@@ -50,11 +49,9 @@ struct file_body_meta_t
 
 namespace A3D
 {
-inline static constexpr const char* GetFileModeString(FileMode mode);
-
 bool MakeDir(const char* path)
 {
-	char buffer[BUFFER_SIZE];
+	char buffer[FILEPATH_BUFFER_SIZE];
 	strcpy(buffer, path);
 	for (char* chr = buffer; *chr; ++chr)
 		if (*chr == '/')
@@ -82,143 +79,170 @@ bool IsFileExists(const char* path)
 	return GetFileAttribute(path) == FileType::FILE;
 }
 
-bool OpenFile(File& file, const char* filename, FileMode mode)
+bool OpenFileRead(File& file, const char* filename)
 {
-	LogDebug("Opening file \"%s\"...", filename);
-
-	char filepath[BUFFER_SIZE];
-	char* delim_pak;
-	char* delim_path;
-	bool packed = false;
-	strcpy(filepath, filename);
-
-	if (mode == FileMode::READ)
+	if (IsFileExists(filename))
 	{
-		constexpr const char PACKAGE_EXT[] = PACKAGE_EXTENSION;
-		const char* ext;
-		char* delim_pak;
-
-		// Check if file in package
-		for (char* chr = filepath; *chr != '\0'; ++chr)
-		{
-			if (*chr == '/')
-				delim_path = chr;
-			for (ext = PACKAGE_EXT; *chr == *ext; ++ext, ++chr)
-				if (*ext == '\0') // Compared full package extension
-				{
-					delim_pak = chr;
-					packed = true;
-					goto done;
-				}
-		}
-done:
-
-		*delim_path = '\0';
-		if (GetFileAttribute(filepath) != FileType::DIRECTORY)
-		{
-			LogFatal("Could not open file \"%s\" for reading: directory \"%s\" does not exist.", filename, filepath);
-			return false;
-		}
-		*delim_path = '/';
-
-		*delim_pak = '\0';
-		if (GetFileAttribute(filepath) != FileType::FILE)
-		{
-			LogFatal("Could not open file \"%s\" for reading: package file \"%s\" does not exist.", filename, filepath);
-			return false;
-		}
-		*delim_pak = '/';
-
-		if (packed)
-		{
-			*delim_pak = '\0';
-			file.handler = fopen(filepath, "rb");
-			if (file.handler == nullptr)
-			{
-				file.size = 0;
-				LogFatal("Could not open package file \"%s\" for reading: file does not exist.", filepath);
-				return false;
-			}
-
-			struct package_header_t ph;
-			fread(&ph, sizeof(ph), 1, file.handler);
-			if (ph.magic_number != MAGIC_NUMBER || ph.files_count == 0)
-			{
-				LogFatal("Failed to open package \"%s\": file is not a package.", filepath);
-				fclose(file.handler);
-				return -1;
-			}
-
-			char filepath_inner[FILEPATH_BUFFER_SIZE];
-			struct file_name_meta_t fnm;
-			struct file_body_meta_t fbm;
-			uint32_t header_pos;
-			for (unsigned i = 0; i < ph.files_count; ++i)
-			{
-				fread(&fnm, sizeof(fnm), 1, file.handler);
-				fread(&fbm, sizeof(fbm), 1, file.handler);
-				header_pos = (uint32_t)ftell(file.handler);
-
-				fseek(file.handler, (long)fnm.offset, SEEK_SET);
-				fread(filepath_inner, fnm.size, 1, file.handler);
-				filepath_inner[fnm.size] = '\0';
-				if (!strcmp(delim_pak + 1, filepath_inner))
-				{
-					file.offset = fbm.offset;
-					return true;
-				}
-			}
-
-			LogFatal("Failed to find file \"%s\" in package \"%s\": file does not exist", delim_pak + 1, filepath);
-			return false;
-		}
-		else
-		{
-			file.handler = fopen(filename, "rb");
-			file.offset = 0;
-			if (file.handler == nullptr)
-			{
-				file.size = 0;
-				LogFatal("Could not open file \"%s\" for reading: file does not exist.", filename);
-				return false;
-			}
-
-			fseek(file.handler, 0, SEEK_END);
-			file.size = (uint32_t)ftell(file.handler);
-			rewind(file.handler);
-
-			LogInfo("File \"%s\" is opened.", filename);
-
-			return true;
-		}
-	}
-	else
-	{
-		for (char* chr = filepath; *chr != '\0'; ++chr)
-			if (*chr == '/')
-				delim_path = chr;
-
-		*delim_path = '\0';
-		if (GetFileAttribute(filepath) != FileType::DIRECTORY)
-		{
-			LogFatal("Could not open file \"%s\" for writing: directory \"%s\" does not exist.", filename, filepath);
-			return false;
-		}
-		*delim_path = '/';
+		LogDebug("Opening file \"%s\" for reading from disk...", filename);
 
 		file.handler = fopen(filename, "rb");
-		if (GetFileAttribute(filepath) != FileType::DIRECTORY)
+		file.offset = 0;
+		if (file.handler == nullptr)
 		{
-			LogFatal("Could not open file \"%s\" for writing: file does not exist.", filename);
+			file.size = 0;
+			LogFatal("Could not open file \"%s\" for reading: file does not exist.", filename);
 			return false;
 		}
-		*delim_path = '/';
 
-		file.offset = 0;
-		file.size = 0;
+		fseek(file.handler, 0, SEEK_END);
+		file.size = (uint32_t)ftell(file.handler);
+		rewind(file.handler);
 
+		LogDebug("File \"%s\" is successfully loaded.", filename);
 		return true;
 	}
+
+	char filepath[FILEPATH_BUFFER_SIZE];
+	strcpy(filepath, filename);
+
+	// File not found. Try to find in package.
+	constexpr const char PACKAGE_EXT[] = PACKAGE_EXTENSION;
+	char temp[5];
+	char* delim_path = nullptr;
+	char* chr = filepath;
+	unsigned i;
+	bool packed = false;
+	bool exist;
+
+	// Skip suffices like "/", "./", "../" etc.
+	while (*chr == '.' || *chr == '/')
+		++chr;
+
+	// Check if package exists.
+	while (*chr != '\0')
+	{
+		if (*chr == '/')
+		{
+			*chr = '\0';
+			exist = IsDirExists(filepath);
+			*chr = '/';
+
+			for (i = 0; i < 5; ++i)
+			{
+				temp[i] = chr[i];
+				chr[i] = PACKAGE_EXT[i];
+			}
+			LogDebug("Checking if package \"%s\" exists...", filepath);
+
+			if (IsFileExists(filepath))
+			{
+				LogDebug("Package \"%s\" exist. Opening package...", filepath);
+
+				file.handler = fopen(filepath, "rb");
+				if (file.handler == nullptr)
+				{
+					LogFatal("Could not open package file \"%s\" for reading: access denied.", filepath);
+					file.size = 0;
+					return false;
+				}
+
+				packed = true;
+				delim_path = chr;
+			}
+			for (i = 0; i < 5; ++i)
+				chr[i] = temp[i];
+
+			if (packed)
+				break;
+
+			// Neither directory nor package file exist.
+			if (!exist)
+			{
+				LogFatal("Could not open file \"%s\" for reading: neither directory \"%s\" nor package does not exist.",
+						 filename, filepath);
+				return false;
+			}
+		}
+		++chr;
+	}
+
+	if (packed) // File is in package.
+	{
+		*delim_path = '\0';
+		++delim_path;
+
+		LogDebug("Finding file \"%s\" in package \"%s\"...", delim_path, filepath);
+
+		struct package_header_t ph;
+		fread(&ph, sizeof(ph), 1, file.handler);
+		if (ph.magic_number != MAGIC_NUMBER || ph.files_count == 0)
+		{
+			LogFatal("Failed to open package \"%s\": file is not a package.", filepath);
+			fclose(file.handler);
+			return false;
+		}
+
+		char filepath_inner[FILEPATH_BUFFER_SIZE];
+		struct file_name_meta_t fnm;
+		struct file_body_meta_t fbm;
+		uint32_t header_pos;
+		for (unsigned i = 0; i < ph.files_count; ++i)
+		{
+			fread(&fnm, sizeof(fnm), 1, file.handler);
+			fread(&fbm, sizeof(fbm), 1, file.handler);
+			header_pos = (uint32_t)ftell(file.handler);
+
+			fseek(file.handler, (long)fnm.offset, SEEK_SET);
+			fread(filepath_inner, fnm.size, 1, file.handler);
+			filepath_inner[fnm.size] = '\0';
+			fseek(file.handler, (long)header_pos, SEEK_SET);
+
+			if (!strcmp(delim_path, filepath_inner))
+			{
+				file.offset = fbm.offset;
+				file.size = fbm.size;
+				return true;
+			}
+		}
+	}
+
+	// File is not in package and directory does not exist.
+	LogFatal("Failed to find file \"%s\": directory does not exist.", filename);
+	return false;
+}
+
+bool OpenFileWrite(File& file, const char* filename)
+{
+	LogDebug("Opening file \"%s\" for writing...", filename);
+
+	char filepath[FILEPATH_BUFFER_SIZE];
+	char* delim_path;
+	strcpy(filepath, filename);
+
+	for (char* chr = filepath; *chr != '\0'; ++chr)
+		if (*chr == '/')
+			delim_path = chr;
+
+	*delim_path = '\0';
+	if (GetFileAttribute(filepath) != FileType::DIRECTORY)
+	{
+		LogFatal("Could not open file \"%s\" for writing: directory \"%s\" does not exist.", filename, filepath);
+		return false;
+	}
+	*delim_path = '/';
+
+	file.handler = fopen(filename, "rb");
+	if (GetFileAttribute(filepath) != FileType::DIRECTORY)
+	{
+		LogFatal("Could not open file \"%s\" for writing: file does not exist.", filename);
+		return false;
+	}
+	*delim_path = '/';
+
+	file.offset = 0;
+	file.size = 0;
+
+	return true;
 }
 
 void CloseFile(File& file) { fclose(file.handler); }
@@ -227,7 +251,7 @@ bool ReadFileData(File& file, void* buffer)
 {
 	if (file.offset > 0)
 		fseek(file.handler, file.offset, SEEK_SET);
-	if (fread(buffer, 1, file.size, file.handler) == file.size)
+	if (fread(buffer, file.size, 1, file.handler) == 1)
 	{
 		LogDebug("Read \"%u\" bytes from file.", file.size);
 		return true;
@@ -241,7 +265,7 @@ bool ReadFileData(File& file, void* buffer)
 
 bool WriteFileData(File& file, const void* buffer, uint32_t size)
 {
-	if (fwrite(buffer, 1, size, file.handler) == size)
+	if (fwrite(buffer, size, 1, file.handler) == 1)
 	{
 		LogDebug("Write \"%u\" bytes to file.", file.size);
 		return true;
@@ -251,15 +275,5 @@ bool WriteFileData(File& file, const void* buffer, uint32_t size)
 		LogFatal("Failed to write \"%u\" bytes to file.", file.size);
 		return false;
 	}
-}
-
-inline static constexpr const char* GetFileModeString(FileMode mode)
-{
-	switch (mode)
-	{
-	case FileMode::READ:  return "rb";
-	case FileMode::WRITE: return "wb";
-	}
-	return nullptr;
 }
 } // namespace A3D

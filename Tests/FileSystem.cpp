@@ -22,6 +22,12 @@
 #include "doctest/doctest.h"
 #include "IO/FileSystem.h"
 
+#ifdef __WIN32__
+#define NO_OUTPUT " > nul"
+#else // __WIN32__
+#define NO_OUTPUT " > /dev/null"
+#endif // __WIN32__
+
 TEST_SUITE("FileSystem")
 {
 	TEST_CASE("Directory")
@@ -58,8 +64,8 @@ TEST_SUITE("FileSystem")
 		constexpr const char FILE1_CONTENT[] = "Hello, World!";
 		constexpr const char FILE2_NAME[] = "BasicText.txt";
 		constexpr const char FILE2_CONTENT[] = "The quick brown fox jumps over the lazy dog";
-		constexpr const char PACKING_COMMAND[] = "packer p Test.pak HW.txt BasicText.txt";
-		constexpr const char UNPACKING_COMMAND[] = "packer u Test.pak .";
+		constexpr const char PACKING_COMMAND[] = "packer p Test.pak HW.txt BasicText.txt" NO_OUTPUT;
+		constexpr const char UNPACKING_COMMAND[] = "packer u Test.pak ." NO_OUTPUT;
 		constexpr const size_t BUFFER_SIZE = 256;
 		char buffer[BUFFER_SIZE];
 
@@ -116,8 +122,8 @@ TEST_SUITE("FileSystem")
 		constexpr const char FILE1_CONTENT[] = "Hello, World!";
 		constexpr const char FILE2_NAME[] = "./Test/BasicText.txt";
 		constexpr const char FILE2_CONTENT[] = "The quick brown fox jumps over the lazy dog";
-		constexpr const char PACKING_COMMAND[] = "packer p ./Test.pak ./Test/HW.txt ./Test/BasicText.txt";
-		constexpr const char UNPACKING_COMMAND[] = "packer u ./Test.pak .";
+		constexpr const char PACKING_COMMAND[] = "packer p ./Test.pak ./Test/HW.txt ./Test/BasicText.txt" NO_OUTPUT;
+		constexpr const char UNPACKING_COMMAND[] = "packer u ./Test.pak ." NO_OUTPUT;
 		constexpr const size_t BUFFER_SIZE = 256;
 		char buffer[BUFFER_SIZE];
 
@@ -168,5 +174,84 @@ TEST_SUITE("FileSystem")
 
 		remove(PACKAGE);
 		REQUIRE(A3D::RemoveDir(TEST_DIRECTORY) == true);
+	}
+	TEST_CASE("Open packed file")
+	{
+		constexpr const char PACKAGE[] = "./Test.pak";
+		constexpr const char FILE1_NAME[] = "./HW.txt";
+		constexpr const char FILE1_NAME_PACKED[] = "./Test/HW.txt";
+		constexpr const char FILE1_CONTENT[] = "Hello, World!";
+		constexpr const char FILE2_NAME[] = "./BasicText.txt";
+		constexpr const char FILE2_CONTENT[] = "The quick brown fox jumps over the lazy dog";
+		constexpr const char PACKING_COMMAND[] = "packer p ./Test.pak ./HW.txt ./BasicText.txt" NO_OUTPUT;
+		constexpr const size_t BUFFER_SIZE = 256;
+		char buffer[BUFFER_SIZE];
+
+		FILE* file = fopen(FILE1_NAME, "wb");
+		REQUIRE(file != nullptr);
+		REQUIRE(fwrite(FILE1_CONTENT, sizeof(FILE1_CONTENT) - 1, 1, file) == 1);
+		fclose(file);
+
+		file = fopen(FILE2_NAME, "wb");
+		REQUIRE(file != nullptr);
+		REQUIRE(fwrite(FILE2_CONTENT, sizeof(FILE2_CONTENT) - 1, 1, file) == 1);
+		fclose(file);
+
+		system(PACKING_COMMAND);
+
+		remove(FILE1_NAME);
+		remove(FILE2_NAME);
+
+		struct A3D::File f;
+		REQUIRE(A3D::OpenFileRead(f, FILE1_NAME_PACKED));
+		REQUIRE(f.size == sizeof(FILE1_CONTENT) - 1);
+		A3D::ReadFileData(f, buffer);
+		buffer[f.size] = '\0';
+		REQUIRE(!strcmp(FILE1_CONTENT, buffer));
+		A3D::CloseFile(f);
+
+		remove(PACKAGE);
+	}
+	TEST_CASE("Open packed file with subdirectories")
+	{
+		constexpr const char PACKAGE[] = "./Test.pak";
+		constexpr const char TEST_DIRECTORY[] = "./Test";
+		constexpr const char FILE1_NAME[] = "./Test/HW.txt";
+		constexpr const char FILE1_CONTENT[] = "Hello, World!";
+		constexpr const char FILE2_NAME[] = "./Test/BasicText.txt";
+		constexpr const char FILE2_NAME_PACKED[] = "./Test/Test/BasicText.txt";
+		constexpr const char FILE2_CONTENT[] = "The quick brown fox jumps over the lazy dog";
+		constexpr const char PACKING_COMMAND[] = "packer p ./Test.pak ./Test/HW.txt ./Test/BasicText.txt" NO_OUTPUT;
+		constexpr const size_t BUFFER_SIZE = 256;
+		char buffer[BUFFER_SIZE];
+
+		REQUIRE(A3D::MakeDir(TEST_DIRECTORY) == true);
+
+		FILE* file = fopen(FILE1_NAME, "wb");
+		REQUIRE(file != nullptr);
+		REQUIRE(fwrite(FILE1_CONTENT, sizeof(FILE1_CONTENT) - 1, 1, file) == 1);
+		fclose(file);
+
+		file = fopen(FILE2_NAME, "wb");
+		REQUIRE(file != nullptr);
+		REQUIRE(fwrite(FILE2_CONTENT, sizeof(FILE2_CONTENT) - 1, 1, file) == 1);
+		fclose(file);
+
+		system(PACKING_COMMAND);
+
+		remove(FILE1_NAME);
+		remove(FILE2_NAME);
+
+		REQUIRE(A3D::RemoveDir(TEST_DIRECTORY) == true);
+
+		struct A3D::File f;
+		REQUIRE(A3D::OpenFileRead(f, FILE2_NAME_PACKED));
+		REQUIRE(f.size == sizeof(FILE2_CONTENT) - 1);
+		A3D::ReadFileData(f, buffer);
+		buffer[f.size] = '\0';
+		REQUIRE(!strcmp(FILE2_CONTENT, buffer));
+		A3D::CloseFile(f);
+
+		remove(PACKAGE);
 	}
 }

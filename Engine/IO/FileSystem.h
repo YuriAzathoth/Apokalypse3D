@@ -32,15 +32,14 @@ struct File
 	uint32_t size;
 };
 
-enum class FileMode : uint8_t { READ, WRITE };
-
 APOKALYPSE3DAPI_EXPORT bool MakeDir(const char* path);
 APOKALYPSE3DAPI_EXPORT bool RemoveDir(const char* path);
 
 APOKALYPSE3DAPI_EXPORT bool IsDirExists(const char* path);
 APOKALYPSE3DAPI_EXPORT bool IsFileExists(const char* path);
 
-APOKALYPSE3DAPI_EXPORT bool OpenFile(File& file, const char* filename, FileMode mode);
+APOKALYPSE3DAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
+APOKALYPSE3DAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
 APOKALYPSE3DAPI_EXPORT void CloseFile(File& file);
 APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer);
 APOKALYPSE3DAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
