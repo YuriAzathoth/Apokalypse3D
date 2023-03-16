@@ -248,9 +248,9 @@ bool OpenFileWrite(File& file, const char* filename)
 
 void CloseFile(File& file) { fclose(file.handler); }
 
-bool ReadFileData(File& file, void* buffer)
+bool ReadFileData(File& file, void* buffer, uint32_t size)
 {
-	if (fread(buffer, file.size, 1, file.handler) == 1)
+	if (fread(buffer, size, 1, file.handler) == 1)
 	{
 		LogDebug("Read \"%u\" bytes from file.", file.size);
 		return true;
@@ -267,6 +267,7 @@ bool WriteFileData(File& file, const void* buffer, uint32_t size)
 	if (fwrite(buffer, size, 1, file.handler) == 1)
 	{
 		LogDebug("Write \"%u\" bytes to file.", file.size);
+		file.size += size;
 		return true;
 	}
 	else

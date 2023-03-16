@@ -41,9 +41,11 @@ APOKALYPSE3DAPI_EXPORT bool IsFileExists(const char* path);
 APOKALYPSE3DAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
 APOKALYPSE3DAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
 APOKALYPSE3DAPI_EXPORT void CloseFile(File& file);
-APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer);
+APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
 APOKALYPSE3DAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
 APOKALYPSE3DAPI_EXPORT void FileRewind(File& file);
+
+inline static bool ReadFileData(File& file, void* buffer) { return ReadFileData(file, buffer, file.size); }
 } // namespace A3D
 
 #endif // IO_FILESYSTEM_H
