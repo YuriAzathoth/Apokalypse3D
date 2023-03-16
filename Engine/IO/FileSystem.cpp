@@ -199,6 +199,7 @@ bool OpenFileRead(File& file, const char* filename)
 
 			if (!strcmp(delim_path, filepath_inner))
 			{
+				fseek(file.handler, (long)fbm.offset, SEEK_SET);
 				file.offset = fbm.offset;
 				file.size = fbm.size;
 				return true;
@@ -249,8 +250,6 @@ void CloseFile(File& file) { fclose(file.handler); }
 
 bool ReadFileData(File& file, void* buffer)
 {
-	if (file.offset > 0)
-		fseek(file.handler, file.offset, SEEK_SET);
 	if (fread(buffer, file.size, 1, file.handler) == 1)
 	{
 		LogDebug("Read \"%u\" bytes from file.", file.size);
@@ -276,4 +275,6 @@ bool WriteFileData(File& file, const void* buffer, uint32_t size)
 		return false;
 	}
 }
+
+void FileRewind(File& file) { fseek(file.handler, (long)file.offset, SEEK_SET); }
 } // namespace A3D

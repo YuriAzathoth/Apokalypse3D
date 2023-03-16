@@ -43,6 +43,7 @@ APOKALYPSE3DAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
 APOKALYPSE3DAPI_EXPORT void CloseFile(File& file);
 APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer);
 APOKALYPSE3DAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
+APOKALYPSE3DAPI_EXPORT void FileRewind(File& file);
 } // namespace A3D
 
 #endif // IO_FILESYSTEM_H
