@@ -182,6 +182,7 @@ TEST_SUITE("FileSystem")
 		constexpr const char FILE1_NAME_PACKED[] = "./Test/HW.txt";
 		constexpr const char FILE1_CONTENT[] = "Hello, World!";
 		constexpr const char FILE2_NAME[] = "./BasicText.txt";
+		constexpr const char FILE2_NAME_PACKED[] = "./Test/BasicText.txt";
 		constexpr const char FILE2_CONTENT[] = "The quick brown fox jumps over the lazy dog";
 		constexpr const char PACKING_COMMAND[] = "packer p ./Test.pak ./HW.txt ./BasicText.txt" NO_OUTPUT;
 		constexpr const size_t BUFFER_SIZE = 256;
@@ -202,13 +203,23 @@ TEST_SUITE("FileSystem")
 		remove(FILE1_NAME);
 		remove(FILE2_NAME);
 
-		struct A3D::File f;
-		REQUIRE(A3D::OpenFileRead(f, FILE1_NAME_PACKED));
-		REQUIRE(f.size == sizeof(FILE1_CONTENT) - 1);
-		A3D::ReadFileData(f, buffer);
-		buffer[f.size] = '\0';
+		struct A3D::File f1;
+		struct A3D::File f2;
+		REQUIRE(A3D::OpenFileRead(f1, FILE1_NAME_PACKED));
+		REQUIRE(A3D::OpenFileRead(f2, FILE2_NAME_PACKED));
+		REQUIRE(f1.size == sizeof(FILE1_CONTENT) - 1);
+		REQUIRE(f2.size == sizeof(FILE2_CONTENT) - 1);
+
+		A3D::ReadFileData(f1, buffer);
+		buffer[f1.size] = '\0';
 		REQUIRE(!strcmp(FILE1_CONTENT, buffer));
-		A3D::CloseFile(f);
+
+		A3D::ReadFileData(f2, buffer);
+		buffer[f2.size] = '\0';
+		REQUIRE(!strcmp(FILE2_CONTENT, buffer));
+
+		A3D::CloseFile(f1);
+		A3D::CloseFile(f2);
 
 		remove(PACKAGE);
 	}
@@ -217,6 +228,7 @@ TEST_SUITE("FileSystem")
 		constexpr const char PACKAGE[] = "./Test.pak";
 		constexpr const char TEST_DIRECTORY[] = "./Test";
 		constexpr const char FILE1_NAME[] = "./Test/HW.txt";
+		constexpr const char FILE1_NAME_PACKED[] = "./Test/Test/HW.txt";
 		constexpr const char FILE1_CONTENT[] = "Hello, World!";
 		constexpr const char FILE2_NAME[] = "./Test/BasicText.txt";
 		constexpr const char FILE2_NAME_PACKED[] = "./Test/Test/BasicText.txt";
@@ -244,13 +256,23 @@ TEST_SUITE("FileSystem")
 
 		REQUIRE(A3D::RemoveDir(TEST_DIRECTORY) == true);
 
-		struct A3D::File f;
-		REQUIRE(A3D::OpenFileRead(f, FILE2_NAME_PACKED));
-		REQUIRE(f.size == sizeof(FILE2_CONTENT) - 1);
-		A3D::ReadFileData(f, buffer);
-		buffer[f.size] = '\0';
+		struct A3D::File f1;
+		struct A3D::File f2;
+		REQUIRE(A3D::OpenFileRead(f1, FILE1_NAME_PACKED));
+		REQUIRE(A3D::OpenFileRead(f2, FILE2_NAME_PACKED));
+		REQUIRE(f1.size == sizeof(FILE1_CONTENT) - 1);
+		REQUIRE(f2.size == sizeof(FILE2_CONTENT) - 1);
+
+		A3D::ReadFileData(f1, buffer);
+		buffer[f1.size] = '\0';
+		REQUIRE(!strcmp(FILE1_CONTENT, buffer));
+
+		A3D::ReadFileData(f2, buffer);
+		buffer[f2.size] = '\0';
 		REQUIRE(!strcmp(FILE2_CONTENT, buffer));
-		A3D::CloseFile(f);
+
+		A3D::CloseFile(f1);
+		A3D::CloseFile(f2);
 
 		remove(PACKAGE);
 	}
