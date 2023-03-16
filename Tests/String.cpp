@@ -1,6 +1,6 @@
 /*
-	RECS - Rapid Entity Component System
-	Copyright (C) 2023 Yuriy Zinchenko
+	Apokalypse3D - Fast and cache-friendly 3D game engine
+	Copyright (C) 2022-2023 Yuriy Zinchenko
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -78,22 +78,22 @@ TEST_SUITE("String View")
 {
 	TEST_CASE("Default constructor")
 	{{
-		Recs::string<test_allocator<char>> s;
+		A3D::string<test_allocator<char>> s;
 		REQUIRE(s.empty());
 	}
 	check_memory_leaks(); }
 
 	TEST_CASE("Const char constructor")
 	{{
-		Recs::string<test_allocator<char>> s(TEST_STRING);
+		A3D::string<test_allocator<char>> s(TEST_STRING);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
 	check_memory_leaks(); }
 
 	TEST_CASE("Copy constructor")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2(s1);
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2(s1);
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 	}
@@ -101,8 +101,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Move constructor")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2(std::move(s1));
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2(std::move(s1));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
 	}
@@ -110,7 +110,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Const char assignment")
 	{{
-		Recs::string<test_allocator<char>> s;
+		A3D::string<test_allocator<char>> s;
 		s = TEST_STRING;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
@@ -118,8 +118,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Copy assignment")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2;
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2;
 		s2 = s1;
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
@@ -128,8 +128,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Move assignment")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2;
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2;
 		s2 = std::move(s1);
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
@@ -138,7 +138,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Const char reassignment")
 	{{
-		Recs::string<test_allocator<char>> s(TEST_STRING_JUNK);
+		A3D::string<test_allocator<char>> s(TEST_STRING_JUNK);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING_JUNK));
 		s = TEST_STRING;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
@@ -147,8 +147,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Copy reassignment")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2(TEST_STRING_JUNK);
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2(TEST_STRING_JUNK);
 		s2 = s1;
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
@@ -157,8 +157,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Move reassignment")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
-		Recs::string<test_allocator<char>> s2(TEST_STRING_JUNK);
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s2(TEST_STRING_JUNK);
 		s2 = std::move(s1);
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
@@ -167,7 +167,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Const char append")
 	{{
-		Recs::string<test_allocator<char>> s(TEST_PART_1);
+		A3D::string<test_allocator<char>> s(TEST_PART_1);
 		s += TEST_PART_2;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
@@ -175,8 +175,8 @@ TEST_SUITE("String View")
 
 	TEST_CASE("String append")
 	{{
-		Recs::string<test_allocator<char>> s(TEST_PART_1);
-		Recs::string<test_allocator<char>> a(TEST_PART_2);
+		A3D::string<test_allocator<char>> s(TEST_PART_1);
+		A3D::string<test_allocator<char>> a(TEST_PART_2);
 		s += a;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
@@ -184,24 +184,24 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Const char concat")
 	{{
-		Recs::string<test_allocator<char>> a(TEST_PART_1);
-		Recs::string<test_allocator<char>> s(a + TEST_PART_2);
+		A3D::string<test_allocator<char>> a(TEST_PART_1);
+		A3D::string<test_allocator<char>> s(a + TEST_PART_2);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
 	check_memory_leaks(); }
 
 	TEST_CASE("String concat")
 	{{
-		Recs::string<test_allocator<char>> a(TEST_PART_1);
-		Recs::string<test_allocator<char>> b(TEST_PART_2);
-		Recs::string<test_allocator<char>> s(a + b);
+		A3D::string<test_allocator<char>> a(TEST_PART_1);
+		A3D::string<test_allocator<char>> b(TEST_PART_2);
+		A3D::string<test_allocator<char>> s(a + b);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
 	check_memory_leaks(); }
 
 	TEST_CASE("Forward iterator")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING;
 		for (auto it = s1.begin(); it != s1.end(); ++it)
 		{
@@ -213,7 +213,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Forward const iterator")
 	{{
-		const Recs::string<test_allocator<char>> s1(TEST_STRING);
+		const A3D::string<test_allocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING;
 		for (auto it = s1.begin(); it != s1.end(); ++it)
 		{
@@ -225,7 +225,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Reverse iterator")
 	{{
-		Recs::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<test_allocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING + sizeof(TEST_STRING) - 1;
 		for (auto it = s1.rbegin(); it != s1.rend(); ++it)
 		{
@@ -237,7 +237,7 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Reverse const iterator")
 	{{
-		const Recs::string<test_allocator<char>> s1(TEST_STRING);
+		const A3D::string<test_allocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING + sizeof(TEST_STRING) - 1;
 		for (auto it = s1.rbegin(); it != s1.rend(); ++it)
 		{
@@ -249,9 +249,9 @@ TEST_SUITE("String View")
 
 	TEST_CASE("Copy-on-write")
 	{{
-		Recs::string<test_allocator<char>> a(TEST_STRING);
+		A3D::string<test_allocator<char>> a(TEST_STRING);
 		REQUIRE(a.refs() == 1);
-		Recs::string<test_allocator<char>> b(a);
+		A3D::string<test_allocator<char>> b(a);
 		REQUIRE(!strcmp(a.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(b.c_str(), TEST_STRING));
 		REQUIRE(a.c_str() == b.c_str());

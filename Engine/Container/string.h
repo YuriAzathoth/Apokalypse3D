@@ -23,7 +23,7 @@
 #include <utility>
 #include "noexcept_allocator.h"
 
-namespace Recs
+namespace A3D
 {
 template <typename Char = char, typename Allocator = A3D::noexcept_allocator<Char>>
 class basic_string
@@ -285,14 +285,14 @@ private:
 };
 
 template <typename Allocator = A3D::noexcept_allocator<char>> using string = basic_string<char, Allocator>;
-} // namespace Recs
+} // namespace A3D
 
 namespace std
 {
 template <typename T, typename Allocator>
-struct hash<Recs::basic_string<T, Allocator>>
+struct hash<A3D::basic_string<T, Allocator>>
 {
-	size_t operator()(const Recs::basic_string<T, Allocator>& str) const noexcept
+	size_t operator()(const A3D::basic_string<T, Allocator>& str) const noexcept
 	{
 		auto chr = str.begin();
 		size_t hash = 0;
