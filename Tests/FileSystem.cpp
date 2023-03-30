@@ -21,12 +21,21 @@
 #include <string>
 #include "doctest/doctest.h"
 #include "IO/FileSystem.h"
+#include "IO/Log.h"
 
 #ifdef __WIN32__
 #define NO_OUTPUT " > nul"
 #else // __WIN32__
 #define NO_OUTPUT " > /dev/null"
 #endif // __WIN32__
+
+static struct LogDisable
+{
+	LogDisable()
+	{
+		SetLogLevel(A3D::LogLevel::ERROR);
+	}
+} _;
 
 TEST_SUITE("FileSystem")
 {

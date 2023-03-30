@@ -44,6 +44,11 @@ inline static const char* GetDate() noexcept
 	return str;
 }
 
+void SetLogLevel(LogLevel logLevel) noexcept
+{
+	g_level = logLevel;
+}
+
 bool LogInit(const char* filepath, LogLevel logLevel) noexcept
 {
 	Mkdir(filepath);

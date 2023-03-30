@@ -22,6 +22,11 @@
 #include "Apokalypse3DAPI.h"
 #include "Apokalypse3DConfig.h"
 
+// Undef ERROR macro if defined in windows.h
+#ifdef ERROR
+#undef ERROR
+#endif // ERROR
+
 namespace A3D
 {
 enum class LogLevel
@@ -35,6 +40,7 @@ enum class LogLevel
 	NONE
 };
 
+APOKALYPSE3DAPI_EXPORT void SetLogLevel(LogLevel logLevel) noexcept;
 APOKALYPSE3DAPI_EXPORT bool LogInit(const char* filepath, LogLevel logLevel) noexcept;
 APOKALYPSE3DAPI_EXPORT void LogDestroy() noexcept;
 
