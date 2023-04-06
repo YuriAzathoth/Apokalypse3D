@@ -16,9 +16,9 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
-#include <SDL2/SDL_video.h>
+#include <SDL.h>
+#include <SDL_syswm.h>
+#include <SDL_video.h>
 
 #ifdef __WIN32__
 #ifdef CreateWindow

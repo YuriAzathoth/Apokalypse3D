@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SDL2/SDL_events.h>
+#include <SDL_events.h>
 
 #include "Graphics/Window.h"
 #include "Graphics/Renderer.h"
