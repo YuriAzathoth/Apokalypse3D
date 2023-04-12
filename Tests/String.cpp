@@ -16,58 +16,11 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <exception>
-#include <iostream>
-#include <string>
-#include <unordered_map>
-
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest/doctest.h"
+#include <string.h>
+#include <doctest/doctest.h>
 #include "Container/string.h"
-
-std::unordered_map<void*, int> g_Allocs;
-
-template <typename T>
-struct test_allocator
-{
-	using value_type = T;
-	using size_type = uint32_t;
-	using difference_type = int32_t;
-
-	T* allocate(size_t size)
-	{
-		T* ret = (T*)malloc(size * sizeof(T));
-		g_Allocs.emplace(ret, 1);
-		return ret;
-	}
-
-	void deallocate(T* ptr, size_t)
-	{
-		auto it = g_Allocs.find(ptr);
-		if (it != g_Allocs.end() && it->second == 1)
-		{
-			g_Allocs.erase(it);
-			free(ptr);
-		}
-		else
-		{
-			std::cerr << "FATAL ERROR: Memory leaks detected: Redundant free!" << std::endl;
-			std::terminate();
-		}
-	}
-};
-
-void check_memory_leaks()
-{
-	if (!g_Allocs.empty())
-	{
-		std::cerr << "FATAL ERROR: Memory leaks detected: Malloc without free!" << std::endl;
-		std::terminate();
-	}
-}
+#include "DebugAllocator.inl"
 
 static constexpr const char TEST_STRING[] = "Hello, World!";
 static constexpr const char TEST_STRING_JUNK[] = "One Two Three Four Five";
@@ -78,130 +31,130 @@ TEST_SUITE("String View")
 {
 	TEST_CASE("Default constructor")
 	{{
-		A3D::string<test_allocator<char>> s;
+		A3D::string<DebugAllocator<char>> s;
 		REQUIRE(s.empty());
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Const char constructor")
 	{{
-		A3D::string<test_allocator<char>> s(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s(TEST_STRING);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Copy constructor")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2(s1);
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2(s1);
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Move constructor")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2(std::move(s1));
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2(std::move(s1));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Const char assignment")
 	{{
-		A3D::string<test_allocator<char>> s;
+		A3D::string<DebugAllocator<char>> s;
 		s = TEST_STRING;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Copy assignment")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2;
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2;
 		s2 = s1;
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Move assignment")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2;
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2;
 		s2 = std::move(s1);
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Const char reassignment")
 	{{
-		A3D::string<test_allocator<char>> s(TEST_STRING_JUNK);
+		A3D::string<DebugAllocator<char>> s(TEST_STRING_JUNK);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING_JUNK));
 		s = TEST_STRING;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Copy reassignment")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2(TEST_STRING_JUNK);
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2(TEST_STRING_JUNK);
 		s2 = s1;
 		REQUIRE(!strcmp(s1.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Move reassignment")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
-		A3D::string<test_allocator<char>> s2(TEST_STRING_JUNK);
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s2(TEST_STRING_JUNK);
 		s2 = std::move(s1);
 		REQUIRE(!strcmp(s2.c_str(), TEST_STRING));
 		REQUIRE(s1.c_str() == nullptr);
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Const char append")
 	{{
-		A3D::string<test_allocator<char>> s(TEST_PART_1);
+		A3D::string<DebugAllocator<char>> s(TEST_PART_1);
 		s += TEST_PART_2;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("String append")
 	{{
-		A3D::string<test_allocator<char>> s(TEST_PART_1);
-		A3D::string<test_allocator<char>> a(TEST_PART_2);
+		A3D::string<DebugAllocator<char>> s(TEST_PART_1);
+		A3D::string<DebugAllocator<char>> a(TEST_PART_2);
 		s += a;
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Const char concat")
 	{{
-		A3D::string<test_allocator<char>> a(TEST_PART_1);
-		A3D::string<test_allocator<char>> s(a + TEST_PART_2);
+		A3D::string<DebugAllocator<char>> a(TEST_PART_1);
+		A3D::string<DebugAllocator<char>> s(a + TEST_PART_2);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("String concat")
 	{{
-		A3D::string<test_allocator<char>> a(TEST_PART_1);
-		A3D::string<test_allocator<char>> b(TEST_PART_2);
-		A3D::string<test_allocator<char>> s(a + b);
+		A3D::string<DebugAllocator<char>> a(TEST_PART_1);
+		A3D::string<DebugAllocator<char>> b(TEST_PART_2);
+		A3D::string<DebugAllocator<char>> s(a + b);
 		REQUIRE(!strcmp(s.c_str(), TEST_STRING));
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Forward iterator")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING;
 		for (auto it = s1.begin(); it != s1.end(); ++it)
 		{
@@ -209,11 +162,11 @@ TEST_SUITE("String View")
 			++s2;
 		}
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Forward const iterator")
 	{{
-		const A3D::string<test_allocator<char>> s1(TEST_STRING);
+		const A3D::string<DebugAllocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING;
 		for (auto it = s1.begin(); it != s1.end(); ++it)
 		{
@@ -221,11 +174,11 @@ TEST_SUITE("String View")
 			++s2;
 		}
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Reverse iterator")
 	{{
-		A3D::string<test_allocator<char>> s1(TEST_STRING);
+		A3D::string<DebugAllocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING + sizeof(TEST_STRING) - 1;
 		for (auto it = s1.rbegin(); it != s1.rend(); ++it)
 		{
@@ -233,11 +186,11 @@ TEST_SUITE("String View")
 			--s2;
 		}
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Reverse const iterator")
 	{{
-		const A3D::string<test_allocator<char>> s1(TEST_STRING);
+		const A3D::string<DebugAllocator<char>> s1(TEST_STRING);
 		const char* s2 = TEST_STRING + sizeof(TEST_STRING) - 1;
 		for (auto it = s1.rbegin(); it != s1.rend(); ++it)
 		{
@@ -245,13 +198,13 @@ TEST_SUITE("String View")
 			--s2;
 		}
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 
 	TEST_CASE("Copy-on-write")
 	{{
-		A3D::string<test_allocator<char>> a(TEST_STRING);
+		A3D::string<DebugAllocator<char>> a(TEST_STRING);
 		REQUIRE(a.refs() == 1);
-		A3D::string<test_allocator<char>> b(a);
+		A3D::string<DebugAllocator<char>> b(a);
 		REQUIRE(!strcmp(a.c_str(), TEST_STRING));
 		REQUIRE(!strcmp(b.c_str(), TEST_STRING));
 		REQUIRE(a.c_str() == b.c_str());
@@ -264,5 +217,5 @@ TEST_SUITE("String View")
 		REQUIRE(a.refs() == 1);
 		REQUIRE(b.refs() == 1);
 	}
-	check_memory_leaks(); }
+	CheckMemoryLeaks(); }
 }
