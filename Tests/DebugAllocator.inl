@@ -37,21 +37,26 @@ struct DebugAllocator : DebugAllocatorBase
 	T* allocate(size_t size)
 	{
 		T* ret = (T*)malloc(size * sizeof(T));
-		s_allocs.emplace(ret, 1);
+		s_allocs[ret] = 1;
 		return ret;
 	}
 
 	void deallocate(T* ptr, size_t)
 	{
 		auto it = s_allocs.find(ptr);
-		REQUIRE(it != s_allocs.end());
-		REQUIRE(it->second == 1);
-		s_allocs.erase(it);
+		REQUIRE_MESSAGE((it != s_allocs.end()) == true, "Memory leaks detected: Free not allocated memory.");
+		REQUIRE_MESSAGE(it->second == 1, "Memory leaks detected: Free already released memory.");
+		--it->second;
 		free(ptr);
 	}
 };
 
 void CheckMemoryLeaks()
 {
-	REQUIRE(DebugAllocatorBase::s_allocs.empty());
+	for (auto it = DebugAllocatorBase::s_allocs.begin(); it != DebugAllocatorBase::s_allocs.end();)
+		if (it->second == 0)
+			it = DebugAllocatorBase::s_allocs.erase(it);
+		else
+			++it;
+	REQUIRE_MESSAGE(DebugAllocatorBase::s_allocs.empty(), "Memory leaks detected: Allocate memory without releasing.");
 }
