@@ -55,6 +55,8 @@ struct noexcept_allocator
 	{
 		free(p);
 	}
+
+	constexpr bool operator==(const noexcept_allocator&) const noexcept { return true; }
 };
 } // namespace A3D
 

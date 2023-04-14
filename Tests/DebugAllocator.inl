@@ -49,6 +49,8 @@ struct DebugAllocator : DebugAllocatorBase
 		--it->second;
 		free(ptr);
 	}
+
+	bool operator==(const DebugAllocator&) const noexcept { return true; }
 };
 
 void CheckMemoryLeaks()
