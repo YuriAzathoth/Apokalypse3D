@@ -279,7 +279,7 @@ private:
 		rebound_allocator_type rebound_allocator(alloc_);
 
 		const size_type size = capacity_ * sizeof(value_type) + get_bitfield_size(capacity_) * sizeof(bitfield_type);
-		rebound_allocator.deallocate(data, size);
+		rebound_allocator.deallocate(reinterpret_cast<uint8_t*>(data), size);
 	}
 
 	void destroy()
