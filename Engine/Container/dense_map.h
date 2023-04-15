@@ -21,12 +21,12 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <bit>
 #include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
 #include "noexcept_allocator.h"
+#include "vector.h"
 
 namespace A3D
 {
@@ -49,260 +49,86 @@ public:
 
 	static constexpr key_type INVALID_KEY = std::numeric_limits<key_type>::max();
 
-	dense_map() :
-		size_(0),
-		capacity_(0)
+	dense_map()
 	{
 		static_assert(std::is_trivial<Key>::value);
 		static_assert(std::is_integral<Key>::value);
 	}
 
 	explicit dense_map(const Allocator& alloc) :
-		size_(0),
-		capacity_(0),
-		alloc_(alloc)
+		data_(alloc)
 	{
 		static_assert(std::is_trivial<Key>::value);
 		static_assert(std::is_integral<Key>::value);
 	}
 
-	dense_map(const dense_map& other) :
-		size_(other.size_),
-		capacity_(other.capacity_),
-		alloc_(other.alloc_)
-	{
-		data_ = alloc_.allocate(capacity_);
+	dense_map(const dense_map& other) : data_(other.data_) { }
+	dense_map(dense_map&& other) noexcept : data_(std::move(other.data_)) {}
 
-		if constexpr (std::is_trivial<value_type>::value)
-			memcpy(data_, other.data_, capacity_ * sizeof(value_type));
-		else
-		{
-			const_iterator src_it = other.begin();
-			const const_iterator src_end = other.end();
-			iterator dst_it = begin();
-			for (; src_it != src_end; ++src_it, ++dst_it)
-				std::construct_at(dst_it, *src_it);
-		}
-	}
+	void operator=(const dense_map& other) { data_ = other.data_; }
+	void operator=(dense_map&& other) noexcept { data_ = std::move(other.data_); }
 
-	dense_map(dense_map&& other) noexcept :
-		data_(other.data_),
-		size_(other.size_),
-		capacity_(other.capacity_),
-		alloc_(other.alloc_)
-	{
-		other.size_ = 0;
-		other.capacity_ = 0;
-	}
+	iterator begin() noexcept { return data_.begin(); }
+	const_iterator begin() const noexcept { return data_.begin(); }
+	const_iterator cbegin() const noexcept { return data_.cbegin(); }
+	iterator end() noexcept { return data_.end(); }
+	const_iterator end() const noexcept { return data_.end(); }
+	const_iterator cend() const noexcept { return data_.cend(); }
 
-	~dense_map() { destroy(); }
-
-	void operator=(const dense_map& other)
-	{
-		destroy();
-
-		size_ = other.size_;
-		capacity_ = other.capacity_;
-		data_ = alloc_.allocate(capacity_);
-
-		if constexpr (std::is_trivial<value_type>::value)
-			memcpy(data_, other.data_, other.capacity_ * sizeof(value_type));
-		else
-		{
-			const_iterator src_it = other.begin();
-			const const_iterator src_end = other.end();
-			iterator dst_it = begin();
-			for (; src_it != src_end; ++src_it, ++dst_it)
-				std::construct_at(dst_it, *src_it);
-		}
-	}
-
-	void operator=(dense_map&& other) noexcept
-	{
-		destroy();
-
-		data_ = other.data_;
-		size_ = other.size_;
-		capacity_ = other.capacity_;
-		other.size_ = 0;
-		other.capacity_ = 0;
-	}
-
-	iterator begin() noexcept { return data_; }
-	const_iterator begin() const noexcept { return data_; }
-	const_iterator cbegin() const noexcept { return data_; }
-	iterator end() noexcept { return data_ + size_; }
-	const_iterator end() const noexcept { return data_ + size_; }
-	const_iterator cend() const noexcept { return data_ + size_; }
-
-	value_type& front() noexcept { return data_[0]; }
-	const value_type& front() const noexcept { return data_[0]; }
-	value_type& back() noexcept { return data_[size_ - 1]; }
-	const value_type& back() const noexcept { return data_[size_ - 1]; }
+	value_type& front() noexcept { return data_.front(); }
+	const value_type& front() const noexcept { return data_.front(); }
+	value_type& back() noexcept { return data_.back(); }
+	const value_type& back() const noexcept { return data_.back(); }
 
 	value_type& operator[](key_type key) noexcept { return data_[key]; }
 	const value_type& operator[](key_type key) const noexcept { return data_[key]; }
 
-	pointer data() noexcept { return data_; }
-	const_pointer data() const noexcept { return data_; }
+	pointer data() noexcept { return data_.data(); }
+	const_pointer data() const noexcept { return data_.data(); }
 
-	size_type size() const noexcept { return size_; }
-	size_type capacity() const noexcept { return capacity_; }
-	[[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+	size_type size() const noexcept { return data_.size(); }
+	size_type capacity() const noexcept { return data_.capacity(); }
+	[[nodiscard]] bool empty() const noexcept { return data_.empty(); }
 
 	template <typename... Args>
-	key_type emplace_back(Args&&... args)
+	key_type emplace(Args&&... args)
 	{
-		if (size_ + 1 > capacity_)
-			if (!reserve(capacity_ + GROW_FACTOR))
-				return INVALID_KEY;
-
-		const key_type key = size_;
-		if constexpr (std::is_trivial<value_type>::value)
-			data_[size_] = { std::forward<Args>(args)... };
-		else
-			std::construct_at(&data_[size_], std::forward<Args>(args)...);
-
-		++size_;
-
-		return size_;
+		const key_type key = static_cast<key_type>(data_.size());
+		const bool res = data_.emplace_back(std::forward<Args>(args)...);
+		return res ? key : INVALID_KEY;
 	}
 
-	key_type push_back(const value_type& value)
+	key_type insert(const value_type& value) { return emplace(value); }
+	key_type insert(value_type&& value) { return emplace(std::move(value)); }
+
+	key_type erase(key_type key)
 	{
-		return emplace_back(value);
-	}
-
-	key_type push_back(value_type&& value)
-	{
-		return emplace_back(std::move(value));
-	}
-
-	void pop_back()
-	{
-		--size_;
-
-		if constexpr (!std::is_trivial<value_type>::value)
-			std::destroy_at(&data_[size_]);
-	}
-
-	key_type erase_swap(key_type key)
-	{
-		const key_type last_key = size_ - 1;
-		const iterator it = data_ + key;
-		const iterator last = data_ + last_key;
-
-		if constexpr (std::is_trivial<value_type>::value)
-			*it = *last;
-		else
-			*it = std::move(*last);
-
-		return last_key;
-	}
-
-	void clear()
-	{
-		destroy();
-
-		size_ = 0;
-		capacity_ = 0;
-	}
-
-	bool reserve(size_type count)
-	{
-		pointer new_data = alloc_.allocate(count);
-		if (new_data == nullptr)
-			return false;
-
-		if (capacity_ > 0)
+		const key_type last_key = data_.size() - 1;
+		const bool is_not_last = key < last_key;
+		if (is_not_last)
 		{
+			const iterator it = data_.begin() + key;
+			const iterator last = data_.begin() + last_key;
 			if constexpr (std::is_trivial<value_type>::value)
-				memcpy(new_data, data_, capacity_ * sizeof(value_type));
+				*it = *last;
 			else
-			{
-				const_iterator src_it = begin();
-				const const_iterator src_end = end();
-				pointer dst_ptr = new_data;
-				for (; src_it != src_end; ++src_it, ++dst_ptr)
-					std::construct_at(dst_ptr, std::move(*src_it));
-			}
+				*it = std::move(*last);
 		}
 
-		data_ = new_data;
-		capacity_ = count;
+		data_.pop_back();
 
-		return true;
+		return is_not_last ? last_key : INVALID_KEY;
 	}
 
-	bool shrink_to_fit()
-	{
-		if (size_ > 0)
-		{
-			pointer new_data = alloc_.allocate(size_);
-			if (new_data == nullptr)
-				return false;
+	void clear() { data_.clear(); }
 
-			if (capacity_ > 0)
-			{
-				if constexpr (std::is_trivial<value_type>::value)
-					memcpy(new_data, data_, size_ * sizeof(value_type));
-				else
-				{
-					const_iterator src_it = begin();
-					pointer dst_ptr = new_data;
-					const pointer dst_end = new_data + size;
-					for (; dst_ptr != dst_end; ++src_it, ++dst_ptr)
-						std::construct_at(dst_ptr, std::move(*src_it));
+	bool reserve(size_type count) { return data_.reserve(count); }
+	bool shrink_to_fit() { return data_.shrink_to_fit(); }
 
-					const const_iterator src_end = end();
-					for (; src_it != src_end; ++src_it)
-						std::destroy_at(src_it);
-				}
-			}
-
-			data_ = new_data;
-		}
-
-		capacity_ = size_;
-
-		return true;
-	}
-
-	size_t memory_size() const noexcept
-	{
-		return sizeof(dense_map) + capacity_ * sizeof(value_type);
-	}
-
-#ifndef NDEBUG
-	void debug_print() const
-	{
-		printf("Dense Map\n");
-		printf("  Size:     %u\n", size_);
-		printf("  Capacity: %u\n", capacity_);
-		for (key_type i = 0; i < size_; ++i)
-			printf("[%u]:\t%u\n", i, data_[i]);
-	}
-#endif // NDEBUG
+	size_t memory_size() const noexcept { return data_.memory_size(); }
 
 private:
-	static constexpr size_type GROW_FACTOR = 16;
-
-	void destroy()
-	{
-		if (capacity_)
-		{
-			if constexpr (!std::is_trivial<value_type>::value)
-				for (iterator it = begin(); it != end(); ++it)
-					std::destroy_at(it);
-
-			alloc_.deallocate(data_, capacity_);
-		}
-	}
-
-	pointer data_;
-	size_type size_;
-	size_type capacity_;
-	allocator_type alloc_;
+	vector<key_type, value_type, allocator_type> data_;
 };
 } // namespace A3D
 

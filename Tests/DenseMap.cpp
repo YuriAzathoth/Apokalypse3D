@@ -46,7 +46,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm.size() == 0);
 		REQUIRE(dm.capacity() == 0);
 
-		dm.push_back(TEST_NUMBERS[0]);
+		dm.insert(TEST_NUMBERS[0]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 1);
 		REQUIRE(dm.capacity() > 0);
@@ -61,7 +61,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_NUMBERS[i]);
+			dm.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 5);
 		REQUIRE(dm.capacity() > 0);
@@ -71,25 +71,7 @@ TEST_SUITE("Dense Map (POD)")
 			REQUIRE(dm[i] == TEST_NUMBERS[i]);
 	} CheckMemoryLeaks(); }
 
-	TEST_CASE("Pop back 1")
-	{{
-		dense_map_pod dm;
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-		REQUIRE(dm.capacity() == 0);
-
-		dm.push_back(TEST_NUMBERS[0]);
-		REQUIRE(dm.empty() == false);
-		REQUIRE(dm.size() == 1);
-		REQUIRE(dm.capacity() > 0);
-		REQUIRE(dm.back() == TEST_NUMBERS[0]);
-
-		dm.pop_back();
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-	} CheckMemoryLeaks(); }
-
-	TEST_CASE("Pop back 5")
+	TEST_CASE("Erase 1")
 	{{
 		dense_map_pod dm;
 		REQUIRE(dm.empty() == true);
@@ -97,57 +79,80 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_NUMBERS[i]);
+			dm.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 5);
 		REQUIRE(dm.capacity() > 0);
 		REQUIRE(dm.back() == TEST_NUMBERS[4]);
 
-		for (unsigned i = 0; i < 5; ++i)
-			REQUIRE(dm[i] == TEST_NUMBERS[i]);
-
-		for (unsigned i = 0; i < 5; ++i)
-		{
-			REQUIRE(dm.back() == TEST_NUMBERS[4 - i]);
-			REQUIRE(dm.empty() == false);
-			REQUIRE(dm.size() == 5 - i);
-			dm.pop_back();
-		}
-
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-	} CheckMemoryLeaks(); }
-
-	TEST_CASE("Erase swap")
-	{{
-		dense_map_pod dm;
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-		REQUIRE(dm.capacity() == 0);
-
-		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_NUMBERS[i]);
+		REQUIRE(dm.erase(2) == 4);
 		REQUIRE(dm.empty() == false);
-		REQUIRE(dm.size() == 5);
+		REQUIRE(dm.size() == 4);
 		REQUIRE(dm.capacity() > 0);
-		REQUIRE(dm.back() == TEST_NUMBERS[4]);
-
-		REQUIRE(dm.erase_swap(2) == dm.size() - 1);
-		dm.pop_back();
+		REQUIRE(dm.back() == TEST_NUMBERS[3]);
 		REQUIRE(dm[0] == TEST_NUMBERS[0]);
 		REQUIRE(dm[1] == TEST_NUMBERS[1]);
 		REQUIRE(dm[2] == TEST_NUMBERS[4]);
 		REQUIRE(dm[3] == TEST_NUMBERS[3]);
 	} CheckMemoryLeaks(); }
 
+	TEST_CASE("Erase 5")
+	{{
+		dense_map_pod dm;
+		REQUIRE(dm.empty() == true);
+		REQUIRE(dm.size() == 0);
+		REQUIRE(dm.capacity() == 0);
+
+		for (unsigned i = 0; i < 5; ++i)
+			dm.insert(TEST_NUMBERS[i]);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 5);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm.back() == TEST_NUMBERS[4]);
+
+		REQUIRE(dm.erase(2) == 4);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 4);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_NUMBERS[0]);
+		REQUIRE(dm[1] == TEST_NUMBERS[1]);
+		REQUIRE(dm[2] == TEST_NUMBERS[4]);
+		REQUIRE(dm[3] == TEST_NUMBERS[3]);
+
+		REQUIRE(dm.erase(1) == 3);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 3);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_NUMBERS[0]);
+		REQUIRE(dm[1] == TEST_NUMBERS[3]);
+		REQUIRE(dm[2] == TEST_NUMBERS[4]);
+
+		REQUIRE(dm.erase(2) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 2);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_NUMBERS[0]);
+		REQUIRE(dm[1] == TEST_NUMBERS[3]);
+
+		REQUIRE(dm.erase(0) == 1);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 1);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_NUMBERS[3]);
+
+		REQUIRE(dm.erase(0) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.empty() == true);
+		REQUIRE(dm.size() == 0);
+	} CheckMemoryLeaks(); }
+
 	TEST_CASE("Clear")
 	{
 		dense_map_pod dm;
-		dm.push_back(TEST_NUMBERS[0]);
-		dm.push_back(TEST_NUMBERS[1]);
-		dm.push_back(TEST_NUMBERS[2]);
-		dm.push_back(TEST_NUMBERS[3]);
-		dm.push_back(TEST_NUMBERS[4]);
+		dm.insert(TEST_NUMBERS[0]);
+		dm.insert(TEST_NUMBERS[1]);
+		dm.insert(TEST_NUMBERS[2]);
+		dm.insert(TEST_NUMBERS[3]);
+		dm.insert(TEST_NUMBERS[4]);
 		REQUIRE(dm.size() == 5);
 
 		dm.clear();
@@ -162,7 +167,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_NUMBERS[i]);
+			dm1.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -191,7 +196,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_NUMBERS[i]);
+			dm1.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -216,7 +221,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_NUMBERS[i]);
+			dm1.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -246,7 +251,7 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_NUMBERS[i]);
+			dm1.insert(TEST_NUMBERS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -282,7 +287,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm.size() == 0);
 		REQUIRE(dm.capacity() == 0);
 
-		dm.push_back(TEST_STRINGS[0]);
+		dm.insert(TEST_STRINGS[0]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 1);
 		REQUIRE(dm.capacity() > 0);
@@ -297,7 +302,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_STRINGS[i]);
+			dm.insert(TEST_STRINGS[i]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 5);
 		REQUIRE(dm.capacity() > 0);
@@ -307,25 +312,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 			REQUIRE(dm[i] == TEST_STRINGS[i]);
 	} CheckMemoryLeaks(); }
 
-	TEST_CASE("Pop back 1")
-	{{
-		dense_map dm;
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-		REQUIRE(dm.capacity() == 0);
-
-		dm.push_back(TEST_STRINGS[0]);
-		REQUIRE(dm.empty() == false);
-		REQUIRE(dm.size() == 1);
-		REQUIRE(dm.capacity() > 0);
-		REQUIRE(dm.back() == TEST_STRINGS[0]);
-
-		dm.pop_back();
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-	} CheckMemoryLeaks(); }
-
-	TEST_CASE("Pop back 5")
+	TEST_CASE("Erase 1")
 	{{
 		dense_map dm;
 		REQUIRE(dm.empty() == true);
@@ -333,54 +320,77 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_STRINGS[i]);
+			dm.insert(TEST_STRINGS[i]);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 5);
 		REQUIRE(dm.capacity() > 0);
 		REQUIRE(dm.back() == TEST_STRINGS[4]);
 
-		for (unsigned i = 0; i < 5; ++i)
-			REQUIRE(dm[i] == TEST_STRINGS[i]);
-
-		for (unsigned i = 0; i < 5; ++i)
-		{
-			REQUIRE(dm.back() == TEST_STRINGS[4 - i]);
-			REQUIRE(dm.empty() == false);
-			REQUIRE(dm.size() == 5 - i);
-			dm.pop_back();
-		}
-
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-	} CheckMemoryLeaks(); }
-
-	TEST_CASE("Erase swap")
-	{{
-		dense_map dm;
-		REQUIRE(dm.empty() == true);
-		REQUIRE(dm.size() == 0);
-		REQUIRE(dm.capacity() == 0);
-
-		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_STRINGS[i]);
+		REQUIRE(dm.erase(2) == 4);
 		REQUIRE(dm.empty() == false);
-		REQUIRE(dm.size() == 5);
+		REQUIRE(dm.size() == 4);
 		REQUIRE(dm.capacity() > 0);
-		REQUIRE(dm.back() == TEST_STRINGS[4]);
-
-		REQUIRE(dm.erase_swap(2) == dm.size() - 1);
-		dm.pop_back();
+		REQUIRE(dm.back() == TEST_STRINGS[3]);
 		REQUIRE(dm[0] == TEST_STRINGS[0]);
 		REQUIRE(dm[1] == TEST_STRINGS[1]);
 		REQUIRE(dm[2] == TEST_STRINGS[4]);
 		REQUIRE(dm[3] == TEST_STRINGS[3]);
 	} CheckMemoryLeaks(); }
 
+	TEST_CASE("Erase 5")
+	{{
+		dense_map dm;
+		REQUIRE(dm.empty() == true);
+		REQUIRE(dm.size() == 0);
+		REQUIRE(dm.capacity() == 0);
+
+		for (unsigned i = 0; i < 5; ++i)
+			dm.insert(TEST_STRINGS[i]);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 5);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm.back() == TEST_STRINGS[4]);
+
+		REQUIRE(dm.erase(2) == 4);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 4);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_STRINGS[0]);
+		REQUIRE(dm[1] == TEST_STRINGS[1]);
+		REQUIRE(dm[2] == TEST_STRINGS[4]);
+		REQUIRE(dm[3] == TEST_STRINGS[3]);
+
+		REQUIRE(dm.erase(1) == 3);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 3);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_STRINGS[0]);
+		REQUIRE(dm[1] == TEST_STRINGS[3]);
+		REQUIRE(dm[2] == TEST_STRINGS[4]);
+
+		REQUIRE(dm.erase(2) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 2);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_STRINGS[0]);
+		REQUIRE(dm[1] == TEST_STRINGS[3]);
+
+		REQUIRE(dm.erase(0) == 1);
+		REQUIRE(dm.empty() == false);
+		REQUIRE(dm.size() == 1);
+		REQUIRE(dm.capacity() > 0);
+		REQUIRE(dm[0] == TEST_STRINGS[3]);
+
+		REQUIRE(dm.erase(0) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.empty() == true);
+		REQUIRE(dm.size() == 0);
+	} CheckMemoryLeaks(); }
+
 	TEST_CASE("Clear")
 	{
 		dense_map dm;
 		for (unsigned i = 0; i < 5; ++i)
-			dm.push_back(TEST_STRINGS[i]);
+			dm.insert(TEST_STRINGS[i]);
 		REQUIRE(dm.size() == 5);
 		dm.clear();
 		REQUIRE(dm.size() == 0);
@@ -394,7 +404,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_STRINGS[i]);
+			dm1.insert(TEST_STRINGS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -423,7 +433,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_STRINGS[i]);
+			dm1.insert(TEST_STRINGS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -448,7 +458,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_STRINGS[i]);
+			dm1.insert(TEST_STRINGS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
@@ -478,7 +488,7 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm1.capacity() == 0);
 
 		for (unsigned i = 0; i < 5; ++i)
-			dm1.push_back(TEST_STRINGS[i]);
+			dm1.insert(TEST_STRINGS[i]);
 		REQUIRE(dm1.empty() == false);
 		REQUIRE(dm1.size() == 5);
 		REQUIRE(dm1.capacity() > 0);
