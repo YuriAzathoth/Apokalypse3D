@@ -37,7 +37,6 @@ class sparse_map
 {
 public:
 	using key_type = Key;
-	using mapped_type = Value;
 	using value_type = Value;
 	using size_type = key_type;
 	using reference = value_type&;
@@ -116,7 +115,8 @@ public:
 		other.capacity_ = 0;
 	}
 
-	mapped_type operator[](key_type key) { return data_[key]; }
+	value_type& operator[](key_type key) noexcept { return data_[key]; }
+	const value_type& operator[](key_type key) const noexcept { return data_[key]; }
 
 	size_type size() const noexcept { return size_; }
 	[[nodiscard]] bool empty() const noexcept { return size_ == 0; }
@@ -128,7 +128,7 @@ public:
 		return capacity_ > 0 && get_bf_value(items_state_[segment], bit);
 	}
 
-	key_type insert(mapped_type value)
+	key_type insert(value_type value)
 	{
 		if (size_ + 1 > capacity_)
 			if (!reserve(capacity_ + BITS_IN_BITFIELD))
