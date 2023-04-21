@@ -101,23 +101,52 @@ public:
 	key_type insert(const value_type& value) { return emplace(value); }
 	key_type insert(value_type&& value) { return emplace(std::move(value)); }
 
-	key_type erase(key_type key)
+	key_type erase(key_type key) { return erase(data_.begin() + key); }
+	key_type erase(const_iterator it) { return erase(const_cast<iterator>(it)); }
+
+	key_type erase(iterator it) noexcept
 	{
-		const key_type last_key = data_.size() - 1;
-		const bool is_not_last = key < last_key;
+		const iterator last = data_.end() - 1;
+		const bool is_not_last = it < last;
 		if (is_not_last)
-		{
-			const iterator it = data_.begin() + key;
-			const iterator last = data_.begin() + last_key;
-			if constexpr (std::is_trivial<value_type>::value)
-				*it = *last;
-			else
-				*it = std::move(*last);
-		}
+			move(it, last);
 
 		data_.pop_back();
 
-		return is_not_last ? last_key : INVALID_KEY;
+		return is_not_last ? last - data_.begin() : INVALID_KEY;
+	}
+
+	void move(key_type dst, key_type src) noexcept { move(begin() + dst, begin() + src); }
+
+	static void move(const_iterator dst, const_iterator src) noexcept
+	{
+		move(const_cast<iterator>(dst), const_cast<iterator>(src));
+	}
+
+	static void move(iterator dst, iterator src) noexcept
+	{
+		if constexpr (std::is_trivial<value_type>::value)
+			*dst = *src;
+		else
+			*dst = std::move(*src);
+	}
+
+	void swap_items(key_type left, key_type right) noexcept
+	{
+		swap_items(begin() + left, begin() + right);
+	}
+
+	static void swap_items(const_iterator left, const_iterator right) noexcept
+	{
+		swap_items(const_cast<iterator>(left), const_cast<iterator>(right));
+	}
+
+	static void swap_items(iterator left, iterator right) noexcept
+	{
+		value_type temp;
+		move(&temp, left);
+		move(left, right);
+		move(right, &temp);
 	}
 
 	void clear() { data_.clear(); }

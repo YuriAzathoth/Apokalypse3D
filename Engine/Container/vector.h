@@ -178,10 +178,9 @@ public:
 
 	void pop_back()
 	{
-		--size_;
-
 		if constexpr (!std::is_trivial<value_type>::value)
-			std::destroy_at(&data_[size_]);
+			std::destroy_at(&back());
+		--size_;
 	}
 
 	void clear()
@@ -234,7 +233,7 @@ public:
 				{
 					const_iterator src_it = begin();
 					pointer dst_ptr = new_data;
-					const pointer dst_end = new_data + size;
+					const pointer dst_end = new_data + size();
 					for (; dst_ptr != dst_end; ++src_it, ++dst_ptr)
 						std::construct_at(dst_ptr, std::move(*src_it));
 

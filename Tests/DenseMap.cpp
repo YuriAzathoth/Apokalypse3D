@@ -134,13 +134,13 @@ TEST_SUITE("Dense Map (POD)")
 		REQUIRE(dm[0] == TEST_NUMBERS[0]);
 		REQUIRE(dm[1] == TEST_NUMBERS[3]);
 
-		REQUIRE(dm.erase(0) == 1);
+		REQUIRE(dm.erase((int)0) == 1);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 1);
 		REQUIRE(dm.capacity() > 0);
 		REQUIRE(dm[0] == TEST_NUMBERS[3]);
 
-		REQUIRE(dm.erase(0) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.erase((int)0) == dense_map_pod::INVALID_KEY);
 		REQUIRE(dm.empty() == true);
 		REQUIRE(dm.size() == 0);
 	} CheckMemoryLeaks(); }
@@ -375,13 +375,13 @@ TEST_SUITE("Dense Map (Non-POD)")
 		REQUIRE(dm[0] == TEST_STRINGS[0]);
 		REQUIRE(dm[1] == TEST_STRINGS[3]);
 
-		REQUIRE(dm.erase(0) == 1);
+		REQUIRE(dm.erase((int)0) == 1);
 		REQUIRE(dm.empty() == false);
 		REQUIRE(dm.size() == 1);
 		REQUIRE(dm.capacity() > 0);
 		REQUIRE(dm[0] == TEST_STRINGS[3]);
 
-		REQUIRE(dm.erase(0) == dense_map_pod::INVALID_KEY);
+		REQUIRE(dm.erase((int)0) == dense_map_pod::INVALID_KEY);
 		REQUIRE(dm.empty() == true);
 		REQUIRE(dm.size() == 0);
 	} CheckMemoryLeaks(); }

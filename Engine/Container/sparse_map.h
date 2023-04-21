@@ -150,9 +150,6 @@ public:
 		disable_bf_bit(items_state_[segment], bit);
 
 		--size_;
-
-		if (segment + 1 == get_bitfield_size(capacity_))
-			shrink_to_fit();
 	}
 
 	void clear()
