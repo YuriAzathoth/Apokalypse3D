@@ -25,3 +25,6 @@
 [submodule "ThirdParty/cglm"]
 	path = ThirdParty/cglm
 	url = https://github.com/recp/cglm
+[submodule "ThirdParty/Bullet"]
+	path = ThirdParty/Bullet
+	url = https://github.com/bulletphysics/bullet3
