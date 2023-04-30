@@ -118,6 +118,7 @@ public:
 	value_type& operator[](key_type key) noexcept { return data_[key]; }
 	const value_type& operator[](key_type key) const noexcept { return data_[key]; }
 
+	size_type capacity() const noexcept { return capacity_; }
 	size_type size() const noexcept { return size_; }
 	[[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
