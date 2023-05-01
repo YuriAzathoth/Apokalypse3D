@@ -16,243 +16,203 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/*#include <bgfx/bgfx.h>
 #include <bx/allocator.h>
+#include <bx/bounds.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
 #include <meshoptimizer/src/meshoptimizer.h>
-#include "Graphics/GeometryComponents.h"
-#include "Graphics/MeshComponents.h"
-#include "Graphics/RendererComponents.h"
-#include "MeshCacheComponents.h"
-#include "MeshCacheSystems.h"
 #include "IO/Log.h"
-#include "IO/SyncCacheComponents.h"
-
-#define BUFFER_SIZE 256
-
-using namespace A3D::Components::Cache::Mesh;
-using namespace A3D::Components::Geometry;
-using namespace A3D::Components::Mesh;
-using namespace A3D::Components::Renderer;
-using namespace A3D::Components::SyncCache;
+#include "Mesh.h"
 
 namespace bgfx
 {
-int32_t read(bx::ReaderI* _reader, bgfx::VertexLayout& _layout, bx::Error* _err);
+int32_t read(bx::ReaderI* reader, bgfx::VertexLayout& layout, bx::Error* err);
 }
 
-static constexpr const unsigned CHUNK_VERTEX_BUFFER = BX_MAKEFOURCC('V', 'B', ' ', 0x1);
-static constexpr const unsigned CHUNK_VERTEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('V', 'B', 'C', 0x0);
-static constexpr const unsigned CHUNK_INDEX_BUFFER = BX_MAKEFOURCC('I', 'B', ' ', 0x0);
-static constexpr const unsigned CHUNK_INDEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('I', 'B', 'C', 0x1);
-static constexpr const unsigned CHUNK_PRIMITIVE = BX_MAKEFOURCC('P', 'R', 'I', 0x0);
-
-static void destroy_mesh(MeshGroup& group)
+namespace A3D
 {
-	bgfx::destroy(group.vbo);
-	bgfx::destroy(group.ebo);
+inline static bool IsChunkValid(uint32_t chunk)
+{
+	return (chunk == (uint32_t)MeshFileChunk::VERTEX_BUFFER) ||
+			(chunk == (uint32_t)MeshFileChunk::VERTEX_BUFFER_COMPRESSED) ||
+			(chunk == (uint32_t)MeshFileChunk::INDEX_BUFFER) ||
+			(chunk == (uint32_t)MeshFileChunk::INDEX_BUFFER_COMPRESSED) ||
+			(chunk == (uint32_t)MeshFileChunk::PRIMITIVE);
 }
 
-static void clear_meshes(flecs::entity e)
+inline static void AabbFromBgfx(BoundingBox& dst, bx::Aabb& src)
 {
-	e.world().filter_builder<MeshGroup>()
-		.term<const MeshStorage>().parent()
-		.build()
-		.each(destroy_mesh);
+	dst.lo[0] = src.min.x;
+	dst.lo[1] = src.min.y;
+	dst.lo[2] = src.min.z;
+
+	dst.hi[0] = src.max.x;
+	dst.hi[1] = src.max.y;
+	dst.hi[2] = src.max.z;
 }
 
-A3D::MeshCacheSystems::MeshCacheSystems(flecs::world& world)
+inline static void SphereFromBgfx(BoundingSphere& dst, bx::Sphere& src)
 {
-	world.module<MeshCacheSystems>("A3D::Systems::Cache::Mesh");
-	world.import<GeometryComponents>();
-	world.import<MeshCacheComponents>();
-	world.import<MeshComponents>();
-	world.import<RendererComponents>();
-	world.import<SyncCacheComponents>();
+	dst.center[0] = src.center.x;
+	dst.center[1] = src.center.y;
+	dst.center[2] = src.center.z;
 
-	findFile_ = world.system<const GetModelFile>("FindFile")
-				.kind(flecs::OnLoad)
-				.no_readonly()
-				.each([](flecs::entity e, const GetModelFile& file)
+	dst.radius = src.radius;
+}
+
+bool OpenMeshFile(MeshFileReader& file, const char* filename)
+{
+	file.allocator = new bx::DefaultAllocator;
+	file.reader = new bx::FileReader;
+	return bx::open(file.reader, filename);
+}
+
+void CloseMeshFile(MeshFileReader& file)
+{
+	bx::close(file.reader);
+	delete file.reader;
+	delete file.allocator;
+}
+
+MeshFileChunk GetNextMeshFileChunk(MeshFileReader& file)
+{
+	bx::Error err;
+	uint32_t chunk;
+	const bool read_success = bx::read(file.reader, chunk, &err) == 4 && err.isOk();
+	return (read_success && IsChunkValid(chunk)) ? (static_cast<MeshFileChunk>(chunk)) : MeshFileChunk::EOF;
+}
+
+void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, BoundingBox& box, BoundingSphere& sphere, bool compressed)
+{
+	bx::Error err;
+	bx::Aabb bx_aabb;
+	bx::Obb bx_obb;
+	bx::Sphere bx_sphere;
+
+	bx::read(file.reader, bx_sphere, &err);
+	bx::read(file.reader, bx_aabb, &err);
+	bx::read(file.reader, bx_obb, &err);
+
+	AabbFromBgfx(box, bx_aabb);
+	SphereFromBgfx(sphere, bx_sphere);
+
+	bgfx::VertexLayout vertex_layout;
+	uint16_t vertices_count;
+	bgfx::read(file.reader, vertex_layout, &err);
+	bx::read(file.reader, vertices_count, &err);
+	const bgfx::Memory* mem = bgfx::alloc(vertices_count * vertex_layout.getStride());
+
+	if (compressed)
 	{
-		flecs::world w = e.world();
-		flecs::entity storage = w.singleton<MeshStorage>();
-		flecs::entity cached = storage.lookup(file.filename.value);
-		if (cached == 0)
-		{
-			w.defer_suspend();
-			cached = w.entity(file.filename.value).child_of(storage).add<LoadModelFile>();
-			w.defer_resume();
-		}
-		cached.add<SetAfterLoad>(e);
-		e.remove<GetModelFile>();
-	});
+		uint32_t compressed_size;
+		bx::read(file.reader, compressed_size, &err);
 
-	loadFile_ = world.system<>("LoadFile")
-				.term<const LoadModelFile>()
-				.term<const Renderer>().singleton()
-				.kind(flecs::PostLoad)
-				.multi_threaded()
-				.each([](flecs::entity e)
+		void* compressed_data = BX_ALLOC(file.allocator, compressed_size);
+		bx::read(file.reader, compressed_data, compressed_size, &err);
+
+		meshopt_decodeVertexBuffer(mem->data,
+								   vertices_count,
+								   vertex_layout.getStride(),
+								   (uint8_t*)compressed_data,
+								   compressed_size);
+
+		BX_FREE(file.allocator, compressed_data);
+	}
+	else
+		bx::read(file.reader, mem->data, mem->size, &err);
+
+	group.vbo = bgfx::createVertexBuffer(mem, vertex_layout);
+}
+
+void ReadMeshIndexBuffer(MeshFileReader& file, MeshGroup& group, bool compressed)
+{
+	bx::Error err;
+	uint32_t indices_count;
+
+	bx::read(file.reader, indices_count, &err);
+	const bgfx::Memory* mem = bgfx::alloc(indices_count * sizeof(uint16_t));
+
+	if (compressed)
 	{
-		bx::DefaultAllocator alloc;
-		bx::FileReader filereader;
+		uint32_t compressed_size;
+		bx::read(file.reader, compressed_size, &err);
 
-		const char* filename = e.name();
-		LogInfo("Loading model \"%s\"..", filename);
-		flecs::world w = e.world();
-		if (!bx::open(&filereader, filename))
-		{
-			LogError("Could not find model file \"%s\".", filename);
-			e.destruct();
-			return;
-		}
+		void* compressed_data = BX_ALLOC(file.allocator, compressed_size);
+		bx::read(file.reader, compressed_data, compressed_size, &err);
 
-		bx::Error err;
-		Aabb aabb;
-		MeshGroup group;
-		MeshPrimitive prim;
-		Obb obb;
-		Sphere sphere;
-		VertexLayout layout;
-		const bgfx::Memory* mem;
-		void* compressed;
-		void* str;
-		unsigned chunk;
-		unsigned size;
-		unsigned i;
-		unsigned short len;
-		unsigned short num;
-		flecs::entity g;
-		flecs::entity p;
-		while (bx::read(&filereader, chunk, &err) == 4 && err.isOk())
-		{
-			switch (chunk)
-			{
-			case CHUNK_VERTEX_BUFFER:
-				bx::read(&filereader, sphere.sphere, &err);
-				bx::read(&filereader, aabb.aabb, &err);
-				bx::read(&filereader, obb.obb, &err);
-				bgfx::read(&filereader, layout.layout, &err);
-				bx::read(&filereader, group.verticesCount, &err);
-				mem = bgfx::alloc(group.verticesCount * layout.layout.getStride());
-				bx::read(&filereader, mem->data, mem->size, &err);
-				group.vbo = bgfx::createVertexBuffer(mem, layout.layout);
-				break;
-			case CHUNK_VERTEX_BUFFER_COMPRESSED:
-				bx::read(&filereader, sphere.sphere, &err);
-				bx::read(&filereader, aabb.aabb, &err);
-				bx::read(&filereader, obb.obb, &err);
-				bgfx::read(&filereader, layout.layout, &err);
-				bx::read(&filereader, group.verticesCount, &err);
-				mem = bgfx::alloc(group.verticesCount * layout.layout.getStride());
-				bx::read(&filereader, size, &err);
-				compressed = BX_ALLOC(&alloc, size);
-				bx::read(&filereader, compressed, size, &err);
-				meshopt_decodeVertexBuffer(mem->data,
-										   group.verticesCount,
-										   layout.layout.getStride(),
-										   (uint8_t*)compressed,
-										   size);
-				BX_FREE(&alloc, compressed);
-				group.vbo = bgfx::createVertexBuffer(mem, layout.layout);
-				break;
-			case CHUNK_INDEX_BUFFER:
-				bx::read(&filereader, group.indicesCount, &err);
-				mem = bgfx::alloc(group.indicesCount * sizeof(uint16_t));
-				bx::read(&filereader, mem->data, mem->size, &err);
-				group.ebo = bgfx::createIndexBuffer(mem);
-				break;
-			case CHUNK_INDEX_BUFFER_COMPRESSED:
-				bx::read(&filereader, group.indicesCount, &err);
-				mem = bgfx::alloc(group.indicesCount * sizeof(uint16_t));
-				bx::read(&filereader, size, &err);
-				compressed = BX_ALLOC(&alloc, size);
-				bx::read(&filereader, compressed, size, &err);
-				meshopt_decodeIndexBuffer(mem->data,
-										  group.indicesCount,
-										  sizeof(uint16_t),
-										  (uint8_t*)compressed,
-										  size);
-				BX_FREE(&alloc, compressed);
-				group.ebo = bgfx::createIndexBuffer(mem);
-				break;
-			case CHUNK_PRIMITIVE:
-				bx::read(&filereader, len, &err);
-				if (len)
-				{
-//					str = BX_ALLOC(&alloc, len);
-//					BX_FREE(&alloc, str);
-				}
-				g = w.entity().child_of(e)
-					.set<MeshGroup>(group)
-					.set<Aabb>(aabb)
-					.set<Obb>(obb)
-					.set<Sphere>(sphere)
-					.set<VertexLayout>(layout);
-				bx::read(&filereader, num, &err);
-				for (i = 0; i < num; ++i)
-				{
-					bx::read(&filereader, len, &err);
-					if (len)
-					{
-//						str = BX_ALLOC(&alloc, len);
-//						BX_FREE(&alloc, str);
-					}
-					bx::read(&filereader, prim.startIndex, &err);
-					bx::read(&filereader, prim.indicesCount, &err);
-					bx::read(&filereader, prim.startVertex, &err);
-					bx::read(&filereader, prim.verticesCount, &err);
-					bx::read(&filereader, sphere.sphere, &err);
-					bx::read(&filereader, aabb.aabb, &err);
-					bx::read(&filereader, obb.obb, &err);
-					p = w.entity().child_of(g)
-						.set<MeshPrimitive>(prim)
-						.set<Aabb>(aabb)
-						.set<Obb>(obb)
-						.set<Sphere>(sphere);
-				}
-				break;
-			default:
-				LogError("Unsupported model file format: \"%s\".", filename);
-				bx::close(&filereader);
-				e.destruct();
-				return;
-			}
-		}
-		bx::close(&filereader);
-		e.remove<LoadModelFile>();
-		LogInfo("Model \"%s\" has been loaded.", filename);
-	});
+		meshopt_decodeIndexBuffer(mem->data,
+								  indices_count,
+								  sizeof(uint16_t),
+								  (uint8_t*)compressed_data,
+								  compressed_size);
 
-	setAfterLoad_ = world.system<>("SetAfterLoad")
-					.term<const SetAfterLoad>(flecs::Wildcard)
-					.term<const MeshStorage>().parent()
-					.term<const LoadModelFile>().not_()
-					.kind(flecs::OnStore)
-					.multi_threaded()
-					.each([](flecs::iter& it, size_t i)
+		BX_FREE(file.allocator, compressed_data);
+	}
+	else
+		bx::read(file.reader, mem->data, mem->size, &err);
+
+	group.ebo = bgfx::createIndexBuffer(mem);
+}
+
+bool ReadMeshPrimitiveName(MeshFileReader& file, char* primitive_name, uint16_t max_size)
+{
+	bx::Error err;
+	uint16_t name_size;
+	bx::read(file.reader, name_size, &err);
+
+	if (name_size == 0)
+		return true;
+	if (name_size <= max_size)
 	{
-		LogTrace("Setting model after loaded...");
-		flecs::world w = it.world();
-		flecs::id pair = it.pair(1);
-		flecs::entity cached = it.entity(i);
-		flecs::entity target = pair.second();
-		cached.children([&target, &w](flecs::entity child)
-		{
-			const MeshGroup* group = child.get<MeshGroup>();
-			ecs_assert(group != nullptr, -1, "Could not set not loaded mesh.");
-			w.entity().child_of(target).set<MeshGroup>(*group);
-		});
-		target.add<Model>();
-		cached.remove(pair);
-	});
+		bx::read(file.reader, primitive_name, &err);
+		return true;
+	}
+	else
+		return false;
+}
 
-	clear_ = world.observer<>("Clear")
-			   .term<const MeshStorage>()
-			   .event(flecs::UnSet)
-			   .each(clear_meshes);
+uint16_t ReadMeshGroupsCount(MeshFileReader& file)
+{
+	bx::Error err;
+	uint16_t groups_count;
+	bx::read(file.reader, groups_count, &err);
+	return groups_count;
+}
 
-	world.add<MeshStorage>();
-}*/
+bool ReadMeshGroupMaterial(MeshFileReader& file, char* material_name, uint16_t max_size)
+{
+	bx::Error err;
+	uint16_t material_size;
+	bx::read(file.reader, material_size, &err);
+
+	if (material_size == 0)
+		return true;
+	if (material_size <= max_size)
+	{
+		bx::read(file.reader, material_name, &err);
+		return true;
+	}
+	else
+		return false;
+}
+
+void ReadMeshPrimitive(MeshFileReader& file, MeshPrimitive& primitive, BoundingBox& box, BoundingSphere& sphere)
+{
+	bx::Error err;
+	bx::read(file.reader, primitive.start_index, &err);
+	bx::read(file.reader, primitive.indices_count, &err);
+	bx::read(file.reader, primitive.start_vertex, &err);
+	bx::read(file.reader, primitive.vertices_count, &err);
+
+	bx::Aabb bx_aabb;
+	bx::Obb bx_obb;
+	bx::Sphere bx_sphere;
+
+	bx::read(file.reader, bx_sphere, &err);
+	bx::read(file.reader, bx_aabb, &err);
+	bx::read(file.reader, bx_obb, &err);
+
+	AabbFromBgfx(box, bx_aabb);
+	SphereFromBgfx(sphere, bx_sphere);
+}
+} // namespace A3D
