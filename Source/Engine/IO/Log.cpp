@@ -104,7 +104,7 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 	char message[BUFFER_SIZE];
 	char* messagetop = message + sprintf(message, "%s: %s: ", GetDate(), type);
 
-#ifndef APOKALYPSE_LOG_FILELINE
+#ifdef APOKALYPSE_LOG_FILELINE
 	messagetop += sprintf(messagetop, "FILE %s LINE %u: ", file, line);
 #endif // APOKALYPSE_LOG_FILELINE
 
