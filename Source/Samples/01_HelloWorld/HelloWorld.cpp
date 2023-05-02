@@ -17,7 +17,6 @@
 */
 
 #include <SDL_events.h>
-
 #include "Graphics/Window.h"
 #include "Graphics/Renderer.h"
 #include "System/SystemEventListener.h"
@@ -39,12 +38,11 @@ int main()
 
 	CreateVideo();
 
-	Window wnd;
 	WindowResolution wres{800, 600};
-	CreateWindow(wnd, "Hello, World!", wres, WindowMode::WINDOWED, false);
+	CreateWindow("Hello, World!", wres, WindowMode::WINDOWED, false);
 
 	WindowPlatformData wpd;
-	GetWindowPlatformData(wpd, wnd);
+	GetWindowPlatformData(wpd);
 
 	RendererGpu gpu{};
 	RendererResolution rres{wres.width, wres.height};
@@ -64,7 +62,7 @@ int main()
 
 	DestroyRendererThreadContexts(contexts);
 	DestroyRenderer();
-	DestroyWindow(wnd);
+	DestroyWindow();
 	DestroyVideo();
 	DestroySystemEventListener();
 

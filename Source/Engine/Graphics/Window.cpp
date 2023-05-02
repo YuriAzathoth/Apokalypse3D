@@ -32,6 +32,9 @@
 #include "IO/Log.h"
 #include "Window.h"
 
+static SDL_Window* g_window = nullptr;
+static bool g_video_init = false;
+
 namespace A3D
 {
 bool CreateVideo()
@@ -42,22 +45,25 @@ bool CreateVideo()
 		LogFatal("Failed to initialize SDL Video: %s.", SDL_GetError());
 		return false;
 	}
+	g_video_init = true;
 	LogInfo("SDL video initialized.");
 	return true;
 }
 
 void DestroyVideo()
 {
+	Assert(g_video_init == true, "Failed to shutdown video subsystem that has not been initialized.");
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	LogInfo("SDL video destroyed.");
 }
 
-bool CreateWindow(Window& window,
-				  const char* title,
+bool CreateWindow(const char* title,
 				  const WindowResolution& resolution,
 				  WindowMode mode,
 				  bool resizeable)
 {
+	Assert(g_video_init == true, "Failed to create window: video subsystem has not been initialized.");
+
 	LogDebug("Initializing SDL window...");
 
 	Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI;
@@ -68,24 +74,25 @@ bool CreateWindow(Window& window,
 		[[fallthrough]];
 	case WindowMode::BORDERLESS:
 		flags |= SDL_WINDOW_BORDERLESS;
+		break;
 	default:
 		; // No flags
 	}
 
-	window.window = SDL_CreateWindow(title,
-									 SDL_WINDOWPOS_CENTERED,
-									 SDL_WINDOWPOS_CENTERED,
-									 resolution.width,
-									 resolution.height,
-									 flags);
-	if (window.window == nullptr)
+	g_window = SDL_CreateWindow(title,
+								SDL_WINDOWPOS_CENTERED,
+								SDL_WINDOWPOS_CENTERED,
+								resolution.width,
+								resolution.height,
+								flags);
+	if (g_window == nullptr)
 	{
 		LogFatal("Failed to create SDL window: %s.", SDL_GetError());
 		return false;
 	}
 
 	if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
-		SDL_SetWindowGrab(window.window, SDL_TRUE);
+		SDL_SetWindowGrab(g_window, SDL_TRUE);
 
 	LogInfo("SDL Window initialized.");
 	LogDebug("\tResolution: %ux%u;", resolution.width, resolution.height);
@@ -109,9 +116,13 @@ bool CreateWindow(Window& window,
 	return true;
 }
 
-void DestroyWindow(Window& window)
+void DestroyWindow()
 {
-	SDL_DestroyWindow(window.window);
+	Assert(g_window != nullptr, "Failed to destroy window that has not been created.");
+
+	SDL_DestroyWindow(g_window);
+	g_window = nullptr;
+
 	LogInfo("SDL window destroyed.");
 }
 
@@ -135,12 +146,14 @@ bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id)
 	return true;
 }
 
-bool GetWindowPlatformData(WindowPlatformData& pd, const Window& window)
+bool GetWindowPlatformData(WindowPlatformData& pd)
 {
+	Assert(g_window != nullptr, "Failed to get window platform data: window has not been created.");
+
 #if !BX_PLATFORM_EMSCRIPTEN
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
-	if (!SDL_GetWindowWMInfo(window.window, &wmi))
+	if (!SDL_GetWindowWMInfo(g_window, &wmi))
 	{
 		LogFatal("Failed to get SDL Window WM info: %s.", SDL_GetError());
 		return false;

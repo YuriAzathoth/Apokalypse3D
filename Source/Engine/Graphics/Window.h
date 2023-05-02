@@ -22,15 +22,8 @@
 #include <stdint.h>
 #include "Apokalypse3DAPI.h"
 
-struct SDL_Window;
-
 namespace A3D
 {
-struct Window
-{
-	SDL_Window* window;
-};
-
 enum WindowMode : uint8_t
 {
 	FULLSCREEN,
@@ -54,16 +47,15 @@ struct WindowResolution
 APOKALYPSE3DAPI_EXPORT bool CreateVideo();
 APOKALYPSE3DAPI_EXPORT void DestroyVideo();
 
-APOKALYPSE3DAPI_EXPORT bool CreateWindow(Window& window,
-										 const char* title,
+APOKALYPSE3DAPI_EXPORT bool CreateWindow(const char* title,
 										 const WindowResolution& resolution,
 										 WindowMode mode,
 										 bool resizeable);
 
-APOKALYPSE3DAPI_EXPORT void DestroyWindow(Window& window);
+APOKALYPSE3DAPI_EXPORT void DestroyWindow();
 
 APOKALYPSE3DAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id);
-APOKALYPSE3DAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd, const Window& window);
+APOKALYPSE3DAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);
 } // namespace A3D
 
 #endif // GRAPHICS_WINDOW_H
