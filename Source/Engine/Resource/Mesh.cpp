@@ -40,18 +40,18 @@ inline static bool IsChunkValid(uint32_t chunk)
 			(chunk == (uint32_t)MeshFileChunk::PRIMITIVE);
 }
 
-inline static void AabbFromBgfx(BoundingBox& dst, bx::Aabb& src)
+inline static void AabbFromBgfx(Box& dst, bx::Aabb& src)
 {
-	dst.lo[0] = src.min.x;
-	dst.lo[1] = src.min.y;
-	dst.lo[2] = src.min.z;
+	dst.min[0] = src.min.x;
+	dst.min[1] = src.min.y;
+	dst.min[2] = src.min.z;
 
-	dst.hi[0] = src.max.x;
-	dst.hi[1] = src.max.y;
-	dst.hi[2] = src.max.z;
+	dst.max[0] = src.max.x;
+	dst.max[1] = src.max.y;
+	dst.max[2] = src.max.z;
 }
 
-inline static void SphereFromBgfx(BoundingSphere& dst, bx::Sphere& src)
+inline static void SphereFromBgfx(Sphere& dst, bx::Sphere& src)
 {
 	dst.center[0] = src.center.x;
 	dst.center[1] = src.center.y;
@@ -82,7 +82,7 @@ MeshFileChunk GetNextMeshFileChunk(MeshFileReader& file)
 	return (read_success && IsChunkValid(chunk)) ? (static_cast<MeshFileChunk>(chunk)) : MeshFileChunk::EOF;
 }
 
-void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, BoundingBox& box, BoundingSphere& sphere, bool compressed)
+void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphere& sphere, bool compressed)
 {
 	bx::Error err;
 	bx::Aabb bx_aabb;
@@ -196,7 +196,7 @@ bool ReadMeshGroupMaterial(MeshFileReader& file, char* material_name, uint16_t m
 		return false;
 }
 
-void ReadMeshPrimitive(MeshFileReader& file, MeshPrimitive& primitive, BoundingBox& box, BoundingSphere& sphere)
+void ReadMeshPrimitive(MeshFileReader& file, MeshPrimitive& primitive, Box& box, Sphere& sphere)
 {
 	bx::Error err;
 	bx::read(file.reader, primitive.start_index, &err);

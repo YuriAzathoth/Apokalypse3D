@@ -16,20 +16,21 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENE_SCENE_PRIMITIVES_H
-#define SCENE_SCENE_PRIMITIVES_H
+#ifndef GRAPHICS_GEOMETRY_H
+#define GRAPHICS_GEOMETRY_H
 
+#include <bgfx/bgfx.h>
 #include <cglm/types.h>
 
 namespace A3D
 {
-struct BoundingBox
+struct Box
 {
-	vec3 hi;
-	vec3 lo;
+	vec3 min;
+	vec3 max;
 };
 
-struct BoundingSphere
+struct Sphere
 {
 	vec3 center;
 	float radius;
@@ -44,6 +45,20 @@ struct LocalTransform
 {
 	mat4 transform;
 };
+
+struct MeshGroup
+{
+	bgfx::IndexBufferHandle ebo;
+	bgfx::VertexBufferHandle vbo;
+};
+
+struct MeshPrimitive
+{
+	uint32_t start_index;
+	uint32_t indices_count;
+	uint16_t start_vertex;
+	uint16_t vertices_count;
+};
 } // namespace A3D
 
-#endif // SCENE_SCENE_PRIMITIVES_H
+#endif // GRAPHICS_GEOMETRY_H

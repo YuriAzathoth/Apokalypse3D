@@ -24,7 +24,7 @@
 #include "Container/dense_map.h"
 #include "Container/sparse_map.h"
 #include "Container/vector.h"
-#include "ScenePrimitives.h"
+#include "Graphics/Geometry.h"
 
 namespace A3D
 {
@@ -106,8 +106,8 @@ private:
 	struct Generation
 	{
 		dense_map<PositionIndex, GlobalTransform> global_transforms;
-		dense_map<PositionIndex, BoundingBox> bounding_boxes;
-		dense_map<PositionIndex, BoundingSphere> bounding_spheres;
+		dense_map<PositionIndex, Box> bounding_boxes;
+		dense_map<PositionIndex, Sphere> bounding_spheres;
 		dense_map<PositionIndex, PositionIndex> first_children;
 		dense_map<PositionIndex, NodeHandleId> external_handles;
 		PositionIndex first_dirty;
