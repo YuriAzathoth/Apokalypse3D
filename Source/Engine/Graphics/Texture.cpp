@@ -26,7 +26,10 @@
 
 namespace A3D
 {
-inline static void ReleaseImage(void*, void* userData);
+static void ReleaseImage(void*, void* image)
+{
+	bimg::imageFree((bimg::ImageContainer*)image);
+}
 
 bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename)
 {
@@ -104,6 +107,4 @@ bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename)
 }
 
 void DestroyTexture(bgfx::TextureHandle& texture) { bgfx::destroy(texture); }
-
-inline static void ReleaseImage(void*, void* data) { bimg::imageFree((bimg::ImageContainer*)data); }
 } // namespace A3D
