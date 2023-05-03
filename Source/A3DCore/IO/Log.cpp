@@ -16,7 +16,6 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <bx/debug.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,11 +125,11 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 		}
 	}
 
-#ifndef NDEBUG
-	if (level >= LogLevel::FATAL)
-		bx::debugBreak();
-#else // NDEBUG
+//#ifndef NDEBUG
+//	if (level >= LogLevel::FATAL)
+//		bx::debugBreak();
+//#else // NDEBUG
 		std::terminate();
-#endif // NDEBUG
+//#endif // NDEBUG
 }
 } // namespace A3D

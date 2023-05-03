@@ -20,11 +20,11 @@
 #define SCENE_SCENE_GRAPH_H
 
 #include <stdint.h>
-#include "Apokalypse3DAPI.h"
+#include "A3DCoreAPI.h"
+#include "Common/Geometry.h"
 #include "Container/dense_map.h"
 #include "Container/sparse_map.h"
 #include "Container/vector.h"
-#include "Graphics/Geometry.h"
 
 namespace A3D
 {
@@ -35,7 +35,7 @@ struct NodeHandle
 	NodeHandleId handle;
 };
 
-class APOKALYPSE3DAPI_EXPORT SceneGraph
+class A3DCOREAPI_EXPORT SceneGraph
 {
 public:
 	using SizeType = NodeHandleId;

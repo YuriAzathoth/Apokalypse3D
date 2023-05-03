@@ -21,8 +21,9 @@
 
 #include <bgfx/bgfx.h>
 #include <bx/macros.h>
-#include "Apokalypse3DAPI.h"
-#include "Graphics/Geometry.h"
+#include "A3DGraphicsAPI.h"
+#include "Common/Geometry.h"
+#include "Common/Model.h"
 
 namespace bx
 {
@@ -51,20 +52,20 @@ struct MeshFileReader
 	bx::AllocatorI* allocator;
 };
 
-APOKALYPSE3DAPI_EXPORT bool OpenMeshFile(MeshFileReader& file, const char* filename);
-APOKALYPSE3DAPI_EXPORT void CloseMeshFile(MeshFileReader& file);
+A3DGRAPHICSAPI_EXPORT bool OpenMeshFile(MeshFileReader& file, const char* filename);
+A3DGRAPHICSAPI_EXPORT void CloseMeshFile(MeshFileReader& file);
 
-APOKALYPSE3DAPI_EXPORT MeshFileChunk GetNextMeshFileChunk(MeshFileReader& file);
+A3DGRAPHICSAPI_EXPORT MeshFileChunk GetNextMeshFileChunk(MeshFileReader& file);
 
-APOKALYPSE3DAPI_EXPORT void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphere& sphere, bool compressed);
-APOKALYPSE3DAPI_EXPORT void ReadMeshIndexBuffer(MeshFileReader& file, MeshGroup& group, bool compressed);
+A3DGRAPHICSAPI_EXPORT void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphere& sphere, bool compressed);
+A3DGRAPHICSAPI_EXPORT void ReadMeshIndexBuffer(MeshFileReader& file, MeshGroup& group, bool compressed);
 
-APOKALYPSE3DAPI_EXPORT bool ReadMeshPrimitiveName(MeshFileReader& file, char* primitive_name, uint16_t max_size);
+A3DGRAPHICSAPI_EXPORT bool ReadMeshPrimitiveName(MeshFileReader& file, char* primitive_name, uint16_t max_size);
 
-APOKALYPSE3DAPI_EXPORT uint16_t ReadMeshGroupsCount(MeshFileReader& file);
-APOKALYPSE3DAPI_EXPORT bool ReadMeshGroupMaterial(MeshFileReader& file, char* material_name, uint16_t max_size);
+A3DGRAPHICSAPI_EXPORT uint16_t ReadMeshGroupsCount(MeshFileReader& file);
+A3DGRAPHICSAPI_EXPORT bool ReadMeshGroupMaterial(MeshFileReader& file, char* material_name, uint16_t max_size);
 
-APOKALYPSE3DAPI_EXPORT void ReadMeshPrimitive(MeshFileReader& file, MeshPrimitive& primitive, Box& box, Sphere& sphere);
+A3DGRAPHICSAPI_EXPORT void ReadMeshPrimitive(MeshFileReader& file, MeshPrimitive& primitive, Box& box, Sphere& sphere);
 } // namespace A3D
 
 #endif // RESOURCE_MESH_H

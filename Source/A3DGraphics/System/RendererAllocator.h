@@ -16,17 +16,22 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_TEXTURE_H
-#define RESOURCE_TEXTURE_H
+#ifndef SYSTEM_RENDERER_ALLOCATOR_H
+#define SYSTEM_RENDERER_ALLOCATOR_H
 
-#include "Apokalypse3DAPI.h"
-
-namespace bgfx { struct TextureHandle; }
+#include <bx/allocator.h>
 
 namespace A3D
 {
-APOKALYPSE3DAPI_EXPORT bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename);
-APOKALYPSE3DAPI_EXPORT void DestroyTexture(const bgfx::TextureHandle& texture);
+struct RendererAllocator : public bx::AllocatorI
+{
+	~RendererAllocator();
+	void* realloc(void* _ptr,
+				  size_t _size,
+				  size_t _align,
+				  const char* _file,
+				  uint32_t _line) override;
+};
 } // namespace A3D
 
-#endif // RESOURCE_TEXTURE_H
+#endif // SYSTEM_RENDERER_ALLOCATOR_H

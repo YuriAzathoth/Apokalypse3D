@@ -16,11 +16,11 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_RENDERER_H
-#define GRAPHICS_RENDERER_H
+#ifndef SYSTEM_RENDERER_H
+#define SYSTEM_RENDERER_H
 
 #include <stdint.h>
-#include "Apokalypse3DAPI.h"
+#include "A3DGraphicsAPI.h"
 
 namespace bgfx { struct Encoder; }
 
@@ -58,7 +58,7 @@ struct RendererThreadContext
 	bgfx::Encoder* queue;
 };
 
-APOKALYPSE3DAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
+A3DGRAPHICSAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
 										   void* window,
 										   void* display,
 										   const RendererResolution& resolution,
@@ -68,15 +68,15 @@ APOKALYPSE3DAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
 										   bool fullscreen,
 										   bool vsync);
 
-APOKALYPSE3DAPI_EXPORT void DestroyRenderer();
+A3DGRAPHICSAPI_EXPORT void DestroyRenderer();
 
-APOKALYPSE3DAPI_EXPORT void BeginRendererFrame(const RendererResolution& resolution);
-APOKALYPSE3DAPI_EXPORT void EndRendererFrame();
+A3DGRAPHICSAPI_EXPORT void BeginRendererFrame(const RendererResolution& resolution);
+A3DGRAPHICSAPI_EXPORT void EndRendererFrame();
 
-APOKALYPSE3DAPI_EXPORT RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
-APOKALYPSE3DAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
-APOKALYPSE3DAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
-APOKALYPSE3DAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
+A3DGRAPHICSAPI_EXPORT RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
+A3DGRAPHICSAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
+A3DGRAPHICSAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
+A3DGRAPHICSAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 } // namespace A3D
 
-#endif // GRAPHICS_RENDERER_H
+#endif // SYSTEM_RENDERER_H

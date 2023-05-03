@@ -19,8 +19,8 @@
 #ifndef IO_LOG_H
 #define IO_LOG_H
 
-#include "Apokalypse3DAPI.h"
-#include "Apokalypse3DConfig.h"
+#include "A3DCoreAPI.h"
+#include "A3DCoreConfig.h"
 
 // Undef ERROR macro if defined in windows.h
 #ifdef ERROR
@@ -40,14 +40,14 @@ enum class LogLevel
 	NONE
 };
 
-APOKALYPSE3DAPI_EXPORT void SetLogLevel(LogLevel logLevel) noexcept;
-APOKALYPSE3DAPI_EXPORT bool LogInit(const char* filepath, LogLevel logLevel) noexcept;
-APOKALYPSE3DAPI_EXPORT void LogDestroy() noexcept;
+A3DCOREAPI_EXPORT void SetLogLevel(LogLevel logLevel) noexcept;
+A3DCOREAPI_EXPORT bool LogInit(const char* filepath, LogLevel logLevel) noexcept;
+A3DCOREAPI_EXPORT void LogDestroy() noexcept;
 
 #ifdef APOKALYPSE_LOG_FILELINE
-APOKALYPSE3DAPI_EXPORT void LogWrite(LogLevel level, const char* file, unsigned line, const char* format, ...) noexcept;
+A3DCOREAPI_EXPORT void LogWrite(LogLevel level, const char* file, unsigned line, const char* format, ...) noexcept;
 #else // APOKALYPSE_LOG_FILELINE
-APOKALYPSE3DAPI_EXPORT void LogWrite(LogLevel level, const char* format, ...) noexcept;
+A3DCOREAPI_EXPORT void LogWrite(LogLevel level, const char* format, ...) noexcept;
 #endif // APOKALYPSE_LOG_FILELINE
 
 #ifdef APOKALYPSE_LOG_FILELINE

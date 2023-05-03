@@ -16,11 +16,11 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_WINDOW_H
-#define GRAPHICS_WINDOW_H
+#ifndef SYSTEM_WINDOW_H
+#define SYSTEM_WINDOW_H
 
 #include <stdint.h>
-#include "Apokalypse3DAPI.h"
+#include "A3DGraphicsAPI.h"
 
 namespace A3D
 {
@@ -44,18 +44,18 @@ struct WindowResolution
 	uint16_t refresh_rate;
 };
 
-APOKALYPSE3DAPI_EXPORT bool CreateVideo();
-APOKALYPSE3DAPI_EXPORT void DestroyVideo();
+A3DGRAPHICSAPI_EXPORT bool CreateVideo();
+A3DGRAPHICSAPI_EXPORT void DestroyVideo();
 
-APOKALYPSE3DAPI_EXPORT bool CreateWindow(const char* title,
+A3DGRAPHICSAPI_EXPORT bool CreateWindow(const char* title,
 										 const WindowResolution& resolution,
 										 WindowMode mode,
 										 bool resizeable);
 
-APOKALYPSE3DAPI_EXPORT void DestroyWindow();
+A3DGRAPHICSAPI_EXPORT void DestroyWindow();
 
-APOKALYPSE3DAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id);
-APOKALYPSE3DAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);
+A3DGRAPHICSAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id);
+A3DGRAPHICSAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);
 } // namespace A3D
 
-#endif // GRAPHICS_WINDOW_H
+#endif // SYSTEM_WINDOW_H

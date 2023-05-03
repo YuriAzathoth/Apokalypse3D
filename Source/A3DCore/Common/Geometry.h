@@ -16,22 +16,34 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_RENDERER_ALLOCATOR_H
-#define GRAPHICS_RENDERER_ALLOCATOR_H
+#ifndef COMMON_GEOMETRY_H
+#define COMMON_GEOMETRY_H
 
-#include <bx/allocator.h>
+#include <cglm/types.h>
 
 namespace A3D
 {
-struct RendererAllocator : public bx::AllocatorI
+struct Box
 {
-	~RendererAllocator();
-	void* realloc(void* _ptr,
-				  size_t _size,
-				  size_t _align,
-				  const char* _file,
-				  uint32_t _line) override;
+	vec3 min;
+	vec3 max;
+};
+
+struct Sphere
+{
+	vec3 center;
+	float radius;
+};
+
+struct GlobalTransform
+{
+	mat4 transform;
+};
+
+struct LocalTransform
+{
+	mat4 transform;
 };
 } // namespace A3D
 
-#endif // GRAPHICS_RENDERER_ALLOCATOR_H
+#endif // COMMON_GEOMETRY_H

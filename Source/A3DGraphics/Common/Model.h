@@ -16,36 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_GEOMETRY_H
-#define GRAPHICS_GEOMETRY_H
+#ifndef COMMON_MODEL_H
+#define COMMON_MODEL_H
 
 #include <bgfx/bgfx.h>
-#include <cglm/types.h>
 
 namespace A3D
 {
-struct Box
-{
-	vec3 min;
-	vec3 max;
-};
-
-struct Sphere
-{
-	vec3 center;
-	float radius;
-};
-
-struct GlobalTransform
-{
-	mat4 transform;
-};
-
-struct LocalTransform
-{
-	mat4 transform;
-};
-
 struct MeshGroup
 {
 	bgfx::IndexBufferHandle ebo;
@@ -61,4 +38,4 @@ struct MeshPrimitive
 };
 } // namespace A3D
 
-#endif // GRAPHICS_GEOMETRY_H
+#endif // COMMON_MODEL_H

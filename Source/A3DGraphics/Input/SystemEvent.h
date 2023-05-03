@@ -16,12 +16,12 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SYSTEM_SYSTEM_EVENT_H
-#define SYSTEM_SYSTEM_EVENT_H
+#ifndef INPUT_SYSTEM_EVENT_H
+#define INPUT_SYSTEM_EVENT_H
 
 #include <stdint.h>
 #include <unordered_map>
-#include "Apokalypse3DAPI.h"
+#include "A3DGraphicsAPI.h"
 #include "Container/noexcept_allocator.h"
 
 union SDL_Event;
@@ -47,10 +47,10 @@ struct SystemEventListener
 	> callbacks;
 };
 
-APOKALYPSE3DAPI_EXPORT bool CreateSystemEventListener();
-APOKALYPSE3DAPI_EXPORT void DestroySystemEventListener();
-APOKALYPSE3DAPI_EXPORT void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data);
-APOKALYPSE3DAPI_EXPORT uint32_t PollSystemEvents(const SystemEventListener& listener);
+A3DGRAPHICSAPI_EXPORT bool CreateSystemEventListener();
+A3DGRAPHICSAPI_EXPORT void DestroySystemEventListener();
+A3DGRAPHICSAPI_EXPORT void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data);
+A3DGRAPHICSAPI_EXPORT uint32_t PollSystemEvents(const SystemEventListener& listener);
 } // namespace A3D
 
-#endif // SYSTEM_SYSTEM_EVENT_H
+#endif // INPUT_SYSTEM_EVENT_H

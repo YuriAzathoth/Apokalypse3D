@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "Apokalypse3DAPI.h"
+#include "A3DCoreAPI.h"
 
 namespace A3D
 {
@@ -32,18 +32,18 @@ struct File
 	uint32_t size;
 };
 
-APOKALYPSE3DAPI_EXPORT bool MakeDir(const char* path);
-APOKALYPSE3DAPI_EXPORT bool RemoveDir(const char* path);
+A3DCOREAPI_EXPORT bool MakeDir(const char* path);
+A3DCOREAPI_EXPORT bool RemoveDir(const char* path);
 
-APOKALYPSE3DAPI_EXPORT bool IsDirExists(const char* path);
-APOKALYPSE3DAPI_EXPORT bool IsFileExists(const char* path);
+A3DCOREAPI_EXPORT bool IsDirExists(const char* path);
+A3DCOREAPI_EXPORT bool IsFileExists(const char* path);
 
-APOKALYPSE3DAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
-APOKALYPSE3DAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
-APOKALYPSE3DAPI_EXPORT void CloseFile(File& file);
-APOKALYPSE3DAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
-APOKALYPSE3DAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
-APOKALYPSE3DAPI_EXPORT void FileRewind(File& file);
+A3DCOREAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
+A3DCOREAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
+A3DCOREAPI_EXPORT void CloseFile(File& file);
+A3DCOREAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
+A3DCOREAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
+A3DCOREAPI_EXPORT void FileRewind(File& file);
 
 inline static bool ReadFileData(File& file, void* buffer) { return ReadFileData(file, buffer, file.size); }
 } // namespace A3D

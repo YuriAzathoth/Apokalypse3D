@@ -17,9 +17,9 @@
 */
 
 #include <SDL_events.h>
-#include "Graphics/Window.h"
-#include "Graphics/Renderer.h"
-#include "System/SystemEventListener.h"
+#include "Input/SystemEvent.h"
+#include "System/Renderer.h"
+#include "System/Window.h"
 
 using namespace A3D;
 

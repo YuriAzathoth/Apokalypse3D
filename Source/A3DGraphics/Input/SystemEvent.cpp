@@ -18,7 +18,7 @@
 
 #include <SDL.h>
 #include "IO/Log.h"
-#include "SystemEventListener.h"
+#include "SystemEvent.h"
 
 namespace A3D
 {

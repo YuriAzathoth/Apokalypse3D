@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_RENDERER_CALLBACK_H
-#define GRAPHICS_RENDERER_CALLBACK_H
+#ifndef SYSTEM_RENDERER_CALLBACK_H
+#define SYSTEM_RENDERER_CALLBACK_H
 
 #include <bgfx/bgfx.h>
 
@@ -63,4 +63,4 @@ struct RendererCallback : public bgfx::CallbackI
 };
 } // namespace A3D
 
-#endif // GRAPHICS_RENDERER_CALLBACK_H
+#endif // SYSTEM_RENDERER_CALLBACK_H
