@@ -70,7 +70,7 @@ MACRO (COMPILE_SHADER TYPE IN DIR_OUT GENERATED_FILES)
 			COMMAND shaderc
 				-f "${IN}"
 				-o "${OUT}"
-				-i "${CMAKE_SOURCE_DIR}/ThirdParty/bgfx/bgfx/src"
+				-i "${CMAKE_SOURCE_DIR}/Source/ThirdParty/bgfx/bgfx/src"
 				--type ${SHADER_TYPE}
 				--varyingdef "${FILEPATH}/${FILENAME}.var"
 				${ARGS_${PLATFORM}}
