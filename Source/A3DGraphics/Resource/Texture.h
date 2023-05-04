@@ -20,13 +20,12 @@
 #define RESOURCE_TEXTURE_H
 
 #include "A3DGraphicsAPI.h"
-
-namespace bgfx { struct TextureHandle; }
+#include "Common/Texture.h"
 
 namespace A3D
 {
-A3DGRAPHICSAPI_EXPORT bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename);
-A3DGRAPHICSAPI_EXPORT void DestroyTexture(const bgfx::TextureHandle& texture);
+A3DGRAPHICSAPI_EXPORT bool LoadTextureFromFile(Texture& texture, const char* filename);
+A3DGRAPHICSAPI_EXPORT void DestroyTexture(Texture& texture);
 } // namespace A3D
 
 #endif // RESOURCE_TEXTURE_H

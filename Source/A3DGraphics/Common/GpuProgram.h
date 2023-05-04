@@ -16,27 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_GPU_PROGRAM_H
-#define RESOURCE_GPU_PROGRAM_H
+#ifndef COMMON_GPU_PROGRAM_H
+#define COMMON_GPU_PROGRAM_H
 
 #include <bgfx/bgfx.h>
-#include "A3DGraphicsAPI.h"
-#include "Common/GpuProgram.h"
 
 namespace A3D
 {
-struct Shader
+struct GpuProgram
 {
-	bgfx::ShaderHandle handle;
+	bgfx::ProgramHandle handle;
 };
-
-A3DGRAPHICSAPI_EXPORT const char* GetShaderPrefix();
-
-A3DGRAPHICSAPI_EXPORT bool LoadShaderFromFile(Shader& shader, const char* filename);
-A3DGRAPHICSAPI_EXPORT void DestroyShader(Shader& shader);
-
-A3DGRAPHICSAPI_EXPORT bool LinkGpuProgram(GpuProgram& program, const Shader& vertex, const Shader& fragment);
-A3DGRAPHICSAPI_EXPORT void DestroyGpuProgram(GpuProgram& program);
 } // namespace A3D
 
-#endif // RESOURCE_GPU_PROGRAM_H
+#endif // COMMON_GPU_PROGRAM_H

@@ -49,7 +49,7 @@ const char* GetShaderPrefix()
 	}
 }
 
-bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename)
+bool LoadShaderFromFile(Shader& shader, const char* filename)
 {
 	LogDebug("Loading shader \"%s\"...", filename);
 
@@ -74,8 +74,8 @@ bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename)
 	fread(mem->data, 1, size, file);
 	fclose(file);
 
-	shader = bgfx::createShader(mem);
-	if (bgfx::isValid(shader))
+	shader.handle = bgfx::createShader(mem);
+	if (bgfx::isValid(shader.handle))
 	{
 		LogInfo("Shader \"%s\" has been loaded.", filename);
 		return true;
@@ -87,15 +87,17 @@ bool LoadShaderFromFile(bgfx::ShaderHandle& shader, const char* filename)
 	}
 }
 
-void DestroyShader(bgfx::ShaderHandle& shader) { bgfx::destroy(shader); }
+void DestroyShader(Shader& shader) { bgfx::destroy(shader.handle); }
 
-bool LinkGpuProgram(bgfx::ProgramHandle& program, const bgfx::ShaderHandle& vertex, const bgfx::ShaderHandle& fragment)
+bool LinkGpuProgram(GpuProgram& program, const Shader& vertex, const Shader& fragment)
 {
 	LogDebug("Begin linking GPU program...");
-	Assert(vertex.idx != fragment.idx, "Could not link program to same vertex and fragment shader.");
+	Assert(bgfx::isValid(vertex.handle), "Could not link program to invalid vertex shader.");
+	Assert(bgfx::isValid(fragment.handle), "Could not link program to invalid fragment shader.");
+	Assert(vertex.handle.idx != fragment.handle.idx, "Could not link program to same vertex and fragment shader.");
 
-	program = bgfx::createProgram(vertex, fragment);
-	if (bgfx::isValid(program))
+	program.handle = bgfx::createProgram(vertex.handle, fragment.handle);
+	if (bgfx::isValid(program.handle))
 	{
 		LogInfo("GPU program has been linked.");
 		return true;
@@ -107,5 +109,5 @@ bool LinkGpuProgram(bgfx::ProgramHandle& program, const bgfx::ShaderHandle& vert
 	}
 }
 
-void DestroyGpuProgram(bgfx::ProgramHandle& program) { bgfx::destroy(program); }
+void DestroyGpuProgram(GpuProgram& program) { bgfx::destroy(program.handle); }
 } // namespace A3D

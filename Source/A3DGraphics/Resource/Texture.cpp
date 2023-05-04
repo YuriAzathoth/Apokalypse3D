@@ -31,7 +31,7 @@ static void ReleaseImage(void*, void* image)
 	bimg::imageFree((bimg::ImageContainer*)image);
 }
 
-bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename)
+bool LoadTextureFromFile(Texture& texture, const char* filename)
 {
 	LogDebug("Loading texture \"%s\"...", filename);
 
@@ -66,35 +66,35 @@ bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename)
 
 	if (img->m_cubeMap)
 	{
-		texture = bgfx::createTextureCube(static_cast<uint16_t>(img->m_width),
-										  img->m_numMips > 1,
-										  img->m_numLayers,
-										  static_cast<bgfx::TextureFormat::Enum>(img->m_format),
-										  0,
-										  mem);
+		texture.handle = bgfx::createTextureCube(static_cast<uint16_t>(img->m_width),
+						 img->m_numMips > 1,
+						 img->m_numLayers,
+						 static_cast<bgfx::TextureFormat::Enum>(img->m_format),
+						 0,
+						 mem);
 	}
 	else if (img->m_depth > 1)
 	{
-		texture = bgfx::createTexture3D(static_cast<uint16_t>(img->m_width),
-										static_cast<uint16_t>(img->m_height),
-										static_cast<uint16_t>(img->m_depth),
-										img->m_numMips > 1,
-										static_cast<bgfx::TextureFormat::Enum>(img->m_format),
-										0,
-										mem);
+		texture.handle = bgfx::createTexture3D(static_cast<uint16_t>(img->m_width),
+											   static_cast<uint16_t>(img->m_height),
+											   static_cast<uint16_t>(img->m_depth),
+											   img->m_numMips > 1,
+											   static_cast<bgfx::TextureFormat::Enum>(img->m_format),
+											   0,
+											   mem);
 	}
 	else
 	{
-		texture = bgfx::createTexture2D(static_cast<uint16_t>(img->m_width),
-										static_cast<uint16_t>(img->m_height),
-										img->m_numMips > 1,
-										img->m_numLayers,
-										static_cast<bgfx::TextureFormat::Enum>(img->m_format),
-										0,
-										mem);
+		texture.handle = bgfx::createTexture2D(static_cast<uint16_t>(img->m_width),
+											   static_cast<uint16_t>(img->m_height),
+											   img->m_numMips > 1,
+											   img->m_numLayers,
+											   static_cast<bgfx::TextureFormat::Enum>(img->m_format),
+											   0,
+											   mem);
 	}
 
-	if (bgfx::isValid(texture))
+	if (bgfx::isValid(texture.handle))
 	{
 		LogInfo("Texture file \"%s\" has been loaded.", filename);
 		return true;
@@ -106,5 +106,8 @@ bool LoadTextureFromFile(bgfx::TextureHandle& texture, const char* filename)
 	}
 }
 
-void DestroyTexture(bgfx::TextureHandle& texture) { bgfx::destroy(texture); }
+void DestroyTexture(Texture& texture)
+{
+	bgfx::destroy(texture.handle);
+}
 } // namespace A3D
