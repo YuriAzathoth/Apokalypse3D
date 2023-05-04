@@ -20,7 +20,7 @@
 #define RESOURCE_MESH_H
 
 #include <bgfx/bgfx.h>
-#include <bx/macros.h>
+#include <bx/bx.h>
 #include "A3DGraphicsAPI.h"
 #include "Common/Geometry.h"
 #include "Common/Model.h"
@@ -38,7 +38,7 @@ struct MeshPrimitive;
 
 enum class MeshFileChunk : uint32_t
 {
-	EOF = 0,
+	END_OF_FILE = 0,
 	VERTEX_BUFFER = BX_MAKEFOURCC('V', 'B', ' ', 0x1),
 	VERTEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('V', 'B', 'C', 0x0),
 	INDEX_BUFFER = BX_MAKEFOURCC('I', 'B', ' ', 0x0),

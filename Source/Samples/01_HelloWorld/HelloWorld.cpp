@@ -16,16 +16,59 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <cglm/affine.h>
+#include <cglm/cam.h>
+#include <cglm/mat4.h>
 #include <SDL_events.h>
 #include "Input/SystemEvent.h"
+#include "IO/Log.h"
+#include "Resource/Mesh.h"
+#include "Resource/GpuProgram.h"
 #include "System/Renderer.h"
 #include "System/Window.h"
+#include "World/VisualWorld.h"
 
 using namespace A3D;
 
 static void OnQuit(const SDL_Event& event, void* run)
 {
 	*reinterpret_cast<bool*>(run) = false;
+}
+
+static void LoadModel(MeshGroup& mesh, const char* filename)
+{
+	MeshFileReader file;
+	if (!OpenMeshFile(file, filename))
+	{
+		LogFatal("Could not load mesh file \"%s\": file not found.", filename);
+		return;
+	}
+
+	Box box;
+	Sphere sphere;
+	MeshFileChunk chunk = MeshFileChunk::END_OF_FILE;
+	do
+	{
+		chunk = GetNextMeshFileChunk(file);
+		switch (chunk)
+		{
+		case MeshFileChunk::VERTEX_BUFFER:
+			ReadMeshVertexBuffer(file, mesh, box, sphere, false);
+			break;
+		case MeshFileChunk::VERTEX_BUFFER_COMPRESSED:
+			ReadMeshVertexBuffer(file, mesh, box, sphere, true);
+			break;
+		case MeshFileChunk::INDEX_BUFFER:
+			ReadMeshIndexBuffer(file, mesh, false);
+			break;
+		case MeshFileChunk::INDEX_BUFFER_COMPRESSED:
+			ReadMeshIndexBuffer(file, mesh, true);
+			break;
+		default:
+			;
+		}
+	}
+	while (chunk != MeshFileChunk::END_OF_FILE);
 }
 
 int main()
@@ -51,14 +94,53 @@ int main()
 	const uint8_t threads_count = 4;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
 
+	VisualWorld vw;
+	CreateVisualWorld(vw);
+
+	vec3 camera_pos {0.0f, 0.0f, 5.0f};
+	vec3 camera_target {0.0f, 0.0f, 0.0f};
+	vec3 camera_up {0.0f, 1.0f, 0.0f};
+	glm_perspective(glm_rad(45.0f), 800.0f / 600.0f, 0.01f, 100.0f, vw.main_camera.proj);
+	glm_lookat(camera_pos, camera_target, camera_up, vw.main_camera.view);
+
+	MeshGroup mesh;
+//	LoadModel(mesh, "../Data/Models/Box.mdl");
+	LoadModel(mesh, "../Data/Models/Cone.mdl");
+
+	GlobalTransform transform{ GLM_MAT4_IDENTITY };
+
+	char buffer[256];
+	const char* SHADER_EXTENSION = GetShaderPrefix();
+
+	Shader vertex;
+	sprintf(buffer, "../Data/Shaders/%s/white_solid.vert.shader", SHADER_EXTENSION);
+	LoadShaderFromFile(vertex, buffer);
+
+	Shader fragment;
+	sprintf(buffer, "../Data/Shaders/%s/white_solid.frag.shader", SHADER_EXTENSION);
+	LoadShaderFromFile(fragment, buffer);
+
+	GpuProgram program;
+	LinkGpuProgram(program, vertex, fragment);
+
+	const VisualHandle cube = AddModel(vw, mesh, program, transform);
+
+	vec3 rotate_axis { 0.5f, 1.0f, 0.0f };
 	while (run)
 	{
+		glm_rotate(GetVisualWorldTransform(vw, cube).transform, glm_rad(0.1f), rotate_axis);
+
+		PrepareVisualWorld(vw);
+
 		PollSystemEvents(listener);
-		BeginRendererFrame(rres);
-		BeginRendererThreadContextsFrame(contexts, threads_count);
-		EndRendererThreadContextsFrame(contexts, threads_count);
+		BeginRendererFrame();
+		RenderVisualWorld(vw);
+//		BeginRendererThreadContextsFrame(contexts, threads_count);
+//		EndRendererThreadContextsFrame(contexts, threads_count);
 		EndRendererFrame();
 	}
+
+	DestroyVisualWorld(vw);
 
 	DestroyRendererThreadContexts(contexts);
 	DestroyRenderer();

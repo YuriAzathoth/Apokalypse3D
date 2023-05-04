@@ -18,6 +18,10 @@
 
 #include <bgfx/bgfx.h>
 #include <stdlib.h>
+#include "Common/Camera.h"
+#include "Common/Geometry.h"
+#include "Common/GpuProgram.h"
+#include "Common/Model.h"
 #include "IO/Log.h"
 #include "Renderer.h"
 #include "RendererAllocator.h"
@@ -33,6 +37,7 @@ static bool SelectBestGpu(RendererGpu& gpu);
 
 static RendererAllocator g_alloc;
 static RendererCallback g_callback;
+static RendererResolution g_resolution;
 
 bool CreateRenderer(RendererGpu& gpu,
 					void* window,
@@ -106,6 +111,8 @@ bool CreateRenderer(RendererGpu& gpu,
 	LogDebug("\tGPU vendor: %s.", GetGpuVendorName(gpu.vendor));
 	LogDebug("\tGPU device: %u.", gpu.device);
 
+	g_resolution = resolution;
+
 	return true;
 }
 
@@ -115,10 +122,10 @@ void DestroyRenderer()
 	LogInfo("BGFX Renderer destroyed.");
 }
 
-void BeginRendererFrame(const RendererResolution& resolution)
+void BeginRendererFrame()
 {
 	LogTrace("Render frame begin start...");
-	bgfx::setViewRect(0, 0, 0, resolution.width, resolution.height);
+	bgfx::setViewRect(0, 0, 0, g_resolution.width, g_resolution.height);
 	bgfx::touch(0);
 	LogTrace("Render frame begin finish...");
 }
@@ -279,5 +286,31 @@ static bool SelectBestGpu(RendererGpu& gpu)
 		}
 	}
 	return true;
+}
+
+void SetCameraTransform(const Camera& camera)
+{
+	bgfx::setViewTransform(0, camera.view, camera.proj);
+}
+
+void DrawMeshGroup(const MeshGroup& mesh, const GpuProgram& program, const GlobalTransform& transform)
+{
+	bgfx::setTransform(transform.transform);
+	bgfx::setVertexBuffer(0, mesh.vbo);
+	bgfx::setIndexBuffer(mesh.ebo);
+	bgfx::setState(BGFX_STATE_DEFAULT);
+	bgfx::submit(0, program.handle);
+}
+
+void DrawMeshGroup(RendererThreadContext& context,
+				   const MeshGroup& mesh,
+				   const GpuProgram& program,
+				   const GlobalTransform& transform)
+{
+	context.queue->setTransform(transform.transform);
+	context.queue->setVertexBuffer(0, mesh.vbo);
+	context.queue->setIndexBuffer(mesh.ebo);
+	context.queue->setState(BGFX_STATE_DEFAULT);
+	context.queue->submit(0, program.handle);
 }
 } // namespace A3D

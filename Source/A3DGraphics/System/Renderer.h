@@ -26,6 +26,11 @@ namespace bgfx { struct Encoder; }
 
 namespace A3D
 {
+struct Camera;
+struct GlobalTransform;
+struct GpuProgram;
+struct MeshGroup;
+
 struct RendererGpu
 {
 	uint16_t device;
@@ -70,13 +75,22 @@ A3DGRAPHICSAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
 
 A3DGRAPHICSAPI_EXPORT void DestroyRenderer();
 
-A3DGRAPHICSAPI_EXPORT void BeginRendererFrame(const RendererResolution& resolution);
+A3DGRAPHICSAPI_EXPORT void BeginRendererFrame();
 A3DGRAPHICSAPI_EXPORT void EndRendererFrame();
 
 A3DGRAPHICSAPI_EXPORT RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
 A3DGRAPHICSAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
 A3DGRAPHICSAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 A3DGRAPHICSAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
+
+A3DGRAPHICSAPI_EXPORT void SetCameraTransform(const Camera& camera);
+
+A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(const MeshGroup& mesh, const GpuProgram& program, const GlobalTransform& transform);
+
+A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(RendererThreadContext& context,
+										 const MeshGroup& mesh,
+										 const GpuProgram& program,
+										 const GlobalTransform& transform);
 } // namespace A3D
 
 #endif // SYSTEM_RENDERER_H

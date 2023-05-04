@@ -79,7 +79,7 @@ MeshFileChunk GetNextMeshFileChunk(MeshFileReader& file)
 	bx::Error err;
 	uint32_t chunk;
 	const bool read_success = bx::read(file.reader, chunk, &err) == 4 && err.isOk();
-	return (read_success && IsChunkValid(chunk)) ? (static_cast<MeshFileChunk>(chunk)) : MeshFileChunk::EOF;
+	return (read_success && IsChunkValid(chunk)) ? (static_cast<MeshFileChunk>(chunk)) : MeshFileChunk::END_OF_FILE;
 }
 
 void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphere& sphere, bool compressed)
