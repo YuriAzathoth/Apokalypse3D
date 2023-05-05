@@ -89,7 +89,7 @@ int main()
 
 	RendererGpu gpu{};
 	RendererResolution rres{wres.width, wres.height};
-	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
+	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::Auto, 16, 0, false, false);
 
 	const uint8_t threads_count = 4;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
@@ -99,9 +99,8 @@ int main()
 
 	vec3 camera_pos {0.0f, 0.0f, 5.0f};
 	vec3 camera_target {0.0f, 0.0f, 0.0f};
-	vec3 camera_up {0.0f, 1.0f, 0.0f};
-	glm_perspective(glm_rad(45.0f), 800.0f / 600.0f, 0.01f, 100.0f, vw.main_camera.proj);
-	glm_lookat(camera_pos, camera_target, camera_up, vw.main_camera.view);
+	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.01f, 100.0f);
+	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
 
 	MeshGroup mesh;
 	LoadModel(mesh, "../Data/Models/Box.mdl");
@@ -127,7 +126,7 @@ int main()
 	vec3 rotate_axis { 0.5f, 1.0f, 0.0f };
 	while (run)
 	{
-		glm_rotate(GetVisualWorldTransform(vw, cube).transform, glm_rad(0.1f), rotate_axis);
+		glm_rotate(GetVisualObjectTransform(vw, cube).transform, glm_rad(0.1f), rotate_axis);
 
 		PrepareVisualWorld(vw);
 

@@ -83,7 +83,7 @@ A3DGRAPHICSAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* 
 A3DGRAPHICSAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 A3DGRAPHICSAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
 
-A3DGRAPHICSAPI_EXPORT void SetCameraTransform(const Camera& camera);
+A3DGRAPHICSAPI_EXPORT void SetCameraTransforms(const Camera* cameras, uint16_t count);
 
 A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(const MeshGroup& mesh, const GpuProgram& program, const GlobalTransform& transform);
 

@@ -288,9 +288,10 @@ static bool SelectBestGpu(RendererGpu& gpu)
 	return true;
 }
 
-void SetCameraTransform(const Camera& camera)
+void SetCameraTransforms(const Camera* cameras, uint16_t count)
 {
-	bgfx::setViewTransform(0, camera.view, camera.proj);
+	for (uint16_t i = 0; i < count; ++i, ++cameras)
+		bgfx::setViewTransform(i, cameras->view, cameras->proj);
 }
 
 void DrawMeshGroup(const MeshGroup& mesh, const GpuProgram& program, const GlobalTransform& transform)
