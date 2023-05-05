@@ -104,8 +104,7 @@ int main()
 	glm_lookat(camera_pos, camera_target, camera_up, vw.main_camera.view);
 
 	MeshGroup mesh;
-//	LoadModel(mesh, "../Data/Models/Box.mdl");
-	LoadModel(mesh, "../Data/Models/Cone.mdl");
+	LoadModel(mesh, "../Data/Models/Box.mdl");
 
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 

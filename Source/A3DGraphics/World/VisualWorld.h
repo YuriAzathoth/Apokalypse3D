@@ -20,7 +20,6 @@
 #define WORLD_VISUAL_WORLD_H
 
 #include <stdint.h>
-#include <vector>
 #include "A3DGraphicsAPI.h"
 #include "Common/Camera.h"
 #include "Common/Geometry.h"
@@ -28,7 +27,7 @@
 #include "Common/Model.h"
 #include "Container/dense_map.h"
 #include "Container/sparse_map.h"
-#include "Graphics/DrawQueue.h"
+#include "Container/vector.h"
 
 namespace A3D
 {
@@ -39,6 +38,20 @@ struct VisualHandle
 	VisualHandleType id;
 };
 
+struct VisualRenderItem
+{
+	MeshGroup mesh;
+	GpuProgram program;
+	GlobalTransform transform;
+};
+
+enum class VisualWorldState : uint8_t
+{
+	RECEIVING,
+	DRAWING,
+	CLEANING
+};
+
 struct VisualWorld
 {
 	dense_map<VisualIndex, MeshGroup> visual_data;
@@ -47,7 +60,7 @@ struct VisualWorld
 	dense_map<VisualIndex, VisualHandleType> external_handles;
 	sparse_map<VisualHandleType, VisualIndex> ids;
 
-	DrawQueue draw_queue;
+	vector<uint32_t, VisualRenderItem> visible;
 
 	Camera main_camera;
 };

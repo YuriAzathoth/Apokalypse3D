@@ -24,7 +24,6 @@ namespace A3D
 {
 void CreateVisualWorld(VisualWorld& world)
 {
-	world.draw_queue.state.store(DrawQueueState::RECEIVING);
 }
 
 void DestroyVisualWorld(VisualWorld& world)
@@ -39,7 +38,7 @@ void PrepareVisualWorld(VisualWorld& world)
 	const auto mesh_end = world.visual_data.cend();
 	while (mesh_it != mesh_end)
 	{
-		PushDrawQueue(world.draw_queue, *mesh_it, *program_it, *transform_it);
+		world.visible.emplace_back(VisualRenderItem{*mesh_it, *program_it, *transform_it});
 		++mesh_it;
 		++program_it;
 		++transform_it;
@@ -49,18 +48,15 @@ void PrepareVisualWorld(VisualWorld& world)
 void RenderVisualWorld(VisualWorld& world)
 {
 	BeginRendererFrame();
-	BeginDrawQueue(world.draw_queue);
 
 	SetCameraTransform(world.main_camera);
 
-	auto range = GetDrawQueueItems(world.draw_queue);
-	for (; range.first != range.second; ++range.first)
-	{
-		DrawMeshGroup(range.first->mesh, range.first->program, range.first->transform);
-	}
+	for (const VisualRenderItem& item : world.visible)
+		DrawMeshGroup(item.mesh, item.program, item.transform);
 
-	EndDrawQueue(world.draw_queue);
 	EndRendererFrame();
+
+	world.visible.clear();
 }
 
 VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, GpuProgram& program, GlobalTransform& transform)
