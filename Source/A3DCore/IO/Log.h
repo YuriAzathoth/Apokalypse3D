@@ -96,7 +96,7 @@ if (!(CONT)) \
 #ifdef APOKALYPSE_LOG_FILELINE
 #define LogTrace(FORMAT, ...) LogWrite(LogLevel::TRACE, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 #else // APOKALYPSE_LOG_FILELINE
-#define LogDebug(FORMAT, ...) LogWrite(LogLevel::TRACE, FORMAT, ##__VA_ARGS__)
+#define LogTrace(FORMAT, ...) LogWrite(LogLevel::TRACE, FORMAT, ##__VA_ARGS__)
 #endif // APOKALYPSE_LOG_FILELINE
 #define LogTraceBody(BODY) { BODY }
 #else // APOKALYPSE_LOG_TRACE
