@@ -284,7 +284,7 @@ private:
 	allocator_type alloc_;
 };
 
-template <typename Allocator = A3D::noexcept_allocator<char>> using string = basic_string<char, Allocator>;
+using string = basic_string<char, A3D::noexcept_allocator<char>>;
 } // namespace A3D
 
 namespace std
