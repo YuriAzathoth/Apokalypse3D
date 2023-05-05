@@ -22,6 +22,7 @@
 #include <bx/readerwriter.h>*/
 #include <stdio.h>
 #include "GpuProgram.h"
+#include "IO/FileSystem.h"
 #include "IO/Log.h"
 
 namespace A3D
@@ -49,30 +50,46 @@ const char* GetShaderPrefix()
 	}
 }
 
+bool LoadShaderFromMemory(Shader& shader, const char* shader_text, uint32_t shader_size)
+{
+	const bgfx::Memory* mem = bgfx::makeRef(shader_text, shader_size);
+	shader.handle = bgfx::createShader(mem);
+	if (bgfx::isValid(shader.handle))
+	{
+		LogInfo("Custom shader has been loaded.");
+		return true;
+	}
+	else
+	{
+		LogFatal("Custom shader compilation error.");
+		return false;
+	}
+}
+
 bool LoadShaderFromFile(Shader& shader, const char* filename)
 {
 	LogDebug("Loading shader \"%s\"...", filename);
 
-	FILE* file = fopen(filename, "rb");
-	if (!file)
+	File file;
+	if (!IsFileExists(filename))
 	{
 		LogFatal("Could not load shader: file \"%s\" not found.", filename);
 		return false;
 	}
 
-	fseek(file, 0, SEEK_END);
-	const unsigned size = static_cast<unsigned>(ftell(file));
-	if (!size)
+	if (!OpenFileRead(file, filename))
+		return false;
+
+	if (file.size == 0)
 	{
 		LogFatal("Could not load shader: file \"%s\" is empty.", filename);
-		fclose(file);
+		CloseFile(file);
 		return false;
 	}
-	rewind(file);
 
-	const bgfx::Memory* mem = bgfx::alloc(size + 1);
-	fread(mem->data, 1, size, file);
-	fclose(file);
+	const bgfx::Memory* mem = bgfx::alloc(file.size + 1);
+	ReadFileData(file, mem->data);
+	CloseFile(file);
 
 	shader.handle = bgfx::createShader(mem);
 	if (bgfx::isValid(shader.handle))

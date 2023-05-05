@@ -32,6 +32,7 @@ struct Shader
 
 A3DGRAPHICSAPI_EXPORT const char* GetShaderPrefix();
 
+A3DGRAPHICSAPI_EXPORT bool LoadShaderFromMemory(Shader& shader, const char* shader_text, uint32_t shader_size);
 A3DGRAPHICSAPI_EXPORT bool LoadShaderFromFile(Shader& shader, const char* filename);
 A3DGRAPHICSAPI_EXPORT void DestroyShader(Shader& shader);
 

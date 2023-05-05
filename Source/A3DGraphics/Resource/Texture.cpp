@@ -21,6 +21,7 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
+#include "IO/FileSystem.h"
 #include "IO/Log.h"
 #include "Texture.h"
 
@@ -35,34 +36,40 @@ bool LoadTextureFromFile(Texture& texture, const char* filename)
 {
 	LogDebug("Loading texture \"%s\"...", filename);
 
-	bx::DefaultAllocator allocator;
-	bx::FileReader filereader;
-
-	if (!bx::open(&filereader, filename))
+	File file;
+	if (!OpenFileRead(file, filename))
 	{
 		LogFatal("Could not load texture: file \"%s\" not found.", filename);
 		return false;
 	}
-	unsigned size = (unsigned)bx::getSize(&filereader);
-	void* data = BX_ALLOC(&allocator, size);
-	if (!data)
+
+	if (file.size == 0)
 	{
-		LogFatal("Could not load texture \"%s\": out of memory.", filename);
-		bx::close(&filereader);
+		LogFatal("Could not load texture \"%s\": file is empty.", filename);
+		CloseFile(file);
 		return false;
 	}
-	bx::read(&filereader, data, size, bx::ErrorAssert{});
-	bx::close(&filereader);
 
-	bimg::ImageContainer* img = bimg::imageParse(&allocator, data, size);
+	const bgfx::Memory* mem = bgfx::alloc(file.size);
+
+	if (!ReadFileData(file, mem->data))
+	{
+		LogFatal("Could not load texture \"%s\": file read error.", filename);
+		CloseFile(file);
+		return false;
+	}
+
+	CloseFile(file);
+
+	bx::DefaultAllocator allocator;
+	bimg::ImageContainer* img = bimg::imageParse(&allocator, mem->data, file.size);
 	if (!img)
 	{
 		LogFatal("Could not load texture \"%s\": invalid image format.", filename);
 		return false;
 	}
 
-	const bgfx::Memory* mem = bgfx::makeRef(img->m_data, img->m_size, ReleaseImage, img);
-	BX_FREE(&allocator, data);
+	mem = bgfx::makeRef(img->m_data, img->m_size, ReleaseImage, img);
 
 	if (img->m_cubeMap)
 	{
