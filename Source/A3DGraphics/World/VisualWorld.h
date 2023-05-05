@@ -54,7 +54,7 @@ enum class VisualWorldState : uint8_t
 
 struct VisualWorld
 {
-	dense_map<VisualIndex, MeshGroup> visual_data;
+	dense_map<VisualIndex, MeshGroup> meshes;
 	dense_map<VisualIndex, GpuProgram> gpu_programs;
 	dense_map<VisualIndex, GlobalTransform> global_transforms;
 	dense_map<VisualIndex, VisualHandleType> external_handles;

@@ -32,10 +32,10 @@ void DestroyVisualWorld(VisualWorld& world)
 
 void PrepareVisualWorld(VisualWorld& world)
 {
-	auto mesh_it = world.visual_data.cbegin();
+	auto mesh_it = world.meshes.cbegin();
 	auto program_it = world.gpu_programs.cbegin();
 	auto transform_it = world.global_transforms.cbegin();
-	const auto mesh_end = world.visual_data.cend();
+	const auto mesh_end = world.meshes.cend();
 	while (mesh_it != mesh_end)
 	{
 		world.visible.emplace_back(VisualRenderItem{*mesh_it, *program_it, *transform_it});
@@ -61,7 +61,7 @@ void RenderVisualWorld(VisualWorld& world)
 
 VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, GpuProgram& program, GlobalTransform& transform)
 {
-	const VisualIndex index = world.visual_data.insert(mesh);
+	const VisualIndex index = world.meshes.insert(mesh);
 	world.gpu_programs.insert(program);
 	world.global_transforms.insert(transform);
 
@@ -76,11 +76,11 @@ void RemoveModel(VisualWorld& world, VisualHandle handle)
 	const VisualIndex index = world.ids[handle.id];
 	world.ids.erase(handle.id);
 
-	const VisualIndex rebound_index = world.visual_data.erase(index);
+	const VisualIndex rebound_index = world.meshes.erase(index);
 	world.gpu_programs.erase(index);
 	world.global_transforms.erase(index);
 
-	if (rebound_index != decltype(world.visual_data)::INVALID_KEY)
+	if (rebound_index != decltype(world.meshes)::INVALID_KEY)
 	{
 		world.ids[rebound_index] = index;
 	}
