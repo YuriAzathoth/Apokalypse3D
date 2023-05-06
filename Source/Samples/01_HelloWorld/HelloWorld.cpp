@@ -97,7 +97,7 @@ int main()
 	VisualWorld vw;
 	CreateVisualWorld(vw);
 
-	vec3 camera_pos {0.0f, 0.0f, 5.0f};
+	vec3 camera_pos {0.0f, 0.0f, 100.0f};
 	vec3 camera_target {0.0f, 0.0f, 0.0f};
 	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.01f, 100.0f);
 	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
@@ -121,12 +121,31 @@ int main()
 	GpuProgram program;
 	LinkGpuProgram(program, vertex, fragment);
 
-	const VisualHandle cube = AddModel(vw, mesh, program, transform);
+	VisualHandle cubes[400];
 
-	vec3 rotate_axis { 0.5f, 1.0f, 0.0f };
+	vec3 pos{};
+	for (int i = 0; i < 400; ++i)
+	{
+		glm_mat4_identity(transform.transform);
+		pos[0] = (float)(i % 20 * 4 - 40);
+		pos[1] = (float)(i / 20 * 4 - 40);
+		glm_translate(transform.transform, pos);
+		cubes[i] = AddModel(vw, mesh, program, transform);
+	}
+
+	vec3 rotate_axis[5] =
+	{
+		{ 0.0f, 0.0f, 1.0f },
+		{ 1.0f, 0.5f, 0.0f },
+		{ 0.0f, 1.0f, 0.5f },
+		{ 0.5f, 0.0f, 1.0f },
+		{ 0.5f, 1.0f, 0.0f }
+	};
+
 	while (run)
 	{
-		glm_rotate(GetVisualObjectTransform(vw, cube).transform, glm_rad(0.1f), rotate_axis);
+		for (unsigned i = 0; i < 400; ++i)
+			glm_rotate(GetVisualObjectTransform(vw, cubes[i]).transform, glm_rad(0.1f), rotate_axis[i % 5]);
 
 		PrepareVisualWorld(vw);
 
