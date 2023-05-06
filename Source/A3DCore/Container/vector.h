@@ -209,6 +209,12 @@ public:
 				for (; src_it != src_end; ++src_it, ++dst_ptr)
 					std::construct_at(dst_ptr, std::move(*src_it));
 			}
+
+			if constexpr (!std::is_trivial<value_type>::value)
+				for (iterator it = begin(); it != end(); ++it)
+					std::destroy_at(it);
+
+			alloc_.deallocate(data_, capacity_);
 		}
 
 		data_ = new_data;
@@ -261,7 +267,7 @@ private:
 
 	void destroy()
 	{
-		if (capacity_)
+		if (capacity_ > 0)
 		{
 			if constexpr (!std::is_trivial<value_type>::value)
 				for (iterator it = begin(); it != end(); ++it)
