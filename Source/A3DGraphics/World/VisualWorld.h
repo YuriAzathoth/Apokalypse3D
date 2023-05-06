@@ -91,21 +91,17 @@ A3DGRAPHICSAPI_EXPORT void RenderVisualWorld(VisualWorld& world, RendererThreadC
 
 A3DGRAPHICSAPI_EXPORT ViewportHandle AddViewport(VisualWorld& world);
 A3DGRAPHICSAPI_EXPORT void RemoveViewport(VisualWorld& world, ViewportHandle viewport);
+
 A3DGRAPHICSAPI_EXPORT void SetCameraPerspective(VisualWorld& world,
 												ViewportHandle viewport,
 												float fov,
 												float aspect,
 												float near,
 												float far);
-A3DGRAPHICSAPI_EXPORT void SetCameraLookAt(VisualWorld& world,
-										   ViewportHandle viewport,
-										   vec3 position,
-										   vec3 target);
 
-A3DGRAPHICSAPI_EXPORT VisualHandle AddModel(VisualWorld& world,
-											MeshGroup& mesh,
-											GpuProgram& program,
-											GlobalTransform& transform);
+A3DGRAPHICSAPI_EXPORT void SetCameraLookAt(VisualWorld& world, ViewportHandle viewport, vec3 position, vec3 target);
+
+A3DGRAPHICSAPI_EXPORT VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, GpuProgram& program, GlobalTransform& transform);
 A3DGRAPHICSAPI_EXPORT void RemoveModel(VisualWorld& world, VisualHandle handle);
 
 inline static GlobalTransform& GetVisualObjectTransform(VisualWorld& world, VisualHandle handle)
