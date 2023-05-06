@@ -62,6 +62,22 @@ void RenderVisualWorld(VisualWorld& world)
 	world.visible.clear();
 }
 
+void RenderVisualWorld(VisualWorld& world, RendererThreadContext* contexts, uint8_t threads_count)
+{
+	BeginRendererFrame();
+	BeginRendererThreadContextsFrame(contexts, threads_count);
+
+	SetCameraTransforms(world.viewports.cameras.data(), world.viewports.cameras.size());
+
+	for (const VisualRenderItem& item : world.visible)
+		DrawMeshGroup(contexts[0], item.mesh, item.program, item.transform);
+
+	EndRendererThreadContextsFrame(contexts, threads_count);
+	EndRendererFrame();
+
+	world.visible.clear();
+}
+
 ViewportHandle AddViewport(VisualWorld& world)
 {
 	const ViewportIndex index = world.viewports.cameras.emplace();

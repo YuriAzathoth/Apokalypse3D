@@ -144,13 +144,14 @@ int main()
 
 	while (run)
 	{
+		PollSystemEvents(listener);
+
 		for (unsigned i = 0; i < 400; ++i)
 			glm_rotate(GetVisualObjectTransform(vw, cubes[i]).transform, glm_rad(0.1f), rotate_axis[i % 5]);
 
 		PrepareVisualWorld(vw);
 
-		PollSystemEvents(listener);
-		RenderVisualWorld(vw);
+		RenderVisualWorld(vw, contexts, threads_count);
 	}
 
 	DestroyVisualWorld(vw);

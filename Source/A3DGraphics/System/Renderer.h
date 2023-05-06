@@ -21,8 +21,7 @@
 
 #include <stdint.h>
 #include "A3DGraphicsAPI.h"
-
-namespace bgfx { struct Encoder; }
+#include "Common/RendererThreadContext.h"
 
 namespace A3D
 {
@@ -56,11 +55,6 @@ enum class RendererType : unsigned
 	Metal,
 #endif // defined
 	None
-};
-
-struct RendererThreadContext
-{
-	bgfx::Encoder* queue;
 };
 
 A3DGRAPHICSAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,

@@ -26,6 +26,7 @@
 #include "Common/Geometry.h"
 #include "Common/GpuProgram.h"
 #include "Common/Model.h"
+#include "Common/RendererThreadContext.h"
 #include "Common/Viewport.h"
 #include "Container/dense_map.h"
 #include "Container/sparse_map.h"
@@ -86,6 +87,7 @@ A3DGRAPHICSAPI_EXPORT void DestroyVisualWorld(VisualWorld& world);
 
 A3DGRAPHICSAPI_EXPORT void PrepareVisualWorld(VisualWorld& world);
 A3DGRAPHICSAPI_EXPORT void RenderVisualWorld(VisualWorld& world);
+A3DGRAPHICSAPI_EXPORT void RenderVisualWorld(VisualWorld& world, RendererThreadContext* contexts, uint8_t threads_count);
 
 A3DGRAPHICSAPI_EXPORT ViewportHandle AddViewport(VisualWorld& world);
 A3DGRAPHICSAPI_EXPORT void RemoveViewport(VisualWorld& world, ViewportHandle viewport);
