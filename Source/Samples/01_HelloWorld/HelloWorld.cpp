@@ -150,11 +150,7 @@ int main()
 		PrepareVisualWorld(vw);
 
 		PollSystemEvents(listener);
-		BeginRendererFrame();
 		RenderVisualWorld(vw);
-//		BeginRendererThreadContextsFrame(contexts, threads_count);
-//		EndRendererThreadContextsFrame(contexts, threads_count);
-		EndRendererFrame();
 	}
 
 	DestroyVisualWorld(vw);
