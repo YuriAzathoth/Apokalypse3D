@@ -69,8 +69,12 @@ void RenderVisualWorld(VisualWorld& world, RendererThreadContext* contexts, uint
 
 	SetCameraTransforms(world.viewports.cameras.data(), world.viewports.cameras.size());
 
-	for (const VisualRenderItem& item : world.visible)
-		DrawMeshGroup(contexts[0], item.mesh, item.program, item.transform);
+	const VisualRenderItem* item;
+	for (uint16_t i = 0; i < world.visible.size(); ++i)
+	{
+		item = &world.visible[i];
+		DrawMeshGroup(contexts[i % threads_count], item->mesh, item->program, item->transform);
+	}
 
 	EndRendererThreadContextsFrame(contexts, threads_count);
 	EndRendererFrame();
