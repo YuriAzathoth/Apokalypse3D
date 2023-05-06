@@ -109,6 +109,46 @@ TEST_SUITE("Sparse Map")
 		REQUIRE(sm.size() == 0);
 	} CheckMemoryLeaks(); }
 
+	TEST_CASE("Insert 20")
+	{{
+		sparse_map sm;
+		int keys[20];
+		for (unsigned i = 0; i < 20; ++i)
+		{
+			REQUIRE(!sm.contains(i));
+			keys[i] = sm.insert(i);
+			REQUIRE(keys[i] == i);
+		}
+
+		REQUIRE(sm.size() == 20);
+
+		for (unsigned i = 0; i < 20; ++i)
+		{
+			REQUIRE(i == keys[i]);
+			REQUIRE(i == sm[keys[i]]);
+		}
+	} CheckMemoryLeaks(); }
+
+	TEST_CASE("Insert 50")
+	{{
+		sparse_map sm;
+		int keys[50];
+		for (unsigned i = 0; i < 50; ++i)
+		{
+			REQUIRE(!sm.contains(i));
+			keys[i] = sm.insert(i);
+			REQUIRE(keys[i] == i);
+		}
+
+		REQUIRE(sm.size() == 50);
+
+		for (unsigned i = 0; i < 50; ++i)
+		{
+			REQUIRE(i == keys[i]);
+			REQUIRE(i == sm[keys[i]]);
+		}
+	} CheckMemoryLeaks(); }
+
 	TEST_CASE("Insert 1 Utilize 1")
 	{{
 		sparse_map sm;

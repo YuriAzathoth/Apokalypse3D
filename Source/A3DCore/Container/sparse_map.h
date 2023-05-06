@@ -262,6 +262,7 @@ private:
 		data = reinterpret_cast<pointer>(memory);
 		memory += data_size;
 		items_state = reinterpret_cast<bitfield_type*>(memory);
+
 		if (memory != nullptr)
 		{
 			memset(items_state, 0, bitfield_size);
@@ -330,9 +331,9 @@ private:
 		return BITS_ONE << get_bf_bit_position(key);
 	}
 
-	static size_type get_bf_first_empty_bit(bitfield_type bitfield) noexcept
+	static bitfield_type get_bf_first_empty_bit(bitfield_type bitfield) noexcept
 	{
-		return static_cast<size_type>(get_bf_bit(std::countr_one(bitfield)));
+		return get_bf_bit(std::countr_one(bitfield));
 	}
 
 	static bool get_bf_value(bitfield_type bitfield, bitfield_type bit) noexcept
