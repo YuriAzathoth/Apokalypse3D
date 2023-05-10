@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include "A3DCoreAPI.h"
 #include "Common/Geometry.h"
-#include "Container/dense_map.h"
 #include "Container/sparse_map.h"
 #include "Container/vector.h"
 
@@ -53,13 +52,17 @@ public:
 		return ids_.contains(node.handle);
 	}
 
-	const mat4& GetGlobalTransform(NodeHandle node) const noexcept
+	const mat4& GetGlobalTransform(NodeHandle node) const
 	{
 		const InternalNodeKey key = ids_[node.handle];
 		return generations_[key.generation].global_transforms[key.position].transform;
 	}
 
-	SizeType GetGenerationsCount() const noexcept { return generations_.size(); }
+	const mat4& GetLocalTransform(NodeHandle node) const
+	{
+		const InternalNodeKey key = ids_[node.handle];
+		return GetLocalTransformMatrix(key);
+	}
 
 	void SetTransform(NodeHandle node, mat4& transform)
 	{
@@ -67,18 +70,97 @@ public:
 		glm_mat4_copy(transform, GetLocalTransformMatrix(key));
 	}
 
-	void Translate(NodeHandle node, mat4 translation)
+	void Translate(NodeHandle node, mat4& translation)
 	{
-		/*const NodeHandleInternal key_internal = ids_[node.handle];
-		mat4* transform_ptr;
-		if (key_internal.level > 0)
-			transform_ptr = &local_transforms_[key_internal.level - 1][key_internal.position].transform;
-		else
-			transform_ptr = &global_transforms_[key_internal.level][key_internal.position].transform;
-		glm_mat4_mul(*transform_ptr, translation, *transform_ptr);*/
+		const InternalNodeKey key = ids_[node.handle];
+		mat4& transform = GetLocalTransformMatrix(key);
+		glm_mat4_mul(transform, translation, transform);
 	}
 
 	void UpdateTransformations();
+
+	NodeHandle GetParent(NodeHandle node) const
+	{
+		const InternalNodeKey key = ids_[node.handle];
+		if (key.generation == 0)
+			return { EMPTY_KEY };
+		const Generation& generation = generations_[key.generation];
+		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
+		const PositionIndex parent_id = inherited.parents[key.position];
+		if (parent_id != EMPTY_KEY)
+		{
+			const Generation& parent_generation = generations_[key.generation - 1];
+			if (parent_id < parent_generation.external_handles.size())
+				return { parent_generation.external_handles[parent_id] };
+			else
+				return { EMPTY_KEY };
+		}
+		else
+			return { EMPTY_KEY };
+	}
+
+	NodeHandle GetFirstChild(NodeHandle node) const
+	{
+		const InternalNodeKey key = ids_[node.handle];
+		const Generation& generation = generations_[key.generation];
+		const PositionIndex first_child_id = generation.first_children[key.position];
+		if (first_child_id != EMPTY_KEY)
+		{
+			const Generation& children_generation = generations_[key.generation + 1];
+			if (first_child_id < children_generation.external_handles.size())
+				return { children_generation.external_handles[first_child_id] };
+			else
+				return { EMPTY_KEY };
+		}
+		else
+			return { EMPTY_KEY };
+	}
+
+	NodeHandle GetNextSibling(NodeHandle node) const
+	{
+		const InternalNodeKey key = ids_[node.handle];
+		if (key.generation == 0)
+			return { EMPTY_KEY };
+		const Generation& generation = generations_[key.generation];
+		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
+		const PositionIndex next_sibling_id = inherited.siblings[key.position].next;
+		if (next_sibling_id != EMPTY_KEY)
+		{
+			const Generation& children_generation = generations_[key.generation + 1];
+			if (next_sibling_id < children_generation.external_handles.size())
+				return { children_generation.external_handles[next_sibling_id] };
+			else
+				return { EMPTY_KEY };
+		}
+		else
+			return { EMPTY_KEY };
+	}
+
+	NodeHandle GetPrevSibling(NodeHandle node) const
+	{
+		const InternalNodeKey key = ids_[node.handle];
+		if (key.generation == 0)
+			return { EMPTY_KEY };
+		const Generation& generation = generations_[key.generation];
+		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
+		const PositionIndex prev_sibling_id = inherited.siblings[key.position].next;
+		if (prev_sibling_id != EMPTY_KEY)
+		{
+			const Generation& children_generation = generations_[key.generation + 1];
+			if (prev_sibling_id < children_generation.external_handles.size())
+				return { children_generation.external_handles[prev_sibling_id] };
+			else
+				return { EMPTY_KEY };
+		}
+		else
+			return { EMPTY_KEY };
+	}
+
+	SizeType GetGenerationsCount() const noexcept { return generations_.size(); }
+	SizeType GetGenerationSize(SizeType generation_id) const noexcept
+	{
+		return generations_[generation_id].external_handles.size();
+	}
 
 	size_t GetMemoryUsage() const noexcept;
 
@@ -97,7 +179,7 @@ private:
 		IndexType position;
 	};
 
-	struct SiblingListNode
+	struct Siblings
 	{
 		PositionIndex next;
 		PositionIndex prev;
@@ -105,28 +187,51 @@ private:
 
 	struct Generation
 	{
-		dense_map<PositionIndex, GlobalTransform> global_transforms;
-		dense_map<PositionIndex, Box> bounding_boxes;
-		dense_map<PositionIndex, Sphere> bounding_spheres;
-		dense_map<PositionIndex, PositionIndex> first_children;
-		dense_map<PositionIndex, NodeHandleId> external_handles;
-		PositionIndex first_dirty;
+		vector<PositionIndex, GlobalTransform> global_transforms;
+		vector<PositionIndex, Box> bounding_boxes;
+		vector<PositionIndex, Sphere> bounding_spheres;
+		vector<PositionIndex, PositionIndex> first_children;
+		vector<PositionIndex, NodeHandleId> external_handles;
+		PositionIndex first_garbage;
 	};
 
 	struct GenerationInherited
 	{
-		dense_map<PositionIndex, LocalTransform> local_transforms;
-		dense_map<PositionIndex, PositionIndex> parents;
-		dense_map<PositionIndex, SiblingListNode> siblings;
+		vector<PositionIndex, LocalTransform> local_transforms;
+		vector<PositionIndex, PositionIndex> parents;
+		vector<PositionIndex, Siblings> siblings;
 	};
 
-	void RemoveNode(Generation& generation, InternalNodeKey key);
-	void RemoveNode(GenerationInherited& inherited, InternalNodeKey key);
+	void RemoveRootNode(Generation& generation, InternalNodeKey key);
+	void RemoveChildNode(Generation& generation, GenerationInherited& inherited, InternalNodeKey key);
 
-	void RebindNodeChildren(Generation& generation, InternalNodeKey key);
-	void RebindNodeParentAndSiblings(GenerationInherited& inherited, InternalNodeKey key);
+	void RemoveChildren(Generation& children_generation,
+						GenerationInherited& children_inherited,
+						GenerationIndex children_generation_id,
+						PositionIndex first_child_id,
+						PositionIndex parent_id);
 
-	inline mat4& GetLocalTransformMatrix(InternalNodeKey key) noexcept
+	void SwapNodesInGeneration(Generation& generation, GenerationIndex generation_id, PositionIndex left_id, PositionIndex right_id);
+	void SwapNodesInGenerationInherited(GenerationInherited& inherited, GenerationIndex generation_id, PositionIndex left_id, PositionIndex right_id);
+
+	void UpdateChildrenLinks(GenerationInherited& children_inherited, PositionIndex first_child_id, PositionIndex parent_id);
+	void UpdateParentLink(Generation& parent_generation, PositionIndex parent_id, PositionIndex old_child_id, PositionIndex new_child_id);
+	void UpdateSiblingsLinks(GenerationInherited& inherited, PositionIndex id);
+
+	void CleanGeneration(Generation& generation, PositionIndex first_garbage);
+	void CleanGenerationInherited(GenerationInherited& inherited, PositionIndex first_garbage);
+
+	void CleanGarbage();
+
+	inline mat4& GetLocalTransformMatrix(InternalNodeKey key)
+	{
+		if (key.generation > 0)
+			return generations_inherited_[key.generation - 1].local_transforms[key.position].transform;
+		else
+			return generations_[key.generation].global_transforms[key.position].transform;
+	}
+
+	inline const mat4& GetLocalTransformMatrix(InternalNodeKey key) const
 	{
 		if (key.generation > 0)
 			return generations_inherited_[key.generation - 1].local_transforms[key.position].transform;
@@ -135,18 +240,26 @@ private:
 	}
 
 	sparse_map<NodeHandleId, InternalNodeKey> ids_;
-	dense_map<GenerationIndex, Generation> generations_;
-	dense_map<GenerationIndex, GenerationInherited> generations_inherited_;
+	vector<GenerationIndex, Generation> generations_;
+	vector<GenerationIndex, GenerationInherited> generations_inherited_;
 
 private:
 	SceneGraph(const SceneGraph&) = delete;
 	void operator=(const SceneGraph&) = delete;
 
+public:
+	inline static bool IsValid(NodeHandle node) noexcept { return node.handle != EMPTY_KEY; }
+
 private:
 	static constexpr IndexType EMPTY_KEY = ~static_cast<IndexType>(0);
 
-	static void Swap(Generation& generation, PositionIndex left, PositionIndex right);
-	static void Swap(GenerationInherited& inherited, PositionIndex left, PositionIndex right);
+	inline static void SwapBoundingBoxes(Box& left, Box& right);
+	inline static void SwapBoundingSpheres(Sphere& left, Sphere& right);
+	inline static void SwapExternalHandles(NodeHandleId& left, NodeHandleId& right);
+	inline static void SwapGlobalTransforms(GlobalTransform& left, GlobalTransform& right);
+	inline static void SwapLocalTransforms(LocalTransform& left, LocalTransform& right);
+	inline static void SwapPositions(PositionIndex& left, PositionIndex& right);
+	inline static void SwapSiblings(Siblings& left, Siblings& right);
 };
 } // namespace A3D
 

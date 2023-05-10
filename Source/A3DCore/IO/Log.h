@@ -67,13 +67,13 @@ A3DCOREAPI_EXPORT void LogWrite(LogLevel level, const char* format, ...) noexcep
 #define Assert(CONT, FORMAT, ...) \
 if (!(CONT)) \
 { \
-	LogWrite(LogLevel::ERROR, __FILE__, __LINE__, FORMAT "%s:", ##__VA_ARGS__, #CONT); \
+	LogWrite(LogLevel::FATAL, __FILE__, __LINE__, "Assertion Error (%s): " FORMAT, #CONT, ##__VA_ARGS__); \
 }
 #else // APOKALYPSE_LOG_FILELINE
 #define Assert(CONT, FORMAT, ...) \
 if (!(CONT)) \
 { \
-	LogWrite(LogLevel::ERROR, FORMAT "%s:", ##__VA_ARGS__, #CONT); \
+	LogWrite(LogLevel::FATAL, "Assertion Error (%s): " FORMAT, #CONT, ##__VA_ARGS__); \
 }
 #endif // APOKALYPSE_LOG_FILELINE
 #else // APOKALYPSE_ASSERTIONS

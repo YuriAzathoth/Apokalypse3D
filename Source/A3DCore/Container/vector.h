@@ -223,6 +223,15 @@ public:
 		return true;
 	}
 
+	void shrink(size_type count)
+	{
+		if constexpr (!std::is_trivial<value_type>::value)
+			for (iterator it = begin() + count; it < end(); ++it)
+				std::destroy_at(it);
+
+		size_ = count;
+	}
+
 	bool shrink_to_fit()
 	{
 		if (size_ > 0)

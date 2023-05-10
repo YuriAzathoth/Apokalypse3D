@@ -31,6 +31,12 @@
 
 namespace A3D
 {
+void DebugBreak()
+{
+	int* int3 = (int*)3L;
+	*int3 = 3;
+}
+
 FileType GetFileAttribute(const char* filepath)
 {
 #ifdef __WIN32__

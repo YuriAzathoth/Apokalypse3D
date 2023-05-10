@@ -24,8 +24,8 @@ namespace A3D
 {
 SceneGraph::SceneGraph()
 {
-	generations_.emplace();
-	generations_.back().first_dirty = 0;
+	generations_.emplace_back();
+	generations_.back().first_garbage = 0;
 }
 
 NodeHandle SceneGraph::AddNode()
@@ -34,28 +34,32 @@ NodeHandle SceneGraph::AddNode()
 
 	InternalNodeKey key;
 	key.generation = 0;
+	key.position = generation.global_transforms.size();
 
-	key.position = generation.global_transforms.insert({GLM_MAT4_IDENTITY_INIT});
-	generation.bounding_boxes.insert({GLM_VEC3_ZERO_INIT, GLM_VEC3_ZERO_INIT});
-	generation.bounding_spheres.insert({GLM_VEC3_ZERO_INIT, 0.0f});
-	generation.first_children.insert(EMPTY_KEY);
+	generation.global_transforms.push_back({GLM_MAT4_IDENTITY_INIT});
+	generation.bounding_boxes.push_back({GLM_VEC3_ZERO_INIT, GLM_VEC3_ZERO_INIT});
+	generation.bounding_spheres.push_back({GLM_VEC3_ZERO_INIT, 0.0f});
+	generation.first_children.push_back(EMPTY_KEY);
 
 	const NodeHandleId handle = ids_.insert(key);
-	generation.external_handles.insert(handle);
+	generation.external_handles.push_back(handle);
 
-//	if (generation.first_dirty < generation.external_handles.size() - 1)
-//		Swap(generation, generation.first_dirty, generation.external_handles.size() - 1);
-//
-//	++generation.first_dirty;
+	++generation.first_garbage;
+	Assert(generation.first_garbage == generation.global_transforms.size(),
+		   "Failed to add root node tn TransformTree: first_garbage link unsynchronized.");
 
 	return { handle };
 }
 
 NodeHandle SceneGraph::AddNode(NodeHandle parent)
 {
-	Assert(ids_.contains(parent.handle), "Trying to attach node to non-existent parent.");
+	Assert(ids_.contains(parent.handle), "Failed to add child node tn TransformTree: parent handle does not exist.");
+
 	const InternalNodeKey parent_key = ids_[parent.handle];
-	Assert(parent_key.generation < generations_.size(), "Trying to attach node to parent in non-existent generation.");
+	Assert(parent_key.generation < generations_.size(),
+		   "Failed to add child node tn TransformTree: parent generation #%u does not exist.", parent_key.generation);
+	Assert(parent_key.position < generations_[parent_key.generation].external_handles.size(),
+		   "Failed to add child node tn TransformTree: parent node #%u does not exist.", parent_key.generation);
 
 	InternalNodeKey key;
 	key.generation = parent_key.generation + 1;
@@ -63,32 +67,39 @@ NodeHandle SceneGraph::AddNode(NodeHandle parent)
 	// Add new generation level if needed
 	if (key.generation >= generations_.size())
 	{
-		generations_.emplace();
-		generations_.back().first_dirty = 0;
-		generations_inherited_.emplace();
+		generations_.emplace_back();
+		generations_.back().first_garbage = 0;
+		generations_inherited_.emplace_back();
 	}
 
 	Generation& generation = generations_[key.generation];
 
+	key.position = generation.global_transforms.size();
+
 	// Insert node data to the end
-	key.position = generation.global_transforms.insert({GLM_MAT4_IDENTITY_INIT});
-	generation.bounding_boxes.insert({GLM_VEC3_ZERO_INIT, GLM_VEC3_ZERO_INIT});
-	generation.bounding_spheres.insert({GLM_VEC3_ZERO_INIT, 0.0f});
-	generation.first_children.insert(EMPTY_KEY);
+	generation.global_transforms.push_back({GLM_MAT4_IDENTITY_INIT});
+	generation.bounding_boxes.push_back({GLM_VEC3_ZERO_INIT, GLM_VEC3_ZERO_INIT});
+	generation.bounding_spheres.push_back({GLM_VEC3_ZERO_INIT, 0.0f});
+	generation.first_children.push_back(EMPTY_KEY);
 
 	// Write external handle
 	const NodeHandleId handle = ids_.insert(key);
-	generation.external_handles.insert(handle);
+	generation.external_handles.push_back(handle);
+
+	// Expand first garbage variable
+	++generation.first_garbage;
+	Assert(generation.first_garbage == generation.global_transforms.size(),
+		   "Failed to add child node tn TransformTree: first_garbage link unsynchronized.");
 
 	// Insert inherited node data to the end
 	GenerationInherited& inherited = generations_inherited_[key.generation - 1];
-	inherited.local_transforms.insert({GLM_MAT4_IDENTITY_INIT});
-	inherited.parents.insert(parent_key.position);
+	inherited.local_transforms.push_back({GLM_MAT4_IDENTITY_INIT});
+	inherited.parents.push_back(parent_key.position);
 
 	PositionIndex& first_child_id = generations_[parent_key.generation].first_children[parent_key.position];
 
 	// Set node as parent's first child
-	inherited.siblings.insert({first_child_id, EMPTY_KEY});
+	inherited.siblings.push_back({first_child_id, EMPTY_KEY});
 
 	// If parent had children
 	if (first_child_id != EMPTY_KEY)
@@ -103,135 +114,264 @@ NodeHandle SceneGraph::AddNode(NodeHandle parent)
 
 void SceneGraph::RemoveNode(NodeHandle node)
 {
-	Assert(ids_.contains(node.handle), "Trying to remove non-existent node.");
+	Assert(ids_.contains(node.handle),
+		   "Failed to remove node from TransformTree: node handle does not exist.");
 	const InternalNodeKey key = ids_[node.handle];
-	Assert(key.generation < generations_.size(), "Trying to remove node from non-existent generation.");
 
-	RemoveNode(generations_[key.generation], key);
-	if (key.generation > 0)
-		RemoveNode(generations_inherited_[key.generation - 1], key);
+	Assert(key.generation < generations_.size(),
+		   "Failed to remove node from TransformTree: generation #%u does not exists.", key.generation);
+
+	Generation& generation = generations_[key.generation];
+	--generation.first_garbage;
+	Assert(!generation.external_handles.empty(),
+		   "Failed to remove node from TransformTree: generation #%u is empty.", key.generation);
+
+	if (key.generation == 0)
+		RemoveRootNode(generation, key);
+	else
+	{
+		GenerationInherited inherited = generations_inherited_[key.generation - 1];
+		RemoveChildNode(generation, inherited, key);
+	}
+
+	CleanGarbage();
+
+	/*Assert(ids_.contains(node.handle), "Trying to remove non-existent node.");
+	const InternalNodeKey key = ids_[node.handle];
+
+	Generation& generation = generations_[key.generation];
+	if (key.generation == 0)
+		RemoveRootNode(generation, key);
+	else
+	{
+		GenerationInherited inherited = generations_inherited_[key.generation - 1];
+		RemoveChildNode(generation, inherited, key);
+		EraseGenerationIfEmpty(generation, key.generation);
+	}
+
+	if (expected_size_ < generations_.size())
+	{
+		generations_.shrink(expected_size_);
+		generations_inherited_.shrink(expected_size_ - 1);
+		expected_size_ = generations_.size();
+	}*/
 }
 
-void SceneGraph::RemoveNode(Generation& generation, InternalNodeKey key)
+void SceneGraph::RemoveRootNode(Generation& generation, InternalNodeKey key)
 {
-	// If generation is not last and node has children
-	if ((key.generation + 1 < generations_.size()) && (generation.first_children[key.generation] != EMPTY_KEY))
-	{
-		InternalNodeKey child_key;
-		child_key.generation = key.generation + 1;
+	int new_id = (int)generation.first_garbage - 1;
+	if ((int)key.position < new_id)
+		SwapNodesInGeneration(generation, key.generation, key.position, (PositionIndex)new_id);
+	else
+		new_id = (int)key.position;
 
-		// Remove children
-		PositionIndex next_sibling;
-		Generation& children_generation = generations_[child_key.generation];
-		GenerationInherited& children_inherited = generations_inherited_[child_key.generation - 1];
-		for (child_key.position = generation.first_children[key.position];
-			 child_key.position != EMPTY_KEY;
-			 child_key.position = next_sibling)
+	ids_.erase(generation.external_handles[new_id]);
+
+	const GenerationIndex children_generation_id = key.generation + 1;
+	if (children_generation_id < generations_.size())
+	{
+		RemoveChildren(generations_[children_generation_id],
+					   generations_inherited_[children_generation_id - 1],
+					   children_generation_id,
+					   generation.first_children[new_id],
+					   new_id);
+	}
+
+/*	Assert(key.generation == 0, "Trying to remove toot node from generation not 0.");
+	Assert(key.position < generation.external_handles.size(), "Trying to remove root node from out-of-range position.");
+
+	if (key.generation + 1 < generations_.size())
+		RemoveChildren(generation, key);
+
+	const PositionIndex rebound_id = EraseSwapFromGeneration(generation, key);
+	if (rebound_id != EMPTY_KEY)
+	{
+		UpdateExternalLink(generation, key);
+		UpdateChildrenLinks(generation, key);
+	}*/
+}
+
+void SceneGraph::RemoveChildNode(Generation& generation, GenerationInherited& inherited, InternalNodeKey key)
+{
+	int new_id = (int)generation.first_garbage - 1;
+	if ((int)key.position < new_id)
+	{
+		SwapNodesInGeneration(generation, key.generation, key.position, (PositionIndex)new_id);
+		SwapNodesInGenerationInherited(inherited, key.generation, key.position, (PositionIndex)new_id);
+	}
+	else
+		new_id = (int)key.position;
+
+	ids_.erase(generation.external_handles[new_id]);
+
+	const GenerationIndex children_generation_id = key.generation + 1;
+	if (children_generation_id < generations_.size())
+	{
+		RemoveChildren(generations_[children_generation_id],
+					   generations_inherited_[children_generation_id - 1],
+					   children_generation_id,
+					   generation.first_children[new_id],
+					   new_id);
+	}
+}
+
+void SceneGraph::RemoveChildren(Generation& children_generation,
+								GenerationInherited& children_inherited,
+								GenerationIndex children_generation_id,
+								PositionIndex first_child_id,
+								PositionIndex parent_id)
+{
+	InternalNodeKey child_key;
+	child_key.position = first_child_id;
+	child_key.generation = children_generation_id;
+
+	PositionIndex next_child_id;
+
+	while (child_key.position != EMPTY_KEY)
+	{
+		--children_generation.first_garbage;
+
+		next_child_id = children_inherited.siblings[child_key.position].next;
+		RemoveChildNode(children_generation, children_inherited, child_key);
+		child_key.position = next_child_id;
+	}
+}
+
+void SceneGraph::SwapNodesInGeneration(Generation& generation,
+									   GenerationIndex generation_id,
+									   PositionIndex left_id,
+									   PositionIndex right_id)
+{
+	Assert(generation_id < generations_.size(),
+		   "Failed to swap nodes in TransformTree: generation #%u does not exist.", generation_id);
+	Assert(left_id < generation.external_handles.size(),
+		   "Failed to swap nodes in TransformTree: node #%u does not exist.", left_id);
+	Assert(right_id < generation.external_handles.size(),
+		   "Failed to swap nodes in TransformTree: node #%u does not exist.", right_id);
+	Assert(left_id != right_id,
+		   "Failed to swap nodes in TransformTree: left and right node ids #%u ared same.", left_id);
+
+	SwapGlobalTransforms(generation.global_transforms[left_id], generation.global_transforms[right_id]);
+	SwapBoundingBoxes(generation.bounding_boxes[left_id], generation.bounding_boxes[right_id]);
+	SwapBoundingSpheres(generation.bounding_spheres[left_id], generation.bounding_spheres[right_id]);
+	SwapPositions(generation.first_children[left_id], generation.first_children[right_id]);
+	SwapExternalHandles(generation.external_handles[left_id], generation.external_handles[right_id]);
+
+	if (generation_id + 1 < generations_.size())
+	{
+		GenerationInherited& inherited = generations_inherited_[generation_id - 1];
+		UpdateChildrenLinks(inherited, generation.first_children[left_id], left_id);
+		UpdateChildrenLinks(inherited, generation.first_children[right_id], right_id);
+	}
+
+	ids_[generation.external_handles[left_id]].position = left_id;
+	ids_[generation.external_handles[right_id]].position = right_id;
+}
+
+void SceneGraph::SwapNodesInGenerationInherited(GenerationInherited& inherited, GenerationIndex generation_id, PositionIndex left_id, PositionIndex right_id)
+{
+	Assert(generation_id > 0,
+		   "Failed to swap children nodes in TransformTree: generation 0 does not have any parents.");
+	Assert(generation_id < generations_.size(),
+		   "Failed to swap children nodes in TransformTree: generation #%u does not exist.", generation_id);
+	Assert(left_id < inherited.local_transforms.size(),
+		   "Failed to swap children nodes in TransformTree: node #%u does not exist.", left_id);
+	Assert(right_id < inherited.local_transforms.size(),
+		   "Failed to swap children nodes in TransformTree: node #%u does not exist.", right_id);
+	Assert(left_id != right_id,
+		   "Failed to swap children nodes in TransformTree: left and right node ids #%u are same.", left_id);
+
+	SwapLocalTransforms(inherited.local_transforms[left_id], inherited.local_transforms[right_id]);
+	SwapPositions(inherited.parents[left_id], inherited.parents[right_id]);
+	SwapSiblings(inherited.siblings[left_id], inherited.siblings[right_id]);
+
+	UpdateSiblingsLinks(inherited, left_id);
+	UpdateSiblingsLinks(inherited, right_id);
+
+	Generation& parent_generation = generations_[generation_id - 1];
+	UpdateParentLink(parent_generation, inherited.parents[left_id], left_id, right_id);
+	UpdateParentLink(parent_generation, inherited.parents[right_id], right_id, left_id);
+}
+
+void SceneGraph::UpdateChildrenLinks(GenerationInherited& children_inherited, PositionIndex first_child_id, PositionIndex parent_id)
+{
+	for (PositionIndex child_id = children_inherited.parents[first_child_id];
+		 child_id != EMPTY_KEY;
+		 child_id = children_inherited.siblings[child_id].next)
+	{
+		children_inherited.parents[child_id] = parent_id;
+	}
+}
+
+void SceneGraph::UpdateParentLink(Generation& parent_generation, PositionIndex parent_id, PositionIndex old_child_id, PositionIndex new_child_id)
+{
+	Assert(!parent_generation.external_handles.empty(),
+		   "Failed to update link to parent in TransformTree: parent generation %u is empty.", parent_id);
+	Assert(parent_id < parent_generation.external_handles.size(),
+		   "Failed to update link to parent in TransformTree: parent %u does not exist.", parent_id);
+
+	PositionIndex& first_child_id = parent_generation.first_children[parent_id];
+
+	Assert(first_child_id != EMPTY_KEY,
+		   "Failed to update link to parent in TransformTree: parent #u does not have any children.", parent_id);
+
+	if (first_child_id == old_child_id)
+		first_child_id = new_child_id;
+}
+
+void SceneGraph::UpdateSiblingsLinks(GenerationInherited& inherited, PositionIndex id)
+{
+	const Siblings& siblings = inherited.siblings[id];
+	if (siblings.prev != EMPTY_KEY)
+		inherited.siblings[siblings.prev].next = id;
+	if (siblings.next != EMPTY_KEY)
+		inherited.siblings[siblings.next].prev = id;
+}
+
+void SceneGraph::CleanGeneration(Generation& generation, PositionIndex first_garbage)
+{
+	generation.global_transforms.shrink(first_garbage);
+	generation.bounding_boxes.shrink(first_garbage);
+	generation.bounding_spheres.shrink(first_garbage);
+	generation.first_children.shrink(first_garbage);
+	generation.external_handles.shrink(first_garbage);
+
+	generation.first_garbage = generation.global_transforms.size();
+}
+
+void SceneGraph::CleanGenerationInherited(GenerationInherited& inherited, PositionIndex first_garbage)
+{
+	inherited.local_transforms.shrink(first_garbage);
+	inherited.parents.shrink(first_garbage);
+	inherited.siblings.shrink(first_garbage);
+}
+
+void SceneGraph::CleanGarbage()
+{
+	Generation* generation = generations_.begin();
+	if (generation->first_garbage < generation->external_handles.size())
+		CleanGeneration(*generation, generation->first_garbage);
+	++generation;
+
+	for(GenerationInherited* inherited = generations_inherited_.begin();
+		inherited != generations_inherited_.end();
+		++generation, ++inherited)
+	{
+		if (generation->first_garbage < generation->external_handles.size())
 		{
-			RemoveNode(children_generation, child_key);
-			next_sibling = children_inherited.siblings[child_key.position].next;
-			if (key.generation > 0)
-				RemoveNode(children_inherited, child_key);
+			CleanGeneration(*generation, generation->first_garbage);
+			CleanGenerationInherited(*inherited, generation->first_garbage);
 		}
 	}
 
-	// Erase swap node data
-	const PositionIndex rebound_position = generation.global_transforms.erase(key.position);
-	generation.bounding_boxes.erase(key.position);
-	generation.bounding_spheres.erase(key.position);
-	generation.first_children.erase(key.position);
-
-	// Erase external identifier binding
-	ids_.erase(generation.external_handles[key.position]);
-	generation.external_handles.erase(key.position);
-
-	// If no nodes left in current generation erase generation
-	if (generation.external_handles.empty() && key.generation > 0)
-		generations_.erase(key.generation);
-
-	// If last node moved to current position
-	if (rebound_position != EMPTY_KEY)
-	{
-		// Set last node external identifier to moved position
-		ids_[generation.external_handles[key.position]].position = key.position;
-
-		RebindNodeChildren(generation, key);
-	}
-}
-
-void SceneGraph::RemoveNode(GenerationInherited& inherited, InternalNodeKey key)
-{
-	SiblingListNode& sibling_node = inherited.siblings[key.position];
-
-	// If node is not the last parent's child
-	if (sibling_node.prev != EMPTY_KEY && sibling_node.next != EMPTY_KEY)
-	{
-		// "Collapse" siblings
-		if (sibling_node.prev != EMPTY_KEY)
-			inherited.siblings[sibling_node.prev].next = sibling_node.next;
-		if (sibling_node.next != EMPTY_KEY)
-			inherited.siblings[sibling_node.next].prev = sibling_node.prev;
-	}
-	// Else node is the last parent's child
-	else
-	{
-		// Remove this node from parent's first child handle
-		const PositionIndex parent_position = inherited.parents[key.position];
-		Generation& parent_generation = generations_[key.generation - 1];
-		parent_generation.first_children[parent_position] = EMPTY_KEY;
-	}
-
-	// Erase swap inherited node data
-	const PositionIndex rebound_position = inherited.local_transforms.erase(key.position);
-	inherited.parents.erase(key.position);
-	inherited.siblings.erase(key.position);
-
-	// If no nodes left in current generation erase generation
-	if (inherited.parents.empty())
-		generations_inherited_.erase(key.generation - 1);
-
-	// If last node moved to current position
-	if (rebound_position != EMPTY_KEY)
-		RebindNodeParentAndSiblings(inherited, key);
-}
-
-void SceneGraph::RebindNodeChildren(Generation& generation, InternalNodeKey key)
-{
-	InternalNodeKey child_key;
-	child_key.generation = key.generation + 1;
-
-	// Iterate through all children
-	PositionIndex next_sibling;
-	GenerationInherited& children_inherited = generations_inherited_[child_key.generation];
-	for (child_key.position = generation.first_children[key.position];
-		 child_key.position != EMPTY_KEY;
-		 child_key.position = next_sibling)
-	{
-		next_sibling = children_inherited.siblings[child_key.position].next;
-		generations_inherited_[child_key.generation - 1].parents[child_key.position] = key.position;
-	}
-}
-
-void SceneGraph::RebindNodeParentAndSiblings(GenerationInherited& inherited, InternalNodeKey key)
-{
-	SiblingListNode& sibling_node = inherited.siblings[key.position];
-
-	// If sibling is not first
-	if (sibling_node.prev != EMPTY_KEY)
-		inherited.siblings[sibling_node.prev].next = key.position;
-	// Else sibling is first
-	else
-	{
-		// Set new node as first parent's child
-		InternalNodeKey parent_key;
-		parent_key.generation = key.generation - 1;
-		parent_key.position = inherited.parents[key.position];
-		generations_[parent_key.generation].first_children[parent_key.position] = key.position;
-	}
-
-	// If node has next sibling
-	if (sibling_node.next != EMPTY_KEY)
-		inherited.siblings[sibling_node.next].prev = key.position;
+	generation = &generations_[1];
+	for (GenerationIndex i = 1; i < generations_.size(); ++i, ++generation)
+		if (generation->global_transforms.empty())
+		{
+			generations_.shrink(i);
+			generations_inherited_.shrink(i - 1);
+			break;
+		}
 }
 
 void SceneGraph::UpdateTransformations()
@@ -260,6 +400,77 @@ void SceneGraph::UpdateTransformations()
 	}
 }
 
+void SceneGraph::SwapBoundingBoxes(Box& left, Box& right)
+{
+	vec3 temp;
+
+	glm_vec3_copy(right.min, temp);
+	glm_vec3_copy(left.min, right.min);
+	glm_vec3_copy(temp, left.min);
+
+	glm_vec3_copy(right.min, temp);
+	glm_vec3_copy(left.min, right.min);
+	glm_vec3_copy(temp, left.min);
+}
+
+void SceneGraph::SwapBoundingSpheres(Sphere& left, Sphere& right)
+{
+	vec3 tempv;
+	glm_vec3_copy(right.center, tempv);
+	glm_vec3_copy(left.center, right.center);
+	glm_vec3_copy(tempv, left.center);
+
+	float tempf;
+	tempf = right.radius;
+	right.radius = left.radius;
+	left.radius = tempf;
+}
+
+void SceneGraph::SwapExternalHandles(NodeHandleId& left, NodeHandleId& right)
+{
+	NodeHandleId temp;
+	temp = right;
+	right = left;
+	left = temp;
+}
+
+void SceneGraph::SwapGlobalTransforms(GlobalTransform& left, GlobalTransform& right)
+{
+	mat4 temp;
+	glm_mat4_copy(right.transform, temp);
+	glm_mat4_copy(left.transform, right.transform);
+	glm_mat4_copy(temp, left.transform);
+}
+
+void SceneGraph::SwapLocalTransforms(LocalTransform& left, LocalTransform& right)
+{
+	mat4 temp;
+	glm_mat4_copy(right.transform, temp);
+	glm_mat4_copy(left.transform, right.transform);
+	glm_mat4_copy(temp, left.transform);
+}
+
+void SceneGraph::SwapPositions(PositionIndex& left, PositionIndex& right)
+{
+	PositionIndex temp;
+	temp = right;
+	right = left;
+	left = temp;
+}
+
+void SceneGraph::SwapSiblings(Siblings& left, Siblings& right)
+{
+	PositionIndex temp;
+
+	temp = right.prev;
+	right.prev = left.prev;
+	left.prev = temp;
+
+	temp = right.next;
+	right.next = left.next;
+	left.next = temp;
+}
+
 size_t SceneGraph::GetMemoryUsage() const noexcept
 {
 	size_t size = static_cast<size_t>(generations_.memory_size()) * sizeof(Generation) +
@@ -275,22 +486,6 @@ size_t SceneGraph::GetMemoryUsage() const noexcept
 			 + r.parents.memory_size()
 			 + r.siblings.memory_size();
 	return size;
-}
-
-void SceneGraph::Swap(Generation& generation, PositionIndex left, PositionIndex right)
-{
-	generation.global_transforms.swap_items(left, right);
-	generation.bounding_boxes.swap_items(left, right);
-	generation.bounding_spheres.swap_items(left, right);
-	generation.first_children.swap_items(left, right);
-	generation.external_handles.swap_items(left, right);
-}
-
-void SceneGraph::Swap(GenerationInherited& inherited, PositionIndex left, PositionIndex right)
-{
-	inherited.local_transforms.swap_items(left, right);
-	inherited.parents.swap_items(left, right);
-	inherited.siblings.swap_items(left, right);
 }
 
 #ifndef NDEBUG

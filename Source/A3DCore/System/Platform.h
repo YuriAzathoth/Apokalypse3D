@@ -30,6 +30,7 @@ enum class FileType : uint8_t
 	DIRECTORY
 };
 
+void DebugBreak();
 FileType GetFileAttribute(const char* filepath);
 void Mkdir(const char* path);
 void Rmdir(const char* path);

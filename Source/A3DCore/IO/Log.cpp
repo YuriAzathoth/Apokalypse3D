@@ -125,11 +125,11 @@ void LogWrite(LogLevel level, const char* format, ...) noexcept
 		}
 	}
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 	if (level >= LogLevel::FATAL)
-//		bx::debugBreak();
-//#else // NDEBUG
+		DebugBreak();
+#else // NDEBUG
 		std::terminate();
-//#endif // NDEBUG
+#endif // NDEBUG
 }
 } // namespace A3D
