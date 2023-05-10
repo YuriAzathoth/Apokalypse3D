@@ -87,16 +87,14 @@ public:
 		const Generation& generation = generations_[key.generation];
 		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
 		const PositionIndex parent_id = inherited.parents[key.position];
+		NodeHandleId ret = EMPTY_KEY;
 		if (parent_id != EMPTY_KEY)
 		{
 			const Generation& parent_generation = generations_[key.generation - 1];
 			if (parent_id < parent_generation.external_handles.size())
-				return { parent_generation.external_handles[parent_id] };
-			else
-				return { EMPTY_KEY };
+				ret = parent_generation.external_handles[parent_id];
 		}
-		else
-			return { EMPTY_KEY };
+		return { ret };
 	}
 
 	NodeHandle GetFirstChild(NodeHandle node) const
@@ -104,16 +102,14 @@ public:
 		const InternalNodeKey key = ids_[node.handle];
 		const Generation& generation = generations_[key.generation];
 		const PositionIndex first_child_id = generation.first_children[key.position];
+		NodeHandleId ret = EMPTY_KEY;
 		if (first_child_id != EMPTY_KEY)
 		{
 			const Generation& children_generation = generations_[key.generation + 1];
 			if (first_child_id < children_generation.external_handles.size())
-				return { children_generation.external_handles[first_child_id] };
-			else
-				return { EMPTY_KEY };
+				ret = children_generation.external_handles[first_child_id];
 		}
-		else
-			return { EMPTY_KEY };
+		return { ret };
 	}
 
 	NodeHandle GetNextSibling(NodeHandle node) const
@@ -124,16 +120,14 @@ public:
 		const Generation& generation = generations_[key.generation];
 		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
 		const PositionIndex next_sibling_id = inherited.siblings[key.position].next;
+		NodeHandleId ret = EMPTY_KEY;
 		if (next_sibling_id != EMPTY_KEY)
 		{
 			const Generation& children_generation = generations_[key.generation + 1];
 			if (next_sibling_id < children_generation.external_handles.size())
-				return { children_generation.external_handles[next_sibling_id] };
-			else
-				return { EMPTY_KEY };
+				ret = children_generation.external_handles[next_sibling_id];
 		}
-		else
-			return { EMPTY_KEY };
+		return { ret };
 	}
 
 	NodeHandle GetPrevSibling(NodeHandle node) const
@@ -144,16 +138,14 @@ public:
 		const Generation& generation = generations_[key.generation];
 		const GenerationInherited& inherited = generations_inherited_[key.generation - 1];
 		const PositionIndex prev_sibling_id = inherited.siblings[key.position].next;
+		NodeHandleId ret = EMPTY_KEY;
 		if (prev_sibling_id != EMPTY_KEY)
 		{
 			const Generation& children_generation = generations_[key.generation + 1];
 			if (prev_sibling_id < children_generation.external_handles.size())
-				return { children_generation.external_handles[prev_sibling_id] };
-			else
-				return { EMPTY_KEY };
+				ret = children_generation.external_handles[prev_sibling_id];
 		}
-		else
-			return { EMPTY_KEY };
+		return { ret };
 	}
 
 	SizeType GetGenerationsCount() const noexcept { return generations_.size(); }
