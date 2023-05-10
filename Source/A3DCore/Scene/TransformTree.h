@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SCENE_SCENE_GRAPH_H
-#define SCENE_SCENE_GRAPH_H
+#ifndef SCENE_TRANSFORM_TREE_H
+#define SCENE_TRANSFORM_TREE_H
 
 #include <stdint.h>
 #include "A3DCoreAPI.h"
@@ -34,13 +34,13 @@ struct NodeHandle
 	NodeHandleId handle;
 };
 
-class A3DCOREAPI_EXPORT SceneGraph
+class A3DCOREAPI_EXPORT TransformTree
 {
 public:
 	using SizeType = NodeHandleId;
 
-	SceneGraph();
-	~SceneGraph() {}
+	TransformTree();
+	~TransformTree() {}
 
 	NodeHandle AddNode();
 	NodeHandle AddNode(NodeHandle parent);
@@ -244,8 +244,8 @@ private:
 	vector<GenerationIndex, GenerationInherited> generations_inherited_;
 
 private:
-	SceneGraph(const SceneGraph&) = delete;
-	void operator=(const SceneGraph&) = delete;
+	TransformTree(const TransformTree&) = delete;
+	void operator=(const TransformTree&) = delete;
 
 public:
 	inline static bool IsValid(NodeHandle node) noexcept { return node.handle != EMPTY_KEY; }
@@ -263,4 +263,4 @@ private:
 };
 } // namespace A3D
 
-#endif // SCENE_SCENE_GRAPH_H
+#endif // SCENE_TRANSFORM_TREE_H

@@ -17,18 +17,18 @@
 */
 
 #include <cglm/cglm.h>
-#include "SceneGraph.h"
 #include "IO/Log.h"
+#include "TransformTree.h"
 
 namespace A3D
 {
-SceneGraph::SceneGraph()
+TransformTree::TransformTree()
 {
 	generations_.emplace_back();
 	generations_.back().first_garbage = 0;
 }
 
-NodeHandle SceneGraph::AddNode()
+NodeHandle TransformTree::AddNode()
 {
 	Generation& generation = generations_[0];
 
@@ -51,7 +51,7 @@ NodeHandle SceneGraph::AddNode()
 	return { handle };
 }
 
-NodeHandle SceneGraph::AddNode(NodeHandle parent)
+NodeHandle TransformTree::AddNode(NodeHandle parent)
 {
 	Assert(ids_.contains(parent.handle), "Failed to add child node tn TransformTree: parent handle does not exist.");
 
@@ -112,7 +112,7 @@ NodeHandle SceneGraph::AddNode(NodeHandle parent)
 	return { handle };
 }
 
-void SceneGraph::RemoveNode(NodeHandle node)
+void TransformTree::RemoveNode(NodeHandle node)
 {
 	Assert(ids_.contains(node.handle),
 		   "Failed to remove node from TransformTree: node handle does not exist.");
@@ -157,7 +157,7 @@ void SceneGraph::RemoveNode(NodeHandle node)
 	}*/
 }
 
-void SceneGraph::RemoveRootNode(Generation& generation, InternalNodeKey key)
+void TransformTree::RemoveRootNode(Generation& generation, InternalNodeKey key)
 {
 	int new_id = (int)generation.first_garbage - 1;
 	if ((int)key.position < new_id)
@@ -191,7 +191,7 @@ void SceneGraph::RemoveRootNode(Generation& generation, InternalNodeKey key)
 	}*/
 }
 
-void SceneGraph::RemoveChildNode(Generation& generation, GenerationInherited& inherited, InternalNodeKey key)
+void TransformTree::RemoveChildNode(Generation& generation, GenerationInherited& inherited, InternalNodeKey key)
 {
 	int new_id = (int)generation.first_garbage - 1;
 	if ((int)key.position < new_id)
@@ -215,7 +215,7 @@ void SceneGraph::RemoveChildNode(Generation& generation, GenerationInherited& in
 	}
 }
 
-void SceneGraph::RemoveChildren(Generation& children_generation,
+void TransformTree::RemoveChildren(Generation& children_generation,
 								GenerationInherited& children_inherited,
 								GenerationIndex children_generation_id,
 								PositionIndex first_child_id,
@@ -237,7 +237,7 @@ void SceneGraph::RemoveChildren(Generation& children_generation,
 	}
 }
 
-void SceneGraph::SwapNodesInGeneration(Generation& generation,
+void TransformTree::SwapNodesInGeneration(Generation& generation,
 									   GenerationIndex generation_id,
 									   PositionIndex left_id,
 									   PositionIndex right_id)
@@ -268,7 +268,7 @@ void SceneGraph::SwapNodesInGeneration(Generation& generation,
 	ids_[generation.external_handles[right_id]].position = right_id;
 }
 
-void SceneGraph::SwapNodesInGenerationInherited(GenerationInherited& inherited, GenerationIndex generation_id, PositionIndex left_id, PositionIndex right_id)
+void TransformTree::SwapNodesInGenerationInherited(GenerationInherited& inherited, GenerationIndex generation_id, PositionIndex left_id, PositionIndex right_id)
 {
 	Assert(generation_id > 0,
 		   "Failed to swap children nodes in TransformTree: generation 0 does not have any parents.");
@@ -293,7 +293,7 @@ void SceneGraph::SwapNodesInGenerationInherited(GenerationInherited& inherited, 
 	UpdateParentLink(parent_generation, inherited.parents[right_id], right_id, left_id);
 }
 
-void SceneGraph::UpdateChildrenLinks(GenerationInherited& children_inherited, PositionIndex first_child_id, PositionIndex parent_id)
+void TransformTree::UpdateChildrenLinks(GenerationInherited& children_inherited, PositionIndex first_child_id, PositionIndex parent_id)
 {
 	for (PositionIndex child_id = children_inherited.parents[first_child_id];
 		 child_id != EMPTY_KEY;
@@ -303,7 +303,7 @@ void SceneGraph::UpdateChildrenLinks(GenerationInherited& children_inherited, Po
 	}
 }
 
-void SceneGraph::UpdateParentLink(Generation& parent_generation, PositionIndex parent_id, PositionIndex old_child_id, PositionIndex new_child_id)
+void TransformTree::UpdateParentLink(Generation& parent_generation, PositionIndex parent_id, PositionIndex old_child_id, PositionIndex new_child_id)
 {
 	Assert(!parent_generation.external_handles.empty(),
 		   "Failed to update link to parent in TransformTree: parent generation %u is empty.", parent_id);
@@ -319,7 +319,7 @@ void SceneGraph::UpdateParentLink(Generation& parent_generation, PositionIndex p
 		first_child_id = new_child_id;
 }
 
-void SceneGraph::UpdateSiblingsLinks(GenerationInherited& inherited, PositionIndex id)
+void TransformTree::UpdateSiblingsLinks(GenerationInherited& inherited, PositionIndex id)
 {
 	const Siblings& siblings = inherited.siblings[id];
 	if (siblings.prev != EMPTY_KEY)
@@ -328,7 +328,7 @@ void SceneGraph::UpdateSiblingsLinks(GenerationInherited& inherited, PositionInd
 		inherited.siblings[siblings.next].prev = id;
 }
 
-void SceneGraph::CleanGeneration(Generation& generation, PositionIndex first_garbage)
+void TransformTree::CleanGeneration(Generation& generation, PositionIndex first_garbage)
 {
 	generation.global_transforms.shrink(first_garbage);
 	generation.bounding_boxes.shrink(first_garbage);
@@ -339,14 +339,14 @@ void SceneGraph::CleanGeneration(Generation& generation, PositionIndex first_gar
 	generation.first_garbage = generation.global_transforms.size();
 }
 
-void SceneGraph::CleanGenerationInherited(GenerationInherited& inherited, PositionIndex first_garbage)
+void TransformTree::CleanGenerationInherited(GenerationInherited& inherited, PositionIndex first_garbage)
 {
 	inherited.local_transforms.shrink(first_garbage);
 	inherited.parents.shrink(first_garbage);
 	inherited.siblings.shrink(first_garbage);
 }
 
-void SceneGraph::CleanGarbage()
+void TransformTree::CleanGarbage()
 {
 	Generation* generation = generations_.begin();
 	if (generation->first_garbage < generation->external_handles.size())
@@ -374,7 +374,7 @@ void SceneGraph::CleanGarbage()
 		}
 }
 
-void SceneGraph::UpdateTransformations()
+void TransformTree::UpdateTransformations()
 {
 	Generation* parent_generation;
 	Generation* generation;
@@ -400,7 +400,7 @@ void SceneGraph::UpdateTransformations()
 	}
 }
 
-void SceneGraph::SwapBoundingBoxes(Box& left, Box& right)
+void TransformTree::SwapBoundingBoxes(Box& left, Box& right)
 {
 	vec3 temp;
 
@@ -413,7 +413,7 @@ void SceneGraph::SwapBoundingBoxes(Box& left, Box& right)
 	glm_vec3_copy(temp, left.min);
 }
 
-void SceneGraph::SwapBoundingSpheres(Sphere& left, Sphere& right)
+void TransformTree::SwapBoundingSpheres(Sphere& left, Sphere& right)
 {
 	vec3 tempv;
 	glm_vec3_copy(right.center, tempv);
@@ -426,7 +426,7 @@ void SceneGraph::SwapBoundingSpheres(Sphere& left, Sphere& right)
 	left.radius = tempf;
 }
 
-void SceneGraph::SwapExternalHandles(NodeHandleId& left, NodeHandleId& right)
+void TransformTree::SwapExternalHandles(NodeHandleId& left, NodeHandleId& right)
 {
 	NodeHandleId temp;
 	temp = right;
@@ -434,7 +434,7 @@ void SceneGraph::SwapExternalHandles(NodeHandleId& left, NodeHandleId& right)
 	left = temp;
 }
 
-void SceneGraph::SwapGlobalTransforms(GlobalTransform& left, GlobalTransform& right)
+void TransformTree::SwapGlobalTransforms(GlobalTransform& left, GlobalTransform& right)
 {
 	mat4 temp;
 	glm_mat4_copy(right.transform, temp);
@@ -442,7 +442,7 @@ void SceneGraph::SwapGlobalTransforms(GlobalTransform& left, GlobalTransform& ri
 	glm_mat4_copy(temp, left.transform);
 }
 
-void SceneGraph::SwapLocalTransforms(LocalTransform& left, LocalTransform& right)
+void TransformTree::SwapLocalTransforms(LocalTransform& left, LocalTransform& right)
 {
 	mat4 temp;
 	glm_mat4_copy(right.transform, temp);
@@ -450,7 +450,7 @@ void SceneGraph::SwapLocalTransforms(LocalTransform& left, LocalTransform& right
 	glm_mat4_copy(temp, left.transform);
 }
 
-void SceneGraph::SwapPositions(PositionIndex& left, PositionIndex& right)
+void TransformTree::SwapPositions(PositionIndex& left, PositionIndex& right)
 {
 	PositionIndex temp;
 	temp = right;
@@ -458,7 +458,7 @@ void SceneGraph::SwapPositions(PositionIndex& left, PositionIndex& right)
 	left = temp;
 }
 
-void SceneGraph::SwapSiblings(Siblings& left, Siblings& right)
+void TransformTree::SwapSiblings(Siblings& left, Siblings& right)
 {
 	PositionIndex temp;
 
@@ -471,7 +471,7 @@ void SceneGraph::SwapSiblings(Siblings& left, Siblings& right)
 	left.next = temp;
 }
 
-size_t SceneGraph::GetMemoryUsage() const noexcept
+size_t TransformTree::GetMemoryUsage() const noexcept
 {
 	size_t size = static_cast<size_t>(generations_.memory_size()) * sizeof(Generation) +
 				   static_cast<size_t>(generations_inherited_.memory_size()) * sizeof(GenerationInherited);
@@ -489,7 +489,7 @@ size_t SceneGraph::GetMemoryUsage() const noexcept
 }
 
 #ifndef NDEBUG
-void SceneGraph::DebugPrint()
+void TransformTree::DebugPrint()
 {
 	printf("SCENE GRAPH\n");
 	printf("  Generations:\n");
