@@ -135,26 +135,6 @@ void TransformTree::RemoveNode(NodeHandle node)
 	}
 
 	CleanGarbage();
-
-	/*Assert(ids_.contains(node.handle), "Trying to remove non-existent node.");
-	const InternalNodeKey key = ids_[node.handle];
-
-	Generation& generation = generations_[key.generation];
-	if (key.generation == 0)
-		RemoveRootNode(generation, key);
-	else
-	{
-		GenerationInherited inherited = generations_inherited_[key.generation - 1];
-		RemoveChildNode(generation, inherited, key);
-		EraseGenerationIfEmpty(generation, key.generation);
-	}
-
-	if (expected_size_ < generations_.size())
-	{
-		generations_.shrink(expected_size_);
-		generations_inherited_.shrink(expected_size_ - 1);
-		expected_size_ = generations_.size();
-	}*/
 }
 
 void TransformTree::RemoveRootNode(Generation& generation, InternalNodeKey key)
@@ -176,19 +156,6 @@ void TransformTree::RemoveRootNode(Generation& generation, InternalNodeKey key)
 					   generation.first_children[new_id],
 					   new_id);
 	}
-
-/*	Assert(key.generation == 0, "Trying to remove toot node from generation not 0.");
-	Assert(key.position < generation.external_handles.size(), "Trying to remove root node from out-of-range position.");
-
-	if (key.generation + 1 < generations_.size())
-		RemoveChildren(generation, key);
-
-	const PositionIndex rebound_id = EraseSwapFromGeneration(generation, key);
-	if (rebound_id != EMPTY_KEY)
-	{
-		UpdateExternalLink(generation, key);
-		UpdateChildrenLinks(generation, key);
-	}*/
 }
 
 void TransformTree::RemoveChildNode(Generation& generation, GenerationInherited& inherited, InternalNodeKey key)
