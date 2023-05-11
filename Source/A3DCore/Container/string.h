@@ -293,7 +293,7 @@ namespace std
 template <typename T, typename Allocator>
 struct hash<A3D::basic_string<T, Allocator>>
 {
-	size_t operator()(const A3D::basic_string<T, Allocator>& str) const noexcept
+	constexpr size_t operator()(const A3D::basic_string<T, Allocator>& str) const noexcept
 	{
 		auto chr = str.begin();
 		size_t hash = 0;
