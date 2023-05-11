@@ -16,7 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#ifndef CONTAINER_STRING_H
+#define CONTAINER_STRING_H
 
 #include <iterator>
 #include <memory>
@@ -310,3 +311,5 @@ struct hash<A3D::basic_string<T, Allocator>>
 	}
 };
 }
+
+#endif // CONTAINER_STRING_H
