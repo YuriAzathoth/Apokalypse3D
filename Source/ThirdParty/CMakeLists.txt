@@ -27,6 +27,12 @@ IF (EMSCRIPTEN)
 ENDIF ()
 ADD_SUBDIRECTORY (bgfx)
 
+# Prevent MinGW from MSYS2 using basetsd.h instead of stdint.h, because
+# that does not contain std types e.g. uint32_t, int64_t etc.
+IF (MINGW)
+	TARGET_COMPILE_DEFINITIONS (glslang PUBLIC MINGW_HAS_SECURE_API=0)
+ENDIF ()
+
 SET (CGLM_SHARED OFF)
 SET (CGLM_STATIC ON)
 ADD_SUBDIRECTORY (cglm)
