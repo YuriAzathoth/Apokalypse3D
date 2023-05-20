@@ -48,7 +48,7 @@ void* RendererAllocator::realloc(void* _ptr,
 			BX_UNUSED(_file, _line);
 			_aligned_free(_ptr);
 #else
-			alignedFree(this, _ptr, _align, _file, _line);
+			alignedFree(this, _ptr, _align, bx::Location(_file, _line));
 #endif // BX_
 		}
 
@@ -63,7 +63,7 @@ void* RendererAllocator::realloc(void* _ptr,
 		BX_UNUSED(_file, _line);
 		return _aligned_malloc(_size, _align);
 #else
-		return alignedAlloc(this, _size, _align, _file, _line);
+		return alignedAlloc(this, _size, _align, bx::Location(_file, _line));
 #endif // BX_
 	}
 
@@ -74,7 +74,7 @@ void* RendererAllocator::realloc(void* _ptr,
 	BX_UNUSED(_file, _line);
 	return _aligned_realloc(_ptr, _size, _align);
 #else
-	return alignedRealloc(this, _ptr, _size, _align, _file, _line);
+	return alignedRealloc(this, _ptr, _size, _align, bx::Location(_file, _line));
 #endif // BX_
 }
 } // namespace A3D

@@ -75,6 +75,18 @@ private:
 };
 
 using string_hash = basic_string_hash<string>;
+} // namespace A3D
+
+namespace std
+{
+template <typename String, typename Hasher>
+struct hash<A3D::basic_string_hash<String, Hasher>>
+{
+	size_t operator()(A3D::basic_string_hash<String, Hasher> str) const noexcept
+	{
+		return str.hash();
+	}
+};
 }
 
 #endif // CONTAINER_STRING_HASH_H

@@ -107,7 +107,7 @@ void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphe
 		uint32_t compressed_size;
 		bx::read(file.reader, compressed_size, &err);
 
-		void* compressed_data = BX_ALLOC(file.allocator, compressed_size);
+		void* compressed_data = bx::alloc(file.allocator, compressed_size);
 		bx::read(file.reader, compressed_data, compressed_size, &err);
 
 		meshopt_decodeVertexBuffer(mem->data,
@@ -116,7 +116,7 @@ void ReadMeshVertexBuffer(MeshFileReader& file, MeshGroup& group, Box& box, Sphe
 								   (uint8_t*)compressed_data,
 								   compressed_size);
 
-		BX_FREE(file.allocator, compressed_data);
+		bx::free(file.allocator, compressed_data);
 	}
 	else
 		bx::read(file.reader, mem->data, mem->size, &err);
@@ -137,7 +137,7 @@ void ReadMeshIndexBuffer(MeshFileReader& file, MeshGroup& group, bool compressed
 		uint32_t compressed_size;
 		bx::read(file.reader, compressed_size, &err);
 
-		void* compressed_data = BX_ALLOC(file.allocator, compressed_size);
+		void* compressed_data = bx::alloc(file.allocator, compressed_size);
 		bx::read(file.reader, compressed_data, compressed_size, &err);
 
 		meshopt_decodeIndexBuffer(mem->data,
@@ -146,7 +146,7 @@ void ReadMeshIndexBuffer(MeshFileReader& file, MeshGroup& group, bool compressed
 								  (uint8_t*)compressed_data,
 								  compressed_size);
 
-		BX_FREE(file.allocator, compressed_data);
+		bx::free(file.allocator, compressed_data);
 	}
 	else
 		bx::read(file.reader, mem->data, mem->size, &err);
