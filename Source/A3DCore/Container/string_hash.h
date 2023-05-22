@@ -22,6 +22,29 @@
 #include <stdint.h>
 #include "string.h"
 
+namespace std
+{
+template <>
+struct hash<const char*>
+{
+	constexpr size_t operator()(const char* str) const noexcept
+	{
+		size_t hash = 0;
+		while (*str)
+		{
+			hash += (size_t)*str;
+			hash += (hash << 10Lu);
+			hash ^= (hash << 6Lu);
+			++str;
+		}
+		hash += (hash << 3Lu);
+		hash ^= (hash << 11Lu);
+		hash += (hash << 15Lu);
+		return hash;
+	}
+};
+}
+
 namespace A3D
 {
 template <typename String, typename Hasher = std::hash<String>>
@@ -32,25 +55,38 @@ public:
 	using string_type = String;
 	using hasher_type = Hasher;
 
+	constexpr basic_string_hash() noexcept :
+		hash_(0)
+	{
+	}
+
 	constexpr basic_string_hash(const string_type& str) noexcept :
-		hash_(hasher_(str))
+		hash_(hasher_type{}(str))
+	{
+	}
+
+	constexpr basic_string_hash(const char* str) noexcept :
+		hash_(std::hash<const char*>{}(str))
 	{
 	}
 
 	constexpr basic_string_hash(const basic_string_hash& other) noexcept :
-		hasher_(other.hasher_),
 		hash_(other.hash_)
 	{
 	}
 
 	constexpr void operator=(const string_type& str) noexcept
 	{
-		hash_ = hasher_(str);
+		hash_ = hasher_type{}(str);
+	}
+
+	constexpr void operator=(const char* str) noexcept
+	{
+		hash_ = std::hash<const char*>{}(str);
 	}
 
 	constexpr void operator=(const basic_string_hash& other) noexcept
 	{
-		hasher_ = other.hasher_;
 		hash_ = other.hash_;
 	}
 
@@ -70,7 +106,6 @@ public:
 	}
 
 private:
-	hasher_type hasher_;
 	value_type hash_;
 };
 
