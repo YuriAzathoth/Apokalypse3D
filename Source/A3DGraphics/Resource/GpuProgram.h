@@ -19,25 +19,16 @@
 #ifndef RESOURCE_GPU_PROGRAM_H
 #define RESOURCE_GPU_PROGRAM_H
 
-#include <bgfx/bgfx.h>
 #include "A3DGraphicsAPI.h"
-#include "Common/GpuProgram.h"
 
 namespace A3D
 {
-struct Shader
-{
-	bgfx::ShaderHandle handle;
-};
+struct GpuProgram;
 
-A3DGRAPHICSAPI_EXPORT const char* GetShaderPrefix();
+A3DGRAPHICSAPI_EXPORT bool GetGpuProgram(GpuProgram& program, const char* vertex_filename, const char* fragment_filename);
+A3DGRAPHICSAPI_EXPORT void ReleaseGpuProgram(GpuProgram& program);
 
-A3DGRAPHICSAPI_EXPORT bool LoadShaderFromMemory(Shader& shader, const char* shader_text, uint32_t shader_size);
-A3DGRAPHICSAPI_EXPORT bool LoadShaderFromFile(Shader& shader, const char* filename);
-A3DGRAPHICSAPI_EXPORT void DestroyShader(Shader& shader);
-
-A3DGRAPHICSAPI_EXPORT bool LinkGpuProgram(GpuProgram& program, const Shader& vertex, const Shader& fragment);
-A3DGRAPHICSAPI_EXPORT void DestroyGpuProgram(GpuProgram& program);
+A3DGRAPHICSAPI_EXPORT void UpdateGpuProgramCache();
 } // namespace A3D
 
 #endif // RESOURCE_GPU_PROGRAM_H

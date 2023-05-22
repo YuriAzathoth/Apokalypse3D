@@ -20,6 +20,7 @@
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <SDL_events.h>
+#include "Common/GpuProgram.h"
 #include "Input/SystemEvent.h"
 #include "IO/Log.h"
 #include "Resource/Mesh.h"
@@ -75,6 +76,8 @@ int main()
 {
 	bool run = true;
 
+	SetLogLevel(LogLevel::WARNING);
+
 	SystemEventListener listener;
 	CreateSystemEventListener();
 	BindSystemEvent(listener, SDL_QUIT, OnQuit, &run);
@@ -97,9 +100,9 @@ int main()
 	VisualWorld vw;
 	CreateVisualWorld(vw);
 
-	vec3 camera_pos {0.0f, 0.0f, 100.0f};
+	vec3 camera_pos {0.0f, 0.0f, 400.0f};
 	vec3 camera_target {0.0f, 0.0f, 0.0f};
-	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.01f, 100.0f);
+	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 512.0f);
 	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
 
 	MeshGroup mesh;
@@ -107,28 +110,16 @@ int main()
 
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 
-	char buffer[256];
-	const char* SHADER_EXTENSION = GetShaderPrefix();
-
-	Shader vertex;
-	sprintf(buffer, "../Data/Shaders/%s/white_solid.vert.shader", SHADER_EXTENSION);
-	LoadShaderFromFile(vertex, buffer);
-
-	Shader fragment;
-	sprintf(buffer, "../Data/Shaders/%s/white_solid.frag.shader", SHADER_EXTENSION);
-	LoadShaderFromFile(fragment, buffer);
-
+	VisualHandle cubes[4096];
 	GpuProgram program;
-	LinkGpuProgram(program, vertex, fragment);
-
-	VisualHandle cubes[400];
-
 	vec3 pos{};
-	for (int i = 0; i < 400; ++i)
+	for (int i = 0; i < 4096; ++i)
 	{
+		GetGpuProgram(program, "../Data/Shaders/white_solid.vert", "../Data/Shaders/white_solid.frag");
+
 		glm_mat4_identity(transform.transform);
-		pos[0] = (float)(i % 20 * 4 - 40);
-		pos[1] = (float)(i / 20 * 4 - 40);
+		pos[0] = (float)(i % 64 * 4 - 128);
+		pos[1] = (float)(i / 64 * 4 - 128);
 		glm_translate(transform.transform, pos);
 		cubes[i] = AddModel(vw, mesh, program, transform);
 	}
@@ -146,14 +137,18 @@ int main()
 	{
 		PollSystemEvents(listener);
 
-		for (unsigned i = 0; i < 400; ++i)
+		for (unsigned i = 0; i < 4096; ++i)
 			glm_rotate(GetVisualObjectTransform(vw, cubes[i]).transform, glm_rad(0.1f), rotate_axis[i % 5]);
 
 		PrepareVisualWorld(vw);
 
 		RenderVisualWorld(vw, contexts, threads_count);
+
+		UpdateGpuProgramCache();
 	}
 
+	for (int i = 0; i < 4096; ++i)
+		ReleaseGpuProgram(program);
 	DestroyVisualWorld(vw);
 
 	DestroyRendererThreadContexts(contexts);
