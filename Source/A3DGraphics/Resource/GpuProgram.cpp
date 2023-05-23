@@ -89,7 +89,114 @@ struct ShaderCache
 static GpuProgramCache s_programs_cache;
 static ShaderCache s_shaders_cache;
 
-static bool GetShader(Shader& shader, const char* filename);
+inline static const char* GetShaderExt()
+{
+	switch (bgfx::getRendererType())
+	{
+	case bgfx::RendererType::Direct3D9:
+		return "dx9";
+	case bgfx::RendererType::Direct3D11:
+	case bgfx::RendererType::Direct3D12:
+		return "dx11";
+	case bgfx::RendererType::Metal:
+		return "msl";
+	case bgfx::RendererType::OpenGLES:
+		return "essl";
+	case bgfx::RendererType::OpenGL:
+		return "glsl";
+	case bgfx::RendererType::Vulkan:
+		return "spirv";
+	default:
+		LogFatal("Invalid BGFX renderer mode.");
+		return nullptr;
+	}
+}
+
+static bool LoadShaderFile(Shader& shader, const char* filename)
+{
+	char real_filename[BUFFER_SIZE];
+	sprintf(real_filename, "%s.%s", filename, GetShaderExt());
+
+	File file;
+	if (!OpenFileRead(file, real_filename))
+		return false;
+
+	const bgfx::Memory* mem = bgfx::alloc(file.size);
+	if (mem == nullptr)
+	{
+		LogFatal("Could not load shader \"%s\": out of memory.", real_filename);
+		CloseFile(file);
+		return false;
+	}
+
+	if (!ReadFileData(file, mem->data))
+	{
+		LogFatal("Could not load shader \"%s\": file reading error.", real_filename);
+		CloseFile(file);
+		return false;
+	}
+
+	shader.handle = bgfx::createShader(mem);
+
+	CloseFile(file);
+
+	if (bgfx::isValid(shader.handle))
+	{
+		LogInfo("Shader \"%s\" has been loaded.", real_filename);
+		return true;
+	}
+	else
+	{
+		LogFatal("Could not load shader \"%s\": compilation error.", real_filename);
+		return false;
+	}
+}
+
+static bool GetShader(Shader& shader, const char* filename)
+{
+	const string_hash filename_hash = filename;
+	const auto it = s_shaders_cache.by_name.find(filename_hash);
+	if (it != s_shaders_cache.by_name.end())
+	{
+		s_shaders_cache.timers[s_shaders_cache.indices[it->second]] = SHADER_TIMER;
+		shader.handle.idx = it->second;
+		return true;
+	}
+	else if (LoadShaderFile(shader, filename))
+	{
+		s_shaders_cache.by_name.emplace(filename, shader.handle.idx);
+		s_shaders_cache.indices.emplace(shader.handle.idx, s_shaders_cache.shaders.size());
+
+		s_shaders_cache.shaders.insert(shader.handle.idx);
+		s_shaders_cache.timers.insert(SHADER_TIMER);
+		s_shaders_cache.filenames.insert(filename);
+
+		return true;
+	}
+	else
+		return false;
+}
+
+static bool LinkProgram(GpuProgram& program, const char* vertex_filename, const char* fragment_filename)
+{
+	Shader vertex;
+	Shader fragment;
+	if (!GetShader(vertex, vertex_filename) || !GetShader(fragment, fragment_filename))
+		return false;
+
+	program.handle = bgfx::createProgram(vertex.handle, fragment.handle);
+
+	if (bgfx::isValid(program.handle))
+	{
+		LogInfo("GPU program with shaders \"%s\" and \"%s\" has been loaded.", vertex_filename, fragment_filename);
+		return true;
+	}
+	else
+	{
+		LogFatal("Could not load GPU program with shaders \"%s\" and \"%s\": linking error.", vertex_filename, fragment_filename);
+		return false;
+	}
+}
 
 bool GetGpuProgram(GpuProgram& program, const char* vertex_filename, const char* fragment_filename)
 {
@@ -104,32 +211,21 @@ bool GetGpuProgram(GpuProgram& program, const char* vertex_filename, const char*
 		program.handle.idx = it->second;
 		return true;
 	}
+	else if (LinkProgram(program, vertex_filename, fragment_filename))
+	{
+		s_programs_cache.by_name.emplace(key, program.handle.idx);
+		s_programs_cache.indices.emplace(program.handle.idx, s_programs_cache.programs.size());
+
+		s_programs_cache.programs.insert(program.handle.idx);
+		s_programs_cache.refs.insert(1);
+		s_programs_cache.parts.insert(key);
+
+		return true;
+	}
 	else
 	{
-		Shader vertex;
-		Shader fragment;
-		if (!GetShader(vertex, vertex_filename) || !GetShader(fragment, fragment_filename))
-			return false;
-
-		program.handle = bgfx::createProgram(vertex.handle, fragment.handle);
-		if (bgfx::isValid(program.handle))
-		{
-			s_programs_cache.by_name.emplace(key, program.handle.idx);
-			s_programs_cache.indices.emplace(program.handle.idx, s_programs_cache.programs.size());
-
-			s_programs_cache.programs.insert(program.handle.idx);
-			s_programs_cache.refs.insert(1);
-			s_programs_cache.parts.insert(key);
-
-			LogInfo("GPU program with shaders \"%s\" and \"%s\" has been loaded.", vertex_filename, fragment_filename);
-
-			return true;
-		}
-		else
-		{
-			LogFatal("Could not load GPU program with shaders \"%s\" and \"%s\" : linking error.", vertex_filename, fragment_filename);
-			return false;
-		}
+		LogFatal("Could not load GPU program with shaders \"%s\" and \"%s\" : linking error.", vertex_filename, fragment_filename);
+		return false;
 	}
 }
 
@@ -178,88 +274,6 @@ void UpdateGpuProgramCache()
 
 			if (rebound != s_programs_cache.programs.INVALID_KEY)
 				s_shaders_cache.indices[s_shaders_cache.shaders[index]] = index;
-		}
-	}
-}
-
-inline static const char* GetShaderExt()
-{
-	switch (bgfx::getRendererType())
-	{
-	case bgfx::RendererType::Direct3D9:
-		return "dx9";
-	case bgfx::RendererType::Direct3D11:
-	case bgfx::RendererType::Direct3D12:
-		return "dx11";
-	case bgfx::RendererType::Metal:
-		return "msl";
-	case bgfx::RendererType::OpenGLES:
-		return "essl";
-	case bgfx::RendererType::OpenGL:
-		return "glsl";
-	case bgfx::RendererType::Vulkan:
-		return "spirv";
-	default:
-		LogFatal("Invalid BGFX renderer mode.");
-		return nullptr;
-	}
-}
-
-bool GetShader(Shader& shader, const char* filename)
-{
-	const string_hash filename_hash = filename;
-	const auto it = s_shaders_cache.by_name.find(filename_hash);
-	if (it != s_shaders_cache.by_name.end())
-	{
-		s_shaders_cache.timers[s_shaders_cache.indices[it->second]] = SHADER_TIMER;
-		shader.handle.idx = it->second;
-		return true;
-	}
-	else
-	{
-		char real_filename[BUFFER_SIZE];
-		sprintf(real_filename, "%s.%s", filename, GetShaderExt());
-
-		File file;
-		if (!OpenFileRead(file, real_filename))
-			return false;
-
-		const bgfx::Memory* mem = bgfx::alloc(file.size);
-		if (mem == nullptr)
-		{
-			LogFatal("Could not load shader \"%s\": out of memory.", real_filename);
-			CloseFile(file);
-			return false;
-		}
-
-		if (!ReadFileData(file, mem->data))
-		{
-			LogFatal("Could not load shader \"%s\": file reading error.", real_filename);
-			CloseFile(file);
-			return false;
-		}
-
-		shader.handle = bgfx::createShader(mem);
-
-		CloseFile(file);
-
-		if (bgfx::isValid(shader.handle))
-		{
-			s_shaders_cache.by_name.emplace(filename, shader.handle.idx);
-			s_shaders_cache.indices.emplace(shader.handle.idx, s_shaders_cache.shaders.size());
-
-			s_shaders_cache.shaders.insert(shader.handle.idx);
-			s_shaders_cache.timers.insert(SHADER_TIMER);
-			s_shaders_cache.filenames.insert(filename);
-
-			LogInfo("Shader \"%s\" has been loaded.", real_filename);
-
-			return true;
-		}
-		else
-		{
-			LogFatal("Could not load shader \"%s\": compilation error.", real_filename);
-			return false;
 		}
 	}
 }
