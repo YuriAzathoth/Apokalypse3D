@@ -16,31 +16,26 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef COMMON_MODEL_H
-#define COMMON_MODEL_H
+#ifndef RESOURCE_MODEL_H
+#define RESOURCE_MODEL_H
 
-#include <bgfx/bgfx.h>
+#include "A3DGraphicsAPI.h"
+#include "Common/Geometry.h"
+#include "Common/Model.h"
+#include "Container/vector.h"
 
 namespace A3D
 {
-struct MeshGroup
+struct MeshGroup;
+struct MeshPrimitive;
+
+struct Model
 {
-	bgfx::IndexBufferHandle ebo;
-	bgfx::VertexBufferHandle vbo;
+	vector<uint32_t, MeshGroup> groups;
 };
 
-struct MeshPrimitive
-{
-	uint32_t start_index;
-	uint32_t indices_count;
-	uint32_t start_vertex;
-	uint32_t vertices_count;
-};
-
-struct ModelHandle
-{
-	uint16_t idx;
-};
+A3DGRAPHICSAPI_EXPORT bool GetModel(Model& model, const char* filename);
+A3DGRAPHICSAPI_EXPORT void ReleaseModel(const char* filename);
 } // namespace A3D
 
-#endif // COMMON_MODEL_H
+#endif // RESOURCE_MODEL_H

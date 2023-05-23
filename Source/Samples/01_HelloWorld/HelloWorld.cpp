@@ -23,7 +23,7 @@
 #include "Common/GpuProgram.h"
 #include "Input/SystemEvent.h"
 #include "IO/Log.h"
-#include "Resource/Mesh.h"
+#include "Resource/Model.h"
 #include "Resource/GpuProgram.h"
 #include "System/Renderer.h"
 #include "System/Window.h"
@@ -36,7 +36,7 @@ static void OnQuit(const SDL_Event& event, void* run)
 	*reinterpret_cast<bool*>(run) = false;
 }
 
-static void LoadModel(MeshGroup& mesh, const char* filename)
+/*static void LoadModel(MeshGroup& mesh, const char* filename)
 {
 	MeshFileReader file;
 	if (!OpenMeshFile(file, filename))
@@ -70,7 +70,7 @@ static void LoadModel(MeshGroup& mesh, const char* filename)
 		}
 	}
 	while (chunk != MeshFileChunk::END_OF_FILE);
-}
+}*/
 
 int main()
 {
@@ -105,8 +105,8 @@ int main()
 	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 512.0f);
 	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
 
-	MeshGroup mesh;
-	LoadModel(mesh, "../Data/Models/Box.mdl");
+	Model model;
+	GetModel(model, "../Data/Models/Box.mdl");
 
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 
@@ -121,7 +121,7 @@ int main()
 		pos[0] = (float)(i % 64 * 4 - 128);
 		pos[1] = (float)(i / 64 * 4 - 128);
 		glm_translate(transform.transform, pos);
-		cubes[i] = AddModel(vw, mesh, program, transform);
+		cubes[i] = AddModel(vw, model.groups[0], program, transform);
 	}
 
 	vec3 rotate_axis[5] =
@@ -149,6 +149,7 @@ int main()
 
 	for (int i = 0; i < 4096; ++i)
 		ReleaseGpuProgram(program);
+	ReleaseModel("../Data/Models/Box.mdl");
 	DestroyVisualWorld(vw);
 
 	DestroyRendererThreadContexts(contexts);
