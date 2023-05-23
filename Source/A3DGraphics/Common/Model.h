@@ -20,6 +20,7 @@
 #define COMMON_MODEL_H
 
 #include <bgfx/bgfx.h>
+#include "Container/vector.h"
 
 namespace A3D
 {
@@ -37,9 +38,9 @@ struct MeshPrimitive
 	uint32_t vertices_count;
 };
 
-struct ModelHandle
+struct Model
 {
-	uint16_t idx;
+	vector<uint32_t, MeshGroup> groups;
 };
 } // namespace A3D
 

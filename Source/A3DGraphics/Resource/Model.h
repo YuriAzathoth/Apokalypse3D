@@ -22,18 +22,9 @@
 #include "A3DGraphicsAPI.h"
 #include "Common/Geometry.h"
 #include "Common/Model.h"
-#include "Container/vector.h"
 
 namespace A3D
 {
-struct MeshGroup;
-struct MeshPrimitive;
-
-struct Model
-{
-	vector<uint32_t, MeshGroup> groups;
-};
-
 A3DGRAPHICSAPI_EXPORT bool GetModel(Model& model, const char* filename);
 A3DGRAPHICSAPI_EXPORT void ReleaseModel(const char* filename);
 } // namespace A3D

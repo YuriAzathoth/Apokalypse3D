@@ -31,6 +31,12 @@
 #include "IO/Log.h"
 #include "Model.h"
 
+inline static constexpr uint32_t CHUNK_VERTEX_BUFFER = BX_MAKEFOURCC('V', 'B', ' ', 0x1);
+inline static constexpr uint32_t CHUNK_VERTEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('V', 'B', 'C', 0x0);
+inline static constexpr uint32_t CHUNK_INDEX_BUFFER = BX_MAKEFOURCC('I', 'B', ' ', 0x0);
+inline static constexpr uint32_t CHUNK_INDEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('I', 'B', 'C', 0x1);
+inline static constexpr uint32_t CHUNK_PRIMITIVE = BX_MAKEFOURCC('P', 'R', 'I', 0x0);
+
 namespace bgfx
 {
 int32_t read(bx::ReaderI* reader, bgfx::VertexLayout& layout, bx::Error* err);
@@ -38,15 +44,8 @@ int32_t read(bx::ReaderI* reader, bgfx::VertexLayout& layout, bx::Error* err);
 
 namespace A3D
 {
-using MeshIndex = uint32_t;
 using ModelIndex = uint32_t;
 using RefsType = uint32_t;
-
-inline static constexpr uint32_t CHUNK_VERTEX_BUFFER = BX_MAKEFOURCC('V', 'B', ' ', 0x1);
-inline static constexpr uint32_t CHUNK_VERTEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('V', 'B', 'C', 0x0);
-inline static constexpr uint32_t CHUNK_INDEX_BUFFER = BX_MAKEFOURCC('I', 'B', ' ', 0x0);
-inline static constexpr uint32_t CHUNK_INDEX_BUFFER_COMPRESSED = BX_MAKEFOURCC('I', 'B', 'C', 0x1);
-inline static constexpr uint32_t CHUNK_PRIMITIVE = BX_MAKEFOURCC('P', 'R', 'I', 0x0);
 
 struct MeshCache
 {
