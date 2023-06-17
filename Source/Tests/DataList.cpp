@@ -62,6 +62,7 @@ TEST_SUITE("Data List")
 		using dl_t = A3D::meta::data_list_builder<int>::type;
 		static_assert(std::is_same_v<dl_t::value_type, int>);
 		static_assert(std::is_same_v<dl_t::next_type, A3D::meta::empty_type>);
+		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int));
 		static_assert(sizeof(dl_t) == sizeof(int));
 	}
 
@@ -71,6 +72,7 @@ TEST_SUITE("Data List")
 		static_assert(std::is_same_v<dl_t::value_type, int>);
 		static_assert(std::is_same_v<dl_t::next_type::value_type, float>);
 		static_assert(std::is_same_v<dl_t::next_type::next_type, A3D::meta::empty_type>);
+		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int) + sizeof(float));
 		static_assert(sizeof(dl_t) == sizeof(int) + sizeof(float));
 	}
 
