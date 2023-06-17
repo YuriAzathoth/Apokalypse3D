@@ -29,7 +29,7 @@ namespace A3D
 template <typename T, typename... Args>
 inline void construct(T* ptr, Args&&... args)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		std::construct_at(ptr, std::forward<Args>(args)...);
 	else
 		*ptr = T(std::forward<Args>(args)...);
@@ -38,14 +38,14 @@ inline void construct(T* ptr, Args&&... args)
 template <typename T>
 inline void destroy(T* ptr)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		std::destroy_at(ptr);
 };
 
 template <typename T>
 inline void copy_construct(T* dst, const T* src)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		std::construct_at(dst, *src);
 	else
 		*dst = *src;
@@ -54,7 +54,7 @@ inline void copy_construct(T* dst, const T* src)
 template <typename T>
 inline void move_construct(T* dst, T* src)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		std::construct_at(dst, std::move(*src));
 	else
 		*dst = *src;
@@ -91,7 +91,7 @@ inline void construct_n(T* begin, size_t size, const Args&... args)
 template <typename T>
 inline void destroy_n(T* begin, const T* end)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		while (begin < end)
 		{
 			destroy(begin);
@@ -108,7 +108,7 @@ inline void destroy_n(T* begin, size_t size)
 template <typename T>
 inline void copy_construct_n(T* dst, const T* src, size_t size)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		for (const T* dst_end = dst + size; dst < dst_end; ++dst, ++src)
 			copy_construct(dst, src);
 	else
@@ -124,7 +124,7 @@ inline void copy_construct_n(T* dst, const T* src, const T* src_end)
 template <typename T>
 inline void move_construct_n(T* dst, T* src, size_t size)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		for (const T* dst_end = dst + size; dst < dst_end; ++dst, ++src)
 			move_construct(dst, src);
 	else
@@ -140,7 +140,7 @@ inline void move_construct_n(T* dst, T* src, const T* src_end)
 template <typename T>
 inline void copy_assign_n(T* dst, const T* src, size_t size)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		for (const T* dst_end = dst + size; dst < dst_end; ++dst, ++src)
 			copy_assign(dst, src);
 	else
@@ -156,7 +156,7 @@ inline void copy_assign_n(T* dst, const T* src, const T* src_end)
 template <typename T>
 inline void move_assign_n(T* dst, T* src, size_t size)
 {
-	if constexpr (!std::is_integral<T>::type && !std::is_trivial<T>::type)
+	if constexpr (!std::is_integral_v<T> && !std::is_trivial_v<T>)
 		for (const T* dst_end = dst + size; dst < dst_end; ++dst, ++src)
 			move_assign(dst, src);
 	else
