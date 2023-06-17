@@ -47,7 +47,7 @@ struct test_ternary
 	}
 };
 
-TEST_SUITE("Types List")
+TEST_SUITE("Data List")
 {
 	TEST_CASE("Empty List")
 	{
