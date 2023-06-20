@@ -127,6 +127,19 @@ template <typename... Types>
 using tuple = typename list_builder<data_list, Types...>::type;
 
 
+template <template <typename, typename> typename DstList, typename List1, typename List2>
+struct list_join
+{
+	using type = DstList<typename List1::value_type, typename list_join<DstList, typename List1::next_type, List2>::type>;
+};
+
+template <template <typename, typename> typename DstList, typename T, template <typename, typename> typename List1, typename List2>
+struct list_join<DstList, List1<T, empty_type>, List2>
+{
+	using type = DstList<T, List2>;
+};
+
+
 template <typename T>
 struct bypass
 {
