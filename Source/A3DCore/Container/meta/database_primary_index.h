@@ -109,10 +109,16 @@ public:
 
 	key_type insert(value_type value, size_type states_count) noexcept
 	{
-		const key_type key = first_empty(states_count);
-		indices_[key] = value;
-		set_bit(key);
-		return key;
+		for (states_bitfield* state = states_; state < states_ + states_count; ++state)
+			if (*state != chunk_full)
+			{
+				const key_type key = get_key(static_cast<chunk_id_type>(state - states_),
+											 std::countr_one<states_bitfield>(*state));
+				indices_[key] = value;
+				set_bit(key);
+				return key;
+			}
+		return invalid_key;
 	}
 
 	void erase(key_type key) noexcept
@@ -139,14 +145,6 @@ public:
 	const states_bitfield* data() const noexcept { return states_; }
 
 private:
-	key_type first_empty(size_type states_count) const noexcept
-	{
-		for (states_bitfield* state = states_; state < states_ + states_count; ++state)
-			if (*state != chunk_full)
-				return get_key(static_cast<chunk_id_type>(state - states_), std::countr_one<states_bitfield>(*state));
-		return invalid_key;
-	}
-
 	void set_bit(key_type key) noexcept
 	{
 		states_[get_chunk_id(key)] |= (static_cast<states_bitfield>(1) << static_cast<states_bitfield>(get_bit_id(key)));
