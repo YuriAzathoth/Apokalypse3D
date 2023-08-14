@@ -26,47 +26,128 @@ TEST_SUITE("Database Table")
 {
 	TEST_CASE("Idle empty columns")
 	{
-		using table_t = A3D::db::table::table<A3D::meta::types_list_builder<>::type>;
+		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<>::type, uint32_t>;
 		table_t table;
 	}
 
 	TEST_CASE("Idle non-empty columns")
 	{
-		using table_t = A3D::db::table::table<A3D::meta::types_list_builder<int, float>::type>;
+		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
 		table_t table;
 	}
 
 	TEST_CASE("Table memory size by rows count empty columns")
 	{
-		using table_t = A3D::db::table::table<A3D::meta::types_list_builder<>::type>;
-		static_assert(A3D::db::table::memory_size<table_t>(10) == 0);
+		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<>::type, uint32_t>;
+		static_assert(table_t::row_sizeof == 0);
 	}
 
 	TEST_CASE("Table memory size by rows count non-empty columns")
 	{
-		using table_t = A3D::db::table::table<A3D::meta::types_list_builder<int, float>::type>;
-		static_assert(A3D::db::table::memory_size<table_t>(10) == 10 * (sizeof(int) + sizeof(float)));
+		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
+		static_assert(table_t::row_sizeof == sizeof(int) + sizeof(float));
 	}
 
 	TEST_CASE("Memory allocation")
 	{
-		using table_t = A3D::db::table::table<A3D::meta::types_list_builder<int, float>::type>;
+		static constexpr size_t ITEMS_COUNT = 1;
+		using types_t = A3D::meta::types_list_builder<int, float>::type;
+		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
 		table_t table;
-		const size_t size = A3D::db::table::memory_size<table_t>(10);
+		const size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t* mem = (uint8_t*)malloc(size);
-		A3D::meta::foreach(table, A3D::db::table::distribute_memory{mem, 10});
-		A3D::meta::foreach(table, A3D::db::table::construct_data{10});
-		for (unsigned i = 0; i < 10; ++i)
+		table.allocate(mem, ITEMS_COUNT);
+		free(mem);
+	}
+
+	TEST_CASE("Front")
+	{
+		static constexpr size_t ITEMS_COUNT = 1;
+		using types_t = A3D::meta::types_list_builder<int, float>::type;
+		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		table_t table;
+		const size_t size = table_t::memory_size(ITEMS_COUNT);
+		uint8_t* mem = (uint8_t*)malloc(size);
+		table.allocate(mem, ITEMS_COUNT);
+		table.create_n(ITEMS_COUNT);
+		table.front<int, types_t>() = 5;
+		table.front<float, types_t>() = 0.1f;
+		REQUIRE(table.front<int, types_t>() == 5);
+		REQUIRE(table.front<float, types_t>() == 0.1f);
+		table.destroy_n(ITEMS_COUNT);
+		free(mem);
+	}
+
+	TEST_CASE("Iterator")
+	{
+		static constexpr size_t ITEMS_COUNT = 2;
+		using types_t = A3D::meta::types_list_builder<int, float>::type;
+		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		table_t table;
+		const size_t size = table_t::memory_size(ITEMS_COUNT);
+		uint8_t* mem = (uint8_t*)malloc(size);
+		table.allocate(mem, ITEMS_COUNT);
+		table.create_n(ITEMS_COUNT);
+		auto it = table.abegin<types_t>();
+		it.get<int>() = 10;
+		it.get<float>() = 0.5f;
+		++it;
+		it.get<int>() = 20;
+		it.get<float>() = 0.25f;
+		REQUIRE(table.front<int, types_t>() == 10);
+		REQUIRE(table.front<float, types_t>() == 0.5f);
+		REQUIRE(table.at<int, types_t>(1) == 20);
+		REQUIRE(table.at<float, types_t>(1) == 0.25f);
+		table.destroy_n(ITEMS_COUNT);
+		free(mem);
+	}
+
+	TEST_CASE("Create 10")
+	{
+		static constexpr size_t ITEMS_COUNT = 10;
+		using types_t = A3D::meta::types_list_builder<int, float>::type;
+		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		table_t table;
+		const size_t size = table_t::memory_size(ITEMS_COUNT);
+		uint8_t* mem = (uint8_t*)malloc(size);
+		table.allocate(mem, ITEMS_COUNT);
+		table.create_n(ITEMS_COUNT);
+		unsigned i = 0;
+		for (i = 0; i < 10; ++i)
 		{
-			A3D::meta::get<int*>(table)[i] = i * 10;
-			A3D::meta::get<float*>(table)[i] = i * 0.5f;
+			table.at<int, types_t>(i) = i * 10;
+			table.at<float, types_t>(i) = i * 0.5f;
 		}
-		for (unsigned i = 0; i < 10; ++i)
+		i = 0;
+		for (auto it = table.abegin<types_t>(); it != table.amid<types_t>(ITEMS_COUNT); ++it)
 		{
-			REQUIRE(A3D::meta::get<int*>(table)[i] == i * 10);
-			REQUIRE(A3D::meta::get<float*>(table)[i] == i * 0.5f);
+			REQUIRE(it.get<int>() == i * 10);
+			REQUIRE(it.get<float>() == i * 0.5f);
+			++i;
 		}
-		A3D::meta::foreach(table, A3D::db::table::destroy_data{10});
+		REQUIRE(i == ITEMS_COUNT);
+		table.destroy_n(ITEMS_COUNT);
+		free(mem);
+	}
+
+	TEST_CASE("Move")
+	{
+		static constexpr size_t ITEMS_COUNT = 2;
+		using types_t = A3D::meta::types_list_builder<int, float>::type;
+		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		table_t table;
+		const size_t size = table_t::memory_size(ITEMS_COUNT);
+		uint8_t* mem = (uint8_t*)malloc(size);
+		table.allocate(mem, ITEMS_COUNT);
+		table.create_n(ITEMS_COUNT);
+		table.at<int, types_t>(0) = 1;
+		table.at<float, types_t>(0) = 0.1f;
+		table.at<int, types_t>(1) = 2;
+		table.at<float, types_t>(1) = 0.2f;
+		table.move<types_t>(table.amid<types_t>(0), table.amid<types_t>(1));
+		REQUIRE(table.front<int, types_t>() == 2);
+		REQUIRE(table.front<float, types_t>() == 0.2f);
+		table.destroy_n(1);
 		free(mem);
 	}
 }

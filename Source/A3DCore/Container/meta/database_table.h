@@ -27,17 +27,8 @@ namespace A3D
 {
 namespace db
 {
-namespace table
+namespace data_table
 {
-template <typename TypesList>
-using table = meta::list_modify<std::add_pointer, meta::data_list, TypesList>::type;
-
-template <typename Table>
-inline constexpr size_t memory_size(size_t column_count)
-{
-	return column_count * meta::list_sizeof<typename meta::list_modify<std::remove_pointer, meta::data_list, Table>::type>();
-}
-
 class distribute_memory
 {
 public:
@@ -50,6 +41,8 @@ public:
 		mem_ += rows_count_ * sizeof(T);
 	}
 
+	uint8_t* mem() const noexcept { return mem_; }
+
 private:
 	uint8_t* mem_;
 	size_t rows_count_;
@@ -58,18 +51,36 @@ private:
 struct construct_value
 {
 	template <typename T>
-	void operator()(T* dst)
+	void operator()(T* ptr)
 	{
-		A3D::construct(dst);
+		A3D::construct(ptr);
 	}
 };
 
 struct destroy_value
 {
 	template <typename T>
-	void operator()(T* dst)
+	void operator()(T* ptr)
 	{
-		A3D::destroy(dst);
+		A3D::destroy(ptr);
+	}
+};
+
+struct copy_value
+{
+	template <typename T>
+	void operator()(T* dst, const T* src)
+	{
+		A3D::copy_assign(dst, src);
+	}
+};
+
+struct move_value
+{
+	template <typename T>
+	void operator()(T* dst, const T* src)
+	{
+		A3D::move_assign(dst, src);
 	}
 };
 
@@ -79,9 +90,9 @@ public:
 	construct_data(size_t size) : size_(size) {}
 
 	template <typename T>
-	void operator()(T* dst)
+	void operator()(T* ptr)
 	{
-		A3D::construct_n(dst, size_);
+		A3D::construct_n(ptr, size_);
 	}
 
 private:
@@ -94,9 +105,9 @@ public:
 	destroy_data(size_t size) : size_(size) {}
 
 	template <typename T>
-	void operator()(T* dst)
+	void operator()(T* ptr)
 	{
-		A3D::destroy_n(dst, size_);
+		A3D::destroy_n(ptr, size_);
 	}
 
 private:
@@ -185,6 +196,7 @@ struct decrement_pointer
 	}
 };
 
+
 template <template <typename> typename Modifier,
 		  typename Table,
 		  typename TableTagsList,
@@ -212,20 +224,15 @@ public:
 		data_types_iter
 	>::type;
 
-	iterator_base() noexcept
-	{
-		meta::foreach(ptr_, reset_pointer{});
-	}
+	iterator_base() noexcept { meta::foreach(ptr_, reset_pointer{}); }
+	iterator_base(const iterator_base& other) noexcept { meta::foreach(ptr_, other.ptr_, set_pointer{}); }
+	iterator_base(pointer_iter& ptr) noexcept { meta::foreach(ptr_, ptr, set_pointer{}); }
+	iterator_base(pointer_iter& ptr, ptrdiff_t bias) noexcept { meta::foreach(ptr_, ptr, set_pointer_bias{bias}); }
 
 	template <typename DataList>
 	iterator_base(DataList& ptr) noexcept
 	{
 		meta::foreach_tags<tags_types_iter, tags_types_table>(ptr_, ptr, set_pointer{});
-	}
-
-	iterator_base(pointer_iter& ptr) noexcept
-	{
-		meta::foreach(ptr_, ptr, set_pointer{});
 	}
 
 	template <typename DataList>
@@ -234,9 +241,9 @@ public:
 		meta::foreach_tags<tags_types_iter, tags_types_table>(ptr_, ptr, set_pointer_bias{bias});
 	}
 
-	iterator_base(pointer_iter& ptr, ptrdiff_t bias) noexcept
+	void operator=(const iterator_base& other) noexcept
 	{
-		meta::foreach(ptr_, ptr, set_pointer_bias{bias});
+		meta::foreach(ptr_, other.ptr_, set_pointer{});
 	}
 
 	template <typename DataList>
@@ -245,30 +252,12 @@ public:
 		meta::foreach_tags<tags_types_iter, tags_types_table>(ptr_, ptr, set_pointer{});
 	}
 
-	void operator=(pointer_iter& ptr) noexcept
-	{
-		meta::foreach(ptr_, ptr, set_pointer{});
-	}
+	void operator=(pointer_iter& ptr) noexcept { meta::foreach(ptr_, ptr, set_pointer{}); }
 
-	void operator++() noexcept
-	{
-		meta::foreach(ptr_, increment_pointer{});
-	}
-
-	void operator--() noexcept
-	{
-		meta::foreach(ptr_, decrement_pointer{});
-	}
-
-	void operator+=(ptrdiff_t delta) noexcept
-	{
-		meta::foreach(ptr_, set_pointer_bias{delta});
-	}
-
-	void operator-=(ptrdiff_t delta) noexcept
-	{
-		meta::foreach(ptr_, set_pointer_bias{-delta});
-	}
+	void operator++() noexcept { meta::foreach(ptr_, increment_pointer{}); }
+	void operator--() noexcept { meta::foreach(ptr_, decrement_pointer{}); }
+	void operator+=(ptrdiff_t delta) noexcept { meta::foreach(ptr_, set_pointer_bias{delta}); }
+	void operator-=(ptrdiff_t delta) noexcept { meta::foreach(ptr_, set_pointer_bias{-delta}); }
 
 	iterator_base operator+(ptrdiff_t delta) noexcept
 	{
@@ -284,15 +273,8 @@ public:
 		return ret;
 	}
 
-	bool operator==(const iterator_base& other) const noexcept
-	{
-		return ptr_.value == other.ptr_.value;
-	}
-
-	bool operator!=(const iterator_base& other) const noexcept
-	{
-		return ptr_.value != other.ptr_.value;
-	}
+	bool operator==(const iterator_base& other) const noexcept { return ptr_.value == other.ptr_.value; }
+	bool operator!=(const iterator_base& other) const noexcept { return ptr_.value != other.ptr_.value; }
 
 	template <typename DataList>
 	bool operator==(const DataList& other) const noexcept
@@ -320,12 +302,107 @@ private:
 	pointer_iter ptr_;
 };
 
-template <typename Table, typename TableTags, typename Tags>
-using iterator = iterator_base<meta::bypass, Table, TableTags, Tags>;
+template <typename TypesList, typename SizeType>
+class table
+{
+public:
+	using data_type = TypesList;
+	using const_data_type = meta::list_modify<std::add_const, meta::data_list, data_type>::type;
+	using pointers_type = meta::list_modify<std::add_pointer, meta::data_list, data_type>::type;
+	using const_pointers_type = meta::list_modify<std::add_pointer, meta::data_list, const_data_type>::type;
+	using size_type = SizeType;
 
-template <typename Table, typename TableTags, typename Tags>
-using const_iterator = iterator_base<std::add_const, Table, TableTags, Tags>;
-} // namespace table
+	template <typename Tags, typename TableTags> using iterator = iterator_base<meta::bypass, data_type, TableTags, Tags>;
+	template <typename Tags, typename TableTags> using const_iterator = iterator_base<meta::bypass, data_type, TableTags, Tags>;
+
+	template <typename Tags, typename TableTags> iterator<Tags, TableTags> begin() noexcept { return { data_ }; }
+	template <typename Tags, typename TableTags> const_iterator<Tags, TableTags> begin() const noexcept { return { data_ }; }
+	template <typename Tags, typename TableTags> const_iterator<Tags, TableTags> cbegin() const noexcept { return { data_ }; }
+	template <typename Tags, typename TableTags> iterator<Tags, TableTags> mid(size_type id) noexcept { return { data_, id }; }
+	template <typename Tags, typename TableTags> const_iterator<Tags, TableTags> mid(size_type id) const noexcept { return { data_, id }; }
+	template <typename Tags, typename TableTags> const_iterator<Tags, TableTags> cmid(size_type id) const noexcept { return { data_, id }; }
+
+	template <typename TableTags> iterator<TableTags, TableTags> abegin() noexcept { return { data_ }; }
+	template <typename TableTags> const_iterator<TableTags, TableTags> abegin() const noexcept { return { data_ }; }
+	template <typename TableTags> const_iterator<TableTags, TableTags> cabegin() const noexcept { return { data_ }; }
+	template <typename TableTags> iterator<TableTags, TableTags> amid(size_type id) noexcept { return { data_, id }; }
+	template <typename TableTags> const_iterator<TableTags, TableTags> amid(size_type id) const noexcept { return { data_, id }; }
+	template <typename TableTags> const_iterator<TableTags, TableTags> camid(size_type id) const noexcept { return { data_, id }; }
+
+	template <typename Tag, typename TableTags>
+	typename meta::type_by_tag<Tag, TableTags, data_type>::type&
+	front() noexcept { return *meta::get_tag<Tag, TableTags>(data_); }
+
+	template <typename Tag, typename TableTags>
+	const typename meta::type_by_tag<Tag, TableTags, const_data_type>::type&
+	front() const noexcept { return *meta::get_tag<Tag, TableTags>(data_); }
+
+	template <typename Tag, typename TableTags>
+	const typename meta::type_by_tag<Tag, TableTags, const_data_type>::type&
+	cfront() const noexcept { return *meta::get_tag<Tag, TableTags>(data_); }
+
+	template <typename Tag, typename TableTags>
+	typename meta::type_by_tag<Tag, TableTags, data_type>::type&
+	at(size_type id) noexcept { return meta::get_tag<Tag, TableTags>(data_)[id]; }
+
+	template <typename Tag, typename TableTags>
+	typename meta::type_by_tag<Tag, TableTags, const_data_type>::type&
+	at(size_type id) const noexcept { return meta::get_tag<Tag, TableTags>(data_)[id]; }
+
+	template <typename Tag, typename TableTags>
+	typename meta::type_by_tag<Tag, TableTags, const_data_type>::type&
+	cat(size_type id) const noexcept { return meta::get_tag<Tag, TableTags>(data_)[id]; }
+
+	pointers_type& data() noexcept { return data_; }
+	const pointers_type& data() const noexcept { return data_; }
+
+	uint8_t* allocate(uint8_t* mem, size_t rows_count) noexcept
+	{
+		distribute_memory dm(mem, rows_count);
+		meta::foreach(data_, dm);
+		return dm.mem();
+	}
+
+	template <typename TableTags>
+	void create(iterator<TableTags, TableTags>& iter)
+	{
+		meta::foreach(iter, construct_value{});
+	}
+
+	template <typename TableTags>
+	void destroy(iterator<TableTags, TableTags>& iter)
+	{
+		meta::foreach(iter, destroy_value{});
+	}
+
+	template <typename TableTags>
+	void copy(iterator<TableTags, TableTags> dst, iterator<TableTags, TableTags> src)
+	{
+		meta::foreach(dst, src, copy_value{});
+	}
+
+	template <typename TableTags>
+	void move(iterator<TableTags, TableTags> dst, iterator<TableTags, TableTags> src)
+	{
+		meta::foreach(dst, src, move_value{});
+	}
+
+	void create_n(size_type size) { meta::foreach(data_, construct_data{size}); }
+	void destroy_n(size_type size) noexcept { meta::foreach(data_, destroy_data{size}); }
+	void copy_n(const table& other, size_type size) noexcept { meta::foreach(data_, other.data_, copy_data{size}); }
+	void move_n(const table& other, size_type size) noexcept { meta::foreach(data_, other.data_, move_data{size}); }
+
+	void copy_pointer(const table& other) noexcept { meta::foreach(data_, other.data_, set_pointer{}); }
+
+private:
+	pointers_type data_;
+
+public:
+	static inline constexpr size_t memory_size(size_t rows_count) noexcept { return rows_count * row_sizeof; }
+
+	static constexpr size_t row_sizeof = meta::list_sizeof<TypesList>();
+};
+} // namespace data_table
 } // namespace db
 } // namespace A3D
 
