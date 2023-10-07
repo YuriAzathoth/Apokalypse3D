@@ -20,11 +20,12 @@
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <SDL_events.h>
-#include "Common/GpuProgram.h"
+#include "Common/RenderPass.h"
 #include "Input/SystemEvent.h"
 #include "IO/Log.h"
 #include "Resource/Model.h"
-#include "Resource/GpuProgram.h"
+#include "Resource/RenderPass.h"
+#include "Resource/Shader.h"
 #include "System/Renderer.h"
 #include "System/Window.h"
 #include "World/VisualWorld.h"
@@ -76,8 +77,6 @@ int main()
 {
 	bool run = true;
 
-	SetLogLevel(LogLevel::WARNING);
-
 	SystemEventListener listener;
 	CreateSystemEventListener();
 	BindSystemEvent(listener, SDL_QUIT, OnQuit, &run);
@@ -111,17 +110,17 @@ int main()
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 
 	VisualHandle cubes[4096];
-	GpuProgram program;
+	RenderPass pass;
 	vec3 pos{};
 	for (int i = 0; i < 4096; ++i)
 	{
-		GetGpuProgram(program, "../Data/Shaders/white_solid.vert", "../Data/Shaders/white_solid.frag");
+		GetRenderPass(pass, "../Data/RenderPasses/BaseColorUnlit.xml");
 
 		glm_mat4_identity(transform.transform);
 		pos[0] = (float)(i % 64 * 4 - 128);
 		pos[1] = (float)(i / 64 * 4 - 128);
 		glm_translate(transform.transform, pos);
-		cubes[i] = AddModel(vw, model.groups[0], program, transform);
+		cubes[i] = AddModel(vw, model.groups[0], pass, transform);
 	}
 
 	vec3 rotate_axis[5] =
@@ -144,11 +143,11 @@ int main()
 
 		RenderVisualWorld(vw, contexts, threads_count);
 
-		UpdateGpuProgramCache();
+		UpdateShaderCache();
 	}
 
 	for (int i = 0; i < 4096; ++i)
-		ReleaseGpuProgram(program);
+		ReleaseRenderPass(pass);
 	ReleaseModel("../Data/Models/Box.mdl");
 	DestroyVisualWorld(vw);
 

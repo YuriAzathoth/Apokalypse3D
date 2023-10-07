@@ -16,19 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_GPU_PROGRAM_H
-#define RESOURCE_GPU_PROGRAM_H
+#define RAPIDXML_NO_EXCEPTIONS
+#include <IO/Log.h>
+#include <rapidxml/rapidxml.hpp>
+#include "A3DCoreAPI.h"
 
-#include "A3DGraphicsAPI.h"
-
-namespace A3D
+A3DCOREAPI_EXPORT void rapidxml::parse_error_handler(const char *what, void *where)
 {
-struct GpuProgram;
-
-A3DGRAPHICSAPI_EXPORT bool GetGpuProgram(GpuProgram& program, const char* vertex_filename, const char* fragment_filename);
-A3DGRAPHICSAPI_EXPORT void ReleaseGpuProgram(GpuProgram& program);
-
-A3DGRAPHICSAPI_EXPORT void UpdateGpuProgramCache();
-} // namespace A3D
-
-#endif // RESOURCE_GPU_PROGRAM_H
+	using namespace A3D;
+	LogInfo("XML parsing error: %s.", what);
+}

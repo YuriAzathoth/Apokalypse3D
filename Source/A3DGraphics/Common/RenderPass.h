@@ -16,17 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef COMMON_GPU_PROGRAM_H
-#define COMMON_GPU_PROGRAM_H
+#ifndef COMMON_RENDER_PASS_H
+#define COMMON_RENDER_PASS_H
 
 #include <bgfx/bgfx.h>
 
 namespace A3D
 {
-struct GpuProgram
+struct RenderPass
 {
-	bgfx::ProgramHandle handle;
+	bgfx::ProgramHandle program;
 };
 } // namespace A3D
 
-#endif // COMMON_GPU_PROGRAM_H
+#endif // COMMON_RENDER_PASS_H

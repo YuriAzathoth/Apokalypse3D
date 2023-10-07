@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include "Common/Camera.h"
 #include "Common/Geometry.h"
-#include "Common/GpuProgram.h"
 #include "Common/Model.h"
+#include "Common/RenderPass.h"
 #include "IO/Log.h"
 #include "Renderer.h"
 #include "RendererAllocator.h"
@@ -294,24 +294,24 @@ void SetCameraTransforms(const Camera* cameras, uint16_t count)
 		bgfx::setViewTransform(i, cameras->view, cameras->proj);
 }
 
-void DrawMeshGroup(const MeshGroup& mesh, const GpuProgram& program, const GlobalTransform& transform)
+void DrawMeshGroup(const MeshGroup& mesh, const RenderPass& pass, const GlobalTransform& transform)
 {
 	bgfx::setTransform(transform.transform);
 	bgfx::setVertexBuffer(0, mesh.vbo);
 	bgfx::setIndexBuffer(mesh.ebo);
 	bgfx::setState(BGFX_STATE_DEFAULT);
-	bgfx::submit(0, program.handle);
+	bgfx::submit(0, pass.program);
 }
 
 void DrawMeshGroup(RendererThreadContext& context,
 				   const MeshGroup& mesh,
-				   const GpuProgram& program,
+				   const RenderPass& pass,
 				   const GlobalTransform& transform)
 {
 	context.queue->setTransform(transform.transform);
 	context.queue->setVertexBuffer(0, mesh.vbo);
 	context.queue->setIndexBuffer(mesh.ebo);
 	context.queue->setState(BGFX_STATE_DEFAULT);
-	context.queue->submit(0, program.handle);
+	context.queue->submit(0, pass.program);
 }
 } // namespace A3D
