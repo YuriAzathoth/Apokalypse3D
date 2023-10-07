@@ -20,12 +20,12 @@
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <SDL_events.h>
-#include "Common/RenderPass.h"
+#include "Common/Technique.h"
 #include "Input/SystemEvent.h"
 #include "IO/Log.h"
 #include "Resource/Model.h"
-#include "Resource/RenderPass.h"
 #include "Resource/Shader.h"
+#include "Resource/Technique.h"
 #include "System/Renderer.h"
 #include "System/Window.h"
 #include "World/VisualWorld.h"
@@ -110,17 +110,17 @@ int main()
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 
 	VisualHandle cubes[4096];
-	RenderPass pass;
+	Technique technique;
 	vec3 pos{};
 	for (int i = 0; i < 4096; ++i)
 	{
-		GetRenderPass(pass, "../Data/RenderPasses/BaseColorUnlit.xml");
+		GetTechnique(technique, "../Data/Techniques/ColorUnlit.xml");
 
 		glm_mat4_identity(transform.transform);
 		pos[0] = (float)(i % 64 * 4 - 128);
 		pos[1] = (float)(i / 64 * 4 - 128);
 		glm_translate(transform.transform, pos);
-		cubes[i] = AddModel(vw, model.groups[0], pass, transform);
+		cubes[i] = AddModel(vw, model.groups[0], technique, transform);
 	}
 
 	vec3 rotate_axis[5] =
@@ -147,7 +147,7 @@ int main()
 	}
 
 	for (int i = 0; i < 4096; ++i)
-		ReleaseRenderPass(pass);
+		ReleaseTechnique(technique);
 	ReleaseModel("../Data/Models/Box.mdl");
 	DestroyVisualWorld(vw);
 

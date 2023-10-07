@@ -28,7 +28,7 @@ namespace A3D
 struct Camera;
 struct GlobalTransform;
 struct MeshGroup;
-struct RenderPass;
+struct Technique;
 
 struct RendererGpu
 {
@@ -79,11 +79,11 @@ A3DGRAPHICSAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext*
 
 A3DGRAPHICSAPI_EXPORT void SetCameraTransforms(const Camera* cameras, uint16_t count);
 
-A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(const MeshGroup& mesh, const RenderPass& pass, const GlobalTransform& transform);
+A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(const MeshGroup& mesh, const Technique& technique, const GlobalTransform& transform);
 
 A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(RendererThreadContext& context,
 										 const MeshGroup& mesh,
-										 const RenderPass& pass,
+										 const Technique& technique,
 										 const GlobalTransform& transform);
 } // namespace A3D
 

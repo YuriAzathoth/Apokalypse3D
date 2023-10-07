@@ -19,14 +19,14 @@
 #include <bgfx/bgfx.h>
 #include <string.h>
 #include <unordered_map>
-#include "Common/RenderPass.h"
+#include "Common/Technique.h"
 #include "Container/dense_map.h"
 #include "Container/string.h"
 #include "Container/string_hash.h"
 #include "IO/FileSystem.h"
 #include "IO/Log.h"
-#include "RenderPass.h"
 #include "Shader.h"
+#include "Technique.h"
 
 #define RAPIDXML_NO_EXCEPTIONS
 #include <rapidxml/rapidxml.hpp>
@@ -38,41 +38,41 @@ namespace A3D
 {
 using RefsCount = uint16_t;
 using ResourceIndex = uint16_t;
-using RenderPassHandleType = decltype(bgfx::ShaderHandle::idx);
+using TechniqueHandleType = decltype(bgfx::ProgramHandle::idx);
 using TimerType = uint8_t;
 
-struct RenderPassCache
+struct TechniqueCache
 {
-	std::unordered_map<string_hash, RenderPassHandleType> by_name;
-	std::unordered_map<RenderPassHandleType, ResourceIndex> indices;
+	std::unordered_map<string_hash, TechniqueHandleType> by_name;
+	std::unordered_map<TechniqueHandleType, ResourceIndex> indices;
 
-	dense_map<ResourceIndex, RenderPassHandleType> render_passes;
+	dense_map<ResourceIndex, TechniqueHandleType> render_passes;
 	dense_map<ResourceIndex, RefsCount> refs;
 	dense_map<ResourceIndex, string> filenames;
 };
 
-static RenderPassCache s_cache;
+static TechniqueCache s_cache;
 
-static bool LoadRenderPassFile(RenderPass& pass, const char* filename)
+static bool LoadTechniqueFile(Technique& pass, const char* filename)
 {
 	File file;
 	if (!OpenFileRead(file, filename))
 	{
-		LogFatal("Could not load render pass \"%s\": file does not exist.", filename);
+		LogFatal("Could not load render technique \"%s\": file does not exist.", filename);
 		return false;
 	}
 
 	char* text = (char*)malloc(file.size + 1);
 	if (text == nullptr)
 	{
-		LogFatal("Could not load render pass \"%s\": out of memory.", filename);
+		LogFatal("Could not load render technique \"%s\": out of memory.", filename);
 		CloseFile(file);
 		return false;
 	}
 
 	if (!ReadFileData(file, text) || file.size == 0)
 	{
-		LogFatal("Could not load render pass \"%s\": file reading error.", filename);
+		LogFatal("Could not load render technique \"%s\": file reading error.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
@@ -82,41 +82,41 @@ static bool LoadRenderPassFile(RenderPass& pass, const char* filename)
 	rapidxml::xml_document<> doc;
 	doc.parse<0>(text);
 
-	rapidxml::xml_node<>* root = doc.first_node("pass");
+	rapidxml::xml_node<>* root = doc.first_node("technique");
 	if (root == nullptr)
 	{
-		LogFatal("Could not load render pass \"%s\": invalid file format.", filename);
+		LogFatal("Could not load render technique \"%s\": invalid file format.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
 	}
 
-	rapidxml::xml_node<>* node = root->first_node("shader");
-	if (node == nullptr)
-	{
-		LogFatal("Could not load render pass \"%s\": shaders are not specialized.", filename);
-		free(text);
-		CloseFile(file);
-		return false;
-	}
+//	rapidxml::xml_node<>* node = root->first_node("shader");
+//	if (node == nullptr)
+//	{
+//		LogFatal("Could not load render technique \"%s\": shaders are not specialized.", filename);
+//		free(text);
+//		CloseFile(file);
+//		return false;
+//	}
 
 	char vertex_filename[BUFFER_SIZE];
 	char fragment_filename[BUFFER_SIZE];
 
-	rapidxml::xml_attribute<>* attrib = node->first_attribute("vertex");
+	rapidxml::xml_attribute<>* attrib = root->first_attribute("vs");
 	if (attrib == nullptr)
 	{
-		LogFatal("Could not load render pass \"%s\": vertex shader is not specialized.", filename);
+		LogFatal("Could not load render technique \"%s\": vertex shader is not specialized.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
 	}
 	strcpy(vertex_filename, attrib->value());
 
-	attrib = node->first_attribute("fragment");
+	attrib = root->first_attribute("fs");
 	if (attrib == nullptr)
 	{
-		LogFatal("Could not load render pass \"%s\": fragment shader is not specialized.", filename);
+		LogFatal("Could not load render technique \"%s\": fragment shader is not specialized.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
@@ -130,14 +130,14 @@ static bool LoadRenderPassFile(RenderPass& pass, const char* filename)
 
 	if (!GetShader(vertex, vertex_filename))
 	{
-		LogFatal("Could not load render pass \"%s\": vertex shader loading error.", filename);
+		LogFatal("Could not load render technique \"%s\": vertex shader loading error.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
 	}
 	if (!GetShader(fragment, fragment_filename))
 	{
-		LogFatal("Could not load render pass \"%s\": fragment shader loading error.", filename);
+		LogFatal("Could not load render technique \"%s\": fragment shader loading error.", filename);
 		free(text);
 		CloseFile(file);
 		return false;
@@ -152,12 +152,12 @@ static bool LoadRenderPassFile(RenderPass& pass, const char* filename)
 	}
 	else
 	{
-		LogFatal("Could not load render pass \"%s\": GPU program linking error.", filename);
+		LogFatal("Could not load render technique \"%s\": GPU program linking error.", filename);
 		return false;
 	}
 }
 
-bool GetRenderPass(RenderPass& pass, const char* filename)
+bool GetTechnique(Technique& pass, const char* filename)
 {
 	const string_hash filename_hash = filename;
 	const auto it = s_cache.by_name.find(filename_hash);
@@ -167,7 +167,7 @@ bool GetRenderPass(RenderPass& pass, const char* filename)
 		++s_cache.refs[it->second];
 		return true;
 	}
-	else if (LoadRenderPassFile(pass, filename))
+	else if (LoadTechniqueFile(pass, filename))
 	{
 		s_cache.by_name.emplace(filename, pass.program.idx);
 		s_cache.indices.emplace(pass.program.idx, s_cache.render_passes.size());
@@ -210,7 +210,7 @@ bool GetRenderPass(RenderPass& pass, const char* filename)
 //	}
 }
 
-void ReleaseRenderPass(const RenderPass& pass)
+void ReleaseTechnique(const Technique& pass)
 {
 //	const ResourceIndex index = s_programs_cache.indices[program.handle.idx];
 //	if (--s_programs_cache.refs[index] == 0)

@@ -1,4 +1,0 @@
-<pass>
-	<shader vertex="../Data/Shaders/ColorUnlit.vert" fragment="../Data/Shaders/ColorUnlit.frag"/>
-	<parameter name="a_color" type="vec4"/>
-</pass>

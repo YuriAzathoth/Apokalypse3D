@@ -16,17 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_RENDER_PASS_H
-#define RESOURCE_RENDER_PASS_H
+#ifndef RESOURCE_TECHNIQUE_H
+#define RESOURCE_TECHNIQUE_H
 
 #include "A3DGraphicsAPI.h"
 
 namespace A3D
 {
-struct RenderPass;
+struct Technique;
 
-A3DGRAPHICSAPI_EXPORT bool GetRenderPass(RenderPass& pass, const char* filename);
-A3DGRAPHICSAPI_EXPORT void ReleaseRenderPass(const RenderPass& pass);
+A3DGRAPHICSAPI_EXPORT bool GetTechnique(Technique& technique, const char* filename);
+A3DGRAPHICSAPI_EXPORT void ReleaseTechnique(const Technique& technique);
 } // namespace A3D
 
-#endif // RESOURCE_RENDER_PASS_H
+#endif // RESOURCE_TECHNIQUE_H

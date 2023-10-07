@@ -25,8 +25,8 @@
 #include "Common/Camera.h"
 #include "Common/Geometry.h"
 #include "Common/Model.h"
-#include "Common/RenderPass.h"
 #include "Common/RendererThreadContext.h"
+#include "Common/Technique.h"
 #include "Common/Viewport.h"
 #include "Container/dense_map.h"
 #include "Container/sparse_map.h"
@@ -53,7 +53,7 @@ inline static const ViewportHandle MAIN_VIEWPORT = {0};
 struct VisualRenderItem
 {
 	MeshGroup mesh;
-	RenderPass render_pass;
+	Technique technique;
 	GlobalTransform transform;
 };
 
@@ -68,7 +68,7 @@ struct VisualViewportStore
 struct VisualObjectsStore
 {
 	dense_map<VisualIndex, MeshGroup> meshes;
-	dense_map<VisualIndex, RenderPass> render_passes;
+	dense_map<VisualIndex, Technique> techniques;
 	dense_map<VisualIndex, GlobalTransform> global_transforms;
 	dense_map<VisualIndex, VisualHandleType> external_handles;
 	sparse_map<VisualHandleType, VisualIndex> ids;
@@ -101,7 +101,7 @@ A3DGRAPHICSAPI_EXPORT void SetCameraPerspective(VisualWorld& world,
 
 A3DGRAPHICSAPI_EXPORT void SetCameraLookAt(VisualWorld& world, ViewportHandle viewport, vec3 position, vec3 target);
 
-A3DGRAPHICSAPI_EXPORT VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, RenderPass& render_pass, GlobalTransform& transform);
+A3DGRAPHICSAPI_EXPORT VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, Technique& technique, GlobalTransform& transform);
 A3DGRAPHICSAPI_EXPORT void RemoveModel(VisualWorld& world, VisualHandle handle);
 
 inline static GlobalTransform& GetVisualObjectTransform(VisualWorld& world, VisualHandle handle)
