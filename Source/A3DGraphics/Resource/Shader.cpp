@@ -21,9 +21,9 @@
 #include "Container/dense_map.h"
 #include "Container/string.h"
 #include "Container/string_hash.h"
-#include "Shader.h"
 #include "IO/FileSystem.h"
 #include "IO/Log.h"
+#include "Shader.h"
 
 #define BUFFER_SIZE 256
 #define SHADER_TIMER 20
@@ -47,33 +47,12 @@ struct ShaderCache
 
 static ShaderCache s_cache;
 
-inline static const char* GetShaderExt()
-{
-	switch (bgfx::getRendererType())
-	{
-	case bgfx::RendererType::Direct3D9:
-		return "dx9";
-	case bgfx::RendererType::Direct3D11:
-	case bgfx::RendererType::Direct3D12:
-		return "dx11";
-	case bgfx::RendererType::Metal:
-		return "msl";
-	case bgfx::RendererType::OpenGLES:
-		return "essl";
-	case bgfx::RendererType::OpenGL:
-		return "glsl";
-	case bgfx::RendererType::Vulkan:
-		return "spirv";
-	default:
-		LogFatal("Invalid BGFX renderer mode.");
-		return nullptr;
-	}
-}
+extern const char* s_shader_suffix;
 
 static bool LoadShaderFile(Shader& shader, const char* filename)
 {
 	char real_filename[BUFFER_SIZE];
-	sprintf(real_filename, "%s.%s", filename, GetShaderExt());
+	sprintf(real_filename, "%s/%s", s_shader_suffix, filename);
 
 	File file;
 	if (!OpenFileRead(file, real_filename))

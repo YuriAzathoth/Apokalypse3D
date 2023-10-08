@@ -1,4 +1,4 @@
-<technique vs="../Data/Shaders/ColorUnlit.vert" fs="../Data/Shaders/ColorUnlit.frag">
+<technique vs="ColorUnlit.vert" fs="ColorUnlit.frag">
 	<parameter name="a_color" type="vec4"/>
 	<pass type="base"/>
 </technique>

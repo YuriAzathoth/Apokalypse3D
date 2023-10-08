@@ -29,6 +29,13 @@
 
 namespace A3D
 {
+static const char SUFFIX_GL[] = "../Data/Shaders/gl";
+static const char SUFFIX_GLES[] = "../Data/Shaders/gles";
+static const char SUFFIX_VK[] = "../Data/Shaders/vk";
+static const char SUFFIX_DX_9[] = "../Data/Shaders/dx9";
+static const char SUFFIX_DX_11[] = "../Data/Shaders/dx11";
+static const char SUFFIX_METAL[] = "../Data/Shaders/metal";
+
 inline static const char* GetGpuVendorName(uint16_t vendor_id);
 inline static const char* GetRendererName(RendererType type);
 inline static RendererType GetRendererTypeFromBgfx(bgfx::RendererType::Enum type);
@@ -38,6 +45,8 @@ static bool SelectBestGpu(RendererGpu& gpu);
 static RendererAllocator g_alloc;
 static RendererCallback g_callback;
 static RendererResolution g_resolution;
+
+const char* s_shader_suffix = nullptr;
 
 bool CreateRenderer(RendererGpu& gpu,
 					void* window,
@@ -112,6 +121,18 @@ bool CreateRenderer(RendererGpu& gpu,
 	LogDebug("\tGPU device: %u.", gpu.device);
 
 	g_resolution = resolution;
+
+	switch (bgfx::getRendererType())
+	{
+	case bgfx::RendererType::OpenGL:		s_shader_suffix = SUFFIX_GL; break;
+	case bgfx::RendererType::OpenGLES:		s_shader_suffix = SUFFIX_GLES; break;
+	case bgfx::RendererType::Vulkan:		s_shader_suffix = SUFFIX_VK; break;
+	case bgfx::RendererType::Direct3D9:		s_shader_suffix = SUFFIX_DX_9; break;
+	case bgfx::RendererType::Direct3D11:
+	case bgfx::RendererType::Direct3D12:	s_shader_suffix = SUFFIX_DX_9; break;
+	case bgfx::RendererType::Metal:			s_shader_suffix = SUFFIX_METAL; break;
+	default:;
+	}
 
 	return true;
 }

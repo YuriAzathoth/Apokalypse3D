@@ -91,7 +91,7 @@ int main()
 
 	RendererGpu gpu{};
 	RendererResolution rres{wres.width, wres.height};
-	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::Auto, 16, 0, false, false);
+	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
 
 	const uint8_t threads_count = 4;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
