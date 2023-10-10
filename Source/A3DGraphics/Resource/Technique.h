@@ -19,14 +19,26 @@
 #ifndef RESOURCE_TECHNIQUE_H
 #define RESOURCE_TECHNIQUE_H
 
+#include <bgfx/bgfx.h>
 #include "A3DGraphicsAPI.h"
+#include "Common/Technique.h"
 
 namespace A3D
 {
-struct Technique;
-
 A3DGRAPHICSAPI_EXPORT bool GetTechnique(Technique& technique, const char* filename);
-A3DGRAPHICSAPI_EXPORT void ReleaseTechnique(const Technique& technique);
+A3DGRAPHICSAPI_EXPORT void ReleaseTechnique(Technique technique);
+
+bgfx::ProgramHandle GetTechniqueProgram(Technique technique);
+
+
+struct Uniform
+{
+	bgfx::UniformHandle handle;
+};
+
+A3DGRAPHICSAPI_EXPORT Uniform GetUniform(const char* name);
+A3DGRAPHICSAPI_EXPORT uint16_t GetUniformSize(Uniform uniform);
+A3DGRAPHICSAPI_EXPORT bgfx::UniformType::Enum GetUniformType(Uniform uniform);
 } // namespace A3D
 
 #endif // RESOURCE_TECHNIQUE_H

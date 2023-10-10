@@ -16,21 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_SHADER_H
-#define RESOURCE_SHADER_H
+#ifndef RESOURCE_MATERIAL_H
+#define RESOURCE_MATERIAL_H
 
 #include <bgfx/bgfx.h>
 #include "A3DGraphicsAPI.h"
+#include "Common/Material.h"
 
 namespace A3D
 {
-struct Shader
-{
-	bgfx::ShaderHandle handle;
-};
+A3DGRAPHICSAPI_EXPORT bool GetMaterial(Material& material, const char* filename);
+A3DGRAPHICSAPI_EXPORT void ReleaseMaterial(Material material);
 
-A3DGRAPHICSAPI_EXPORT bool GetShader(Shader& shader, const char* filename);
-A3DGRAPHICSAPI_EXPORT void UpdateShaderCache();
+bgfx::ProgramHandle UseMaterial(Material material);
+bgfx::ProgramHandle UseMaterial(Material material, bgfx::Encoder* queue);
 } // namespace A3D
 
-#endif // RESOURCE_SHADER_H
+#endif // RESOURCE_MATERIAL_H

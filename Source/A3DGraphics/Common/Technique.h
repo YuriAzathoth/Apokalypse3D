@@ -19,13 +19,15 @@
 #ifndef COMMON_TECHNIQUE_H
 #define COMMON_TECHNIQUE_H
 
-#include <bgfx/bgfx.h>
+#include <stdint.h>
 
 namespace A3D
 {
+using TechniqueHandle = uint16_t;
+
 struct Technique
 {
-	bgfx::ProgramHandle program;
+	TechniqueHandle handle;
 };
 } // namespace A3D
 

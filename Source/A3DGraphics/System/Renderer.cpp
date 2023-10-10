@@ -20,9 +20,10 @@
 #include <stdlib.h>
 #include "Common/Camera.h"
 #include "Common/Geometry.h"
+#include "Common/Material.h"
 #include "Common/Model.h"
-#include "Common/Technique.h"
 #include "IO/Log.h"
+#include "Resource/Material.h"
 #include "Renderer.h"
 #include "RendererAllocator.h"
 #include "RendererCallback.h"
@@ -129,7 +130,7 @@ bool CreateRenderer(RendererGpu& gpu,
 	case bgfx::RendererType::Vulkan:		s_shader_suffix = SUFFIX_VK; break;
 	case bgfx::RendererType::Direct3D9:		s_shader_suffix = SUFFIX_DX_9; break;
 	case bgfx::RendererType::Direct3D11:
-	case bgfx::RendererType::Direct3D12:	s_shader_suffix = SUFFIX_DX_9; break;
+	case bgfx::RendererType::Direct3D12:	s_shader_suffix = SUFFIX_DX_11; break;
 	case bgfx::RendererType::Metal:			s_shader_suffix = SUFFIX_METAL; break;
 	default:;
 	}
@@ -315,24 +316,28 @@ void SetCameraTransforms(const Camera* cameras, uint16_t count)
 		bgfx::setViewTransform(i, cameras->view, cameras->proj);
 }
 
-void DrawMeshGroup(const MeshGroup& mesh, const Technique& technique, const GlobalTransform& transform)
+void DrawMeshGroup(const MeshGroup& mesh, const Material& material, const GlobalTransform& transform)
 {
 	bgfx::setTransform(transform.transform);
 	bgfx::setVertexBuffer(0, mesh.vbo);
 	bgfx::setIndexBuffer(mesh.ebo);
 	bgfx::setState(BGFX_STATE_DEFAULT);
-	bgfx::submit(0, technique.program);
+
+	bgfx::ProgramHandle program = UseMaterial(material);
+	bgfx::submit(0, program);
 }
 
 void DrawMeshGroup(RendererThreadContext& context,
 				   const MeshGroup& mesh,
-				   const Technique& technique,
+				   const Material& material,
 				   const GlobalTransform& transform)
 {
 	context.queue->setTransform(transform.transform);
 	context.queue->setVertexBuffer(0, mesh.vbo);
 	context.queue->setIndexBuffer(mesh.ebo);
 	context.queue->setState(BGFX_STATE_DEFAULT);
-	context.queue->submit(0, technique.program);
+
+	bgfx::ProgramHandle program = UseMaterial(material, context.queue);
+	context.queue->submit(0, program);
 }
 } // namespace A3D

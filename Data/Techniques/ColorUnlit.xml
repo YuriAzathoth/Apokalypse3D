@@ -1,4 +1,4 @@
 <technique vs="ColorUnlit.vert" fs="ColorUnlit.frag">
-	<parameter name="a_color" type="vec4"/>
+	<parameter name="u_color" type="vec4"/>
 	<pass type="base"/>
 </technique>

@@ -16,21 +16,19 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_SHADER_H
-#define RESOURCE_SHADER_H
+#ifndef COMMON_MATERIAL_H
+#define COMMON_MATERIAL_H
 
-#include <bgfx/bgfx.h>
-#include "A3DGraphicsAPI.h"
+#include <stdint.h>
 
 namespace A3D
 {
-struct Shader
-{
-	bgfx::ShaderHandle handle;
-};
+using MaterialHandle = uint16_t;
 
-A3DGRAPHICSAPI_EXPORT bool GetShader(Shader& shader, const char* filename);
-A3DGRAPHICSAPI_EXPORT void UpdateShaderCache();
+struct Material
+{
+	MaterialHandle handle;
+};
 } // namespace A3D
 
-#endif // RESOURCE_SHADER_H
+#endif // COMMON_MATERIAL_H

@@ -36,14 +36,14 @@ void DestroyVisualWorld(VisualWorld& world)
 void PrepareVisualWorld(VisualWorld& world)
 {
 	auto mesh_it = world.objects.meshes.cbegin();
-	auto tehnique_it = world.objects.techniques.cbegin();
+	auto material_it = world.objects.materials.cbegin();
 	auto transform_it = world.objects.global_transforms.cbegin();
 	const auto mesh_end = world.objects.meshes.cend();
 	while (mesh_it != mesh_end)
 	{
-		world.visible.emplace_back(VisualRenderItem{*mesh_it, *tehnique_it, *transform_it});
+		world.visible.emplace_back(VisualRenderItem{*mesh_it, *material_it, *transform_it});
 		++mesh_it;
-		++tehnique_it;
+		++material_it;
 		++transform_it;
 	}
 }
@@ -55,7 +55,7 @@ void RenderVisualWorld(VisualWorld& world)
 	SetCameraTransforms(world.viewports.cameras.data(), world.viewports.cameras.size());
 
 	for (const VisualRenderItem& item : world.visible)
-		DrawMeshGroup(item.mesh, item.technique, item.transform);
+		DrawMeshGroup(item.mesh, item.material, item.transform);
 
 	EndRendererFrame();
 
@@ -73,7 +73,7 @@ void RenderVisualWorld(VisualWorld& world, RendererThreadContext* contexts, uint
 	for (uint16_t i = 0; i < world.visible.size(); ++i)
 	{
 		item = &world.visible[i];
-		DrawMeshGroup(contexts[i % threads_count], item->mesh, item->technique, item->transform);
+		DrawMeshGroup(contexts[i % threads_count], item->mesh, item->material, item->transform);
 	}
 
 	EndRendererThreadContextsFrame(contexts, threads_count);
@@ -128,10 +128,10 @@ void SetCameraLookAt(VisualWorld& world,
 	glm_lookat(position, target, up, view);
 }
 
-VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, Technique& technique, GlobalTransform& transform)
+VisualHandle AddModel(VisualWorld& world, MeshGroup& mesh, Material& material, GlobalTransform& transform)
 {
 	const VisualIndex index = world.objects.meshes.insert(mesh);
-	world.objects.techniques.insert(technique);
+	world.objects.materials.insert(material);
 	world.objects.global_transforms.insert(transform);
 
 	const VisualHandleType handle = world.objects.ids.insert(index);
@@ -146,7 +146,7 @@ void RemoveModel(VisualWorld& world, VisualHandle handle)
 	world.objects.ids.erase(handle.id);
 
 	const VisualIndex rebound_index = world.objects.meshes.erase(index);
-	world.objects.techniques.erase(index);
+	world.objects.materials.erase(index);
 	world.objects.global_transforms.erase(index);
 
 	if (rebound_index != world.objects.meshes.INVALID_KEY)

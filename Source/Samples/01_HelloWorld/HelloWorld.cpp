@@ -20,12 +20,12 @@
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <SDL_events.h>
-#include "Common/Technique.h"
+#include "Common/Material.h"
 #include "Input/SystemEvent.h"
 #include "IO/Log.h"
 #include "Resource/Model.h"
 #include "Resource/Shader.h"
-#include "Resource/Technique.h"
+#include "Resource/Material.h"
 #include "System/Renderer.h"
 #include "System/Window.h"
 #include "World/VisualWorld.h"
@@ -91,9 +91,10 @@ int main()
 
 	RendererGpu gpu{};
 	RendererResolution rres{wres.width, wres.height};
-	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
+//	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::OpenGL, 16, 0, false, false);
+	CreateRenderer(gpu, wpd.window, wpd.display, rres, RendererType::Auto, 16, 0, false, false);
 
-	const uint8_t threads_count = 4;
+	const uint8_t threads_count = 2;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
 
 	VisualWorld vw;
@@ -109,18 +110,27 @@ int main()
 
 	GlobalTransform transform{ GLM_MAT4_IDENTITY };
 
+	static constexpr const char* MATERIAL_NAMES[] =
+	{
+		"../Data/Materials/WhiteUnlit.xml",
+		"../Data/Materials/RedUnlit.xml",
+		"../Data/Materials/GreenUnlit.xml",
+		"../Data/Materials/BlueUnlit.xml"
+	};
+
 	VisualHandle cubes[4096];
-	Technique technique;
+	Material material;
 	vec3 pos{};
 	for (int i = 0; i < 4096; ++i)
 	{
-		GetTechnique(technique, "../Data/Techniques/ColorUnlit.xml");
+		if (!GetMaterial(material, MATERIAL_NAMES[i % 4]))
+			return 1;
 
 		glm_mat4_identity(transform.transform);
 		pos[0] = (float)(i % 64 * 4 - 128);
 		pos[1] = (float)(i / 64 * 4 - 128);
 		glm_translate(transform.transform, pos);
-		cubes[i] = AddModel(vw, model.groups[0], technique, transform);
+		cubes[i] = AddModel(vw, model.groups[0], material, transform);
 	}
 
 	vec3 rotate_axis[5] =
@@ -147,7 +157,7 @@ int main()
 	}
 
 	for (int i = 0; i < 4096; ++i)
-		ReleaseTechnique(technique);
+		ReleaseMaterial(material);
 	ReleaseModel("../Data/Models/Box.mdl");
 	DestroyVisualWorld(vw);
 
