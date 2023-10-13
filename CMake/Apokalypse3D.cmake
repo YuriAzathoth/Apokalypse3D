@@ -100,54 +100,6 @@ MACRO (COMPILE_SHADER TYPE IN DIR_OUT GENERATED_FILES)
 			WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/DataSource/Shaders"
 		)
 	ENDFOREACH ()
-	#~ FOREACH (PROFILE ${PROFILES_LIST})
-		#~ MESSAGE ("${PROFILE}")
-	#~ ENDFOREACH ()
-	#~ MESSAGE (FATAL_ERROR EndDebug)
-	#~ SET (PLATFORMS_LIST)
-	#~ IF (WIN32)
-		#~ LIST (APPEND PLATFORMS_LIST glsl spirv dx9 dx11)
-	#~ ELSEIF (UNIX)
-		#~ LIST (APPEND PLATFORMS_LIST glsl spirv)
-		#~ IF (APPLE)
-			#~ LIST (APPEND PLATFORMS_LIST msl)
-		#~ ENDIF ()
-	#~ ELSEIF (ANDROID)
-		#~ LIST (APPEND PLATFORMS_LIST spirv msl)
-	#~ ENDIF ()
-	#~ SET (ARGS_glsl --platform linux -p 120)
-	#~ SET (ARGS_spirv --platform linux -p spirv)
-	#~ SET (ARGS_essl --platform android -p 300_es)
-	#~ SET (ARGS_msl --platform osx -p metal)
-	#~ SET (ARGS_pssl --platform orbis -p pssl)
-	#~ SET (ARGS_dx9 --platform windows -p s_3_0)
-	#~ SET (ARGS_dx11 --platform windows -p s_5_0)
-	#~ IF (${TYPE} STREQUAL VERTEX)
-		#~ SET (SHADER_TYPE vertex)
-	#~ ELSEIF (${TYPE} STREQUAL FRAGMENT)
-		#~ SET (SHADER_TYPE fragment)
-	#~ ELSE ()
-		#~ MESSAGE (FATAL_ERROR "Unrecognized shader type ${TYPE}")
-	#~ ENDIF ()
-	#~ GET_FILENAME_COMPONENT (FILEPATH ${IN} DIRECTORY)
-	#~ GET_FILENAME_COMPONENT (FILENAME ${IN} NAME_WLE)
-	#~ GET_FILENAME_COMPONENT (FILEEXT ${IN} EXT)
-	#~ FOREACH (PLATFORM ${PLATFORMS_LIST})
-		#~ SET (OUT "${DIR_OUT}/${FILENAME}${FILEEXT}.${PLATFORM}")
-		#~ LIST (APPEND ${GENERATED_FILES} ${OUT})
-		#~ ADD_CUSTOM_COMMAND (
-			#~ OUTPUT ${OUT}
-			#~ COMMAND shaderc
-				#~ -f "${IN}"
-				#~ -o "${OUT}"
-				#~ -i "${CMAKE_SOURCE_DIR}/Source/ThirdParty/bgfx/bgfx/src"
-				#~ --type ${SHADER_TYPE}
-				#~ --varyingdef "${FILEPATH}/${FILENAME}.var"
-				#~ ${ARGS_${PLATFORM}}
-			#~ DEPENDS ${IN} shaderc
-			#~ WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/DataSource/Shaders"
-		#~ )
-	#~ ENDFOREACH ()
 ENDMACRO ()
 
 MACRO (COMPILE_TEXTURE IN DIR_OUT GENERATED_FILES)
