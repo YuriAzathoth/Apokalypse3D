@@ -56,7 +56,7 @@ struct MeshCache
 	dense_map<ModelIndex, string> filenames;
 };
 
-static MeshCache s_mesh_cache;
+static MeshCache s_cache;
 
 inline static void AabbFromBgfx(Box& dst, bx::Aabb& src)
 {
@@ -256,19 +256,19 @@ static bool LoadModelFile(Model& model, const char* filename)
 
 bool GetModel(Model& model, const char* filename)
 {
-	const auto it = s_mesh_cache.ids_models.find(filename);
-	if (it != s_mesh_cache.ids_models.end())
+	const auto it = s_cache.ids_models.find(filename);
+	if (it != s_cache.ids_models.end())
 	{
-		++s_mesh_cache.refs[it->second];
-		model = s_mesh_cache.models[it->second];
+		++s_cache.refs[it->second];
+		model = s_cache.models[it->second];
 		return true;
 	}
 	else if (LoadModelFile(model, filename))
 	{
-		s_mesh_cache.ids_models.emplace(filename, s_mesh_cache.models.size());
-		s_mesh_cache.models.insert(model);
-		s_mesh_cache.refs.insert(1);
-		s_mesh_cache.filenames.insert(filename);
+		s_cache.ids_models.emplace(filename, s_cache.models.size());
+		s_cache.models.insert(model);
+		s_cache.refs.insert(1);
+		s_cache.filenames.insert(filename);
 		return true;
 	}
 	else
@@ -277,18 +277,18 @@ bool GetModel(Model& model, const char* filename)
 
 void ReleaseModel(const char* filename)
 {
-	const auto it = s_mesh_cache.ids_models.find(filename);
-	if (--s_mesh_cache.refs[it->second] == 0)
+	const auto it = s_cache.ids_models.find(filename);
+	if (--s_cache.refs[it->second] == 0)
 	{
-		s_mesh_cache.ids_models.erase(filename);
+		s_cache.ids_models.erase(filename);
 
 		const ModelIndex index = it->second;
-		const ModelIndex rebound = s_mesh_cache.models.erase(index);
-		s_mesh_cache.refs.erase(index);
-		s_mesh_cache.filenames.erase(index);
+		const ModelIndex rebound = s_cache.models.erase(index);
+		s_cache.refs.erase(index);
+		s_cache.filenames.erase(index);
 
-		if (rebound != s_mesh_cache.models.INVALID_KEY)
-			s_mesh_cache.ids_models[s_mesh_cache.filenames[index]] = index;
+		if (rebound != s_cache.models.INVALID_KEY)
+			s_cache.ids_models[s_cache.filenames[index]] = index;
 	}
 }
 } // namespace A3D
