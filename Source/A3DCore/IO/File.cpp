@@ -27,7 +27,6 @@
 #define STR_TO_I32(A, B, C, D) ((uint32_t)(D) << 24 | (uint32_t)(C) << 16U | (uint32_t)(B) << 8U | (uint32_t)(A))
 
 #define FILEPATH_BUFFER_SIZE 512
-//#define DEFAULT_BLOCK_SIZE 2048
 #define MAGIC_NUMBER STR_TO_I32('.', 'P', 'A', 'K')
 
 struct package_header_t
@@ -247,6 +246,4 @@ bool WriteFileData(File& file, const void* buffer, uint32_t size)
 		return false;
 	}
 }
-
-void FileRewind(File& file) { fseek(file.handler, (long)file.offset, SEEK_SET); }
 } // namespace A3D

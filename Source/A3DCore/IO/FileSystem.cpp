@@ -16,7 +16,6 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//#include <stdint.h>
 #include <string.h>
 #include "IO/FileSystem.h"
 #include "System/Platform.h"

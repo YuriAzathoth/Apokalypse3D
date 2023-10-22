@@ -25,7 +25,6 @@ namespace A3D
 {
 struct RendererAllocator : public bx::AllocatorI
 {
-	~RendererAllocator();
 	void* realloc(void* _ptr,
 				  size_t _size,
 				  size_t _align,

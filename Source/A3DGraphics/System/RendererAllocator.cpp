@@ -24,10 +24,6 @@
 
 namespace A3D
 {
-RendererAllocator::~RendererAllocator()
-{
-}
-
 void* RendererAllocator::realloc(void* _ptr,
 								size_t _size,
 								size_t _align,
