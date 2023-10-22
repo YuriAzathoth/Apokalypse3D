@@ -16,42 +16,30 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//#include <stdint.h>
-#include <string.h>
-#include "IO/FileSystem.h"
-#include "System/Platform.h"
+#ifndef IO_FILE_H
+#define IO_FILE_H
 
-#define FILEPATH_BUFFER_SIZE 512
+#include <stdint.h>
+#include <stdio.h>
+#include "A3DCoreAPI.h"
 
 namespace A3D
 {
-bool MakeDir(const char* path)
+struct File
 {
-	char buffer[FILEPATH_BUFFER_SIZE];
-	strcpy(buffer, path);
-	for (char* chr = buffer; *chr; ++chr)
-		if (*chr == '/')
-		{
-			*chr = '\0';
-			Mkdir(buffer);
-			*chr = '/';
-		}
-	Mkdir(buffer);
-	return true;
-}
+	FILE* handler;
+	uint32_t offset;
+	uint32_t size;
+};
 
-bool RemoveDir(const char* path)
-{
-	return Rmrf(path);
-}
+A3DCOREAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
+A3DCOREAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
+A3DCOREAPI_EXPORT void CloseFile(File& file);
+A3DCOREAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
+A3DCOREAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
+A3DCOREAPI_EXPORT void FileRewind(File& file);
 
-bool IsDirExists(const char* path)
-{
-	return GetFileAttribute(path) == FileType::DIRECTORY;
-}
-
-bool IsFileExists(const char* path)
-{
-	return GetFileAttribute(path) == FileType::FILE;
-}
+inline static bool ReadFileData(File& file, void* buffer) { return ReadFileData(file, buffer, file.size); }
 } // namespace A3D
+
+#endif // IO_FILE_H

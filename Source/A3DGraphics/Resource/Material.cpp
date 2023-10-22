@@ -25,7 +25,7 @@
 #include "Container/sparse_map.h"
 #include "Container/string.h"
 #include "Container/string_hash.h"
-#include "IO/FileSystem.h"
+#include "IO/File.h"
 #include "IO/Log.h"
 #include "Material.h"
 #include "Technique.h"

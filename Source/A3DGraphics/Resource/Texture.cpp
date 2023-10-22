@@ -21,7 +21,7 @@
 #include <bx/allocator.h>
 #include <bx/file.h>
 #include <bx/readerwriter.h>
-#include "IO/FileSystem.h"
+#include "IO/File.h"
 #include "IO/Log.h"
 #include "Texture.h"
 

@@ -19,33 +19,15 @@
 #ifndef IO_FILESYSTEM_H
 #define IO_FILESYSTEM_H
 
-#include <stdint.h>
-#include <stdio.h>
 #include "A3DCoreAPI.h"
 
 namespace A3D
 {
-struct File
-{
-	FILE* handler;
-	uint32_t offset;
-	uint32_t size;
-};
-
 A3DCOREAPI_EXPORT bool MakeDir(const char* path);
 A3DCOREAPI_EXPORT bool RemoveDir(const char* path);
 
 A3DCOREAPI_EXPORT bool IsDirExists(const char* path);
 A3DCOREAPI_EXPORT bool IsFileExists(const char* path);
-
-A3DCOREAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
-A3DCOREAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
-A3DCOREAPI_EXPORT void CloseFile(File& file);
-A3DCOREAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
-A3DCOREAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
-A3DCOREAPI_EXPORT void FileRewind(File& file);
-
-inline static bool ReadFileData(File& file, void* buffer) { return ReadFileData(file, buffer, file.size); }
 } // namespace A3D
 
 #endif // IO_FILESYSTEM_H
