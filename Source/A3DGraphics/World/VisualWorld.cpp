@@ -31,6 +31,18 @@ void CreateVisualWorld(VisualWorld& world)
 
 void DestroyVisualWorld(VisualWorld& world)
 {
+	world.objects.ids.clear();
+	world.objects.external_handles.clear();
+	world.objects.global_transforms.clear();
+	world.objects.materials.clear();
+	world.objects.meshes.clear();
+
+	world.viewports.ids.clear();
+	world.viewports.external_handles.clear();
+	world.viewports.cameras.clear();
+	world.viewports.sizes.clear();
+
+	world.visible.clear();
 }
 
 void PrepareVisualWorld(VisualWorld& world)
