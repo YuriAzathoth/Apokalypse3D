@@ -1,0 +1,4 @@
+<material>
+	<technique name="../Data/Techniques/ColorUnlit.xml" />
+	<parameter name="u_color" value="1.0 0.0 0.0 1.0" />
+</material>

@@ -1,30 +1,30 @@
-[submodule "ThirdParty/GLM"]
-	path = ThirdParty/GLM
-	url = https://github.com/g-truc/glm
 [submodule "ThirdParty/bgfx"]
-	path = ThirdParty/bgfx
+	path = Source/ThirdParty/bgfx
 	url = https://github.com/bkaradzic/bgfx.cmake
 [submodule "ThirdParty/SDL"]
-	path = ThirdParty/SDL
+	path = Source/ThirdParty/SDL
 	url = https://github.com/libsdl-org/SDL
 [submodule "ThirdParty/doctest"]
-	path = ThirdParty/doctest
+	path = Source/ThirdParty/doctest
 	url = https://github.com/doctest/doctest
 [submodule "ThirdParty/Celero"]
-	path = ThirdParty/Celero
+	path = Source/ThirdParty/Celero
 	url = https://github.com/DigitalInBlue/Celero
-[submodule "ThirdParty/flecs"]
-	path = ThirdParty/flecs
-	url = https://github.com/SanderMertens/flecs
 [submodule "ThirdParty/rapidxml"]
-	path = ThirdParty/rapidxml
+	path = Source/ThirdParty/rapidxml
 	url = https://github.com/CodeFinder2/rapidxml
 [submodule "ThirdParty/Nuklear"]
-	path = ThirdParty/Nuklear
+	path = Source/ThirdParty/Nuklear
 	url = https://github.com/Immediate-Mode-UI/Nuklear
 [submodule "ThirdParty/SDL_net"]
-	path = ThirdParty/SDL_net
+	path = Source/ThirdParty/SDL_net
 	url = https://github.com/libsdl-org/SDL_net
 [submodule "ThirdParty/SDL_mixer"]
-	path = ThirdParty/SDL_mixer
+	path = Source/ThirdParty/SDL_mixer
 	url = https://github.com/libsdl-org/SDL_mixer
+[submodule "ThirdParty/cglm"]
+	path = Source/ThirdParty/cglm
+	url = https://github.com/recp/cglm
+[submodule "ThirdParty/Bullet"]
+	path = Source/ThirdParty/Bullet
+	url = https://github.com/bulletphysics/bullet3
