@@ -28,7 +28,7 @@
 #include "Container/dense_map.h"
 #include "Container/string.h"
 #include "Container/string_hash.h"
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "Model.h"
 
 inline static constexpr uint32_t CHUNK_VERTEX_BUFFER = BX_MAKEFOURCC('V', 'B', ' ', 0x1);

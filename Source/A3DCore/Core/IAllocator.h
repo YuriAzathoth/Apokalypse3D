@@ -16,13 +16,22 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#ifndef CORE_IALLOCATOR_H
+#define CORE_IALLOCATOR_H
 
-static struct LogDisable
+#include <stdint.h>
+#include "A3DCoreAPI.h"
+
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+struct IAllocator
+{
+	virtual ~IAllocator() {}
+
+	virtual void* Allocate(size_t size) = 0;
+
+	virtual void Deallocate(void* ptr) = 0;
+};
+} // namespace A3D
+
+#endif // CORE_IALLOCATOR_H

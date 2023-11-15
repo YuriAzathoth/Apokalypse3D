@@ -25,7 +25,6 @@ namespace A3D
 {
 struct RendererCallback : public bgfx::CallbackI
 {
-	~RendererCallback();
 	void fatal(const char* _filePath,
 			   uint16_t _line,
 			   bgfx::Fatal::Enum _code,

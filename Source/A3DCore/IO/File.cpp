@@ -17,9 +17,9 @@
 */
 
 #include <string.h>
+#include "Core/EngineLog.h"
 #include "IO/File.h"
 #include "IO/FileSystem.h"
-#include "IO/Log.h"
 #include "System/Platform.h"
 
 #define PACKAGE_EXTENSION ".pak"

@@ -21,8 +21,8 @@
 #include "Container/dense_map.h"
 #include "Container/string.h"
 #include "Container/string_hash.h"
+#include "Core/EngineLog.h"
 #include "IO/File.h"
-#include "IO/Log.h"
 #include "Shader.h"
 
 #define BUFFER_SIZE 256

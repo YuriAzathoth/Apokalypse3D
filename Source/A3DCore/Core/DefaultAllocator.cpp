@@ -16,13 +16,18 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#include <stdlib.h>
+#include "DefaultAllocator.h"
 
-static struct LogDisable
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+void* DefaultAllocator::Allocate(size_t size)
+{
+	return malloc(size);
+}
+
+void DefaultAllocator::Deallocate(void* ptr)
+{
+	free(ptr);
+}
+} // namespace A3D

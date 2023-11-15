@@ -22,7 +22,7 @@
 #include "Common/Geometry.h"
 #include "Common/Material.h"
 #include "Common/Model.h"
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "Resource/Material.h"
 #include "Renderer.h"
 #include "RendererAllocator.h"

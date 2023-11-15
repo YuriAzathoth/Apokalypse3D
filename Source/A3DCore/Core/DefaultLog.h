@@ -16,13 +16,35 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#ifndef CORE_DEFAULT_LOG_H
+#define CORE_DEFAULT_LOG_H
 
-static struct LogDisable
+#include <mutex>
+#include "A3DCoreAPI.h"
+#include "A3DCoreConfig.h"
+#include "ILog.h"
+
+#define A3DCORE_LOG_FILENAME_LENGTH 256
+
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+struct IAllocator;
+
+class DefaultLog : public ILog
+{
+public:
+	DefaultLog(Level level, const char* filepath = nullptr, const char* filename = nullptr);
+
+protected:
+	void Write(const char* message, Level level) override;
+
+private:
+	char filename_[A3DCORE_LOG_FILENAME_LENGTH];
+	std::mutex file_mutex_;
+
+private:
+	static std::mutex s_con_mutex;
+};
+} // namespace A3D
+
+#endif // CORE_DEFAULT_LOG_H

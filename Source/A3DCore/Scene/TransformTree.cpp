@@ -17,7 +17,7 @@
 */
 
 #include <cglm/cglm.h>
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "TransformTree.h"
 
 namespace A3D

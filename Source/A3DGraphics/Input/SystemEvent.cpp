@@ -17,7 +17,7 @@
 */
 
 #include <SDL.h>
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "SystemEvent.h"
 
 namespace A3D

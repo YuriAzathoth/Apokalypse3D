@@ -21,8 +21,9 @@
 #include <cglm/mat4.h>
 #include <SDL_events.h>
 #include "Common/Material.h"
+#include "Core/Global.h"
+#include "Core/ILog.h"
 #include "Input/SystemEvent.h"
-#include "IO/Log.h"
 #include "Resource/Model.h"
 #include "Resource/Shader.h"
 #include "Resource/Material.h"

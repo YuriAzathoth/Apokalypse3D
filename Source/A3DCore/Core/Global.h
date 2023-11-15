@@ -16,13 +16,25 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#ifndef CORE_GLOBAL_H
+#define CORE_GLOBAL_H
 
-static struct LogDisable
+#include "A3DCoreAPI.h"
+#include "A3DCoreConfig.h"
+
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+struct IAllocator;
+struct ILog;
+
+struct Global
+{
+	IAllocator* alloc;
+	ILog* log;
+};
+
+A3DCOREAPI_EXPORT void SetGlobal(Global* global);
+A3DCOREAPI_EXPORT Global* GetGlobal();
+} // namespace A3D
+
+#endif // CORE_GLOBAL_H

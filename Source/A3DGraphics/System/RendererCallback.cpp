@@ -17,7 +17,7 @@
 */
 
 #include <stdio.h>
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "RendererCallback.h"
 
 #ifndef BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
@@ -26,10 +26,6 @@
 
 namespace A3D
 {
-RendererCallback::~RendererCallback()
-{
-}
-
 void RendererCallback::fatal(const char* _filePath,
 							 uint16_t _line,
 							 bgfx::Fatal::Enum _code,

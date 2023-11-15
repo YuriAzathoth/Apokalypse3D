@@ -29,7 +29,7 @@
 #endif // ERROR
 #endif // __WIN32__
 
-#include "IO/Log.h"
+#include "Core/EngineLog.h"
 #include "Window.h"
 
 static SDL_Window* g_window = nullptr;
@@ -95,23 +95,22 @@ bool CreateWindow(const char* title,
 		SDL_SetWindowGrab(g_window, SDL_TRUE);
 
 	LogInfo("SDL Window initialized.");
-	LogDebug("\tResolution: %ux%u;", resolution.width, resolution.height);
-	LogDebug("\tRefresh rate: %uHz;", resolution.refresh_rate);
-	LogDebugBody(
+	LogDebug("\tResolution:\t%ux%u;", resolution.width, resolution.height);
+	LogDebug("\tRefresh rate:\t%uHz;", resolution.refresh_rate);
+#ifdef APOKALYPSE_LOG_DEBUG
+	switch (mode)
 	{
-		switch (mode)
-		{
-		case WindowMode::FULLSCREEN:
-			LogDebug("\tMode: Fullscreen.");
-			break;
-		case WindowMode::BORDERLESS:
-			LogDebug("\tMode: Borderless.");
-			break;
-		case WindowMode::WINDOWED:
-			LogDebug("\tMode: Windowed.");
-			break;
-		}
-	});
+	case WindowMode::FULLSCREEN:
+		LogDebug("\tMode:\t\tFullscreen.");
+		break;
+	case WindowMode::BORDERLESS:
+		LogDebug("\tMode:\t\tBorderless.");
+		break;
+	case WindowMode::WINDOWED:
+		LogDebug("\tMode:\t\tWindowed.");
+		break;
+	}
+#endif // APOKALYPSE_LOG_DEBUG
 
 	return true;
 }

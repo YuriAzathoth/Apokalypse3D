@@ -16,13 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#include "IAllocator.h"
 
-static struct LogDisable
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+static IAllocator* s_alloc = nullptr;
+
+void SetEngineAllocator(IAllocator* alloc) { s_alloc = alloc; }
+
+IAllocator* GetEngineAllocator() { return s_alloc; }
+} // namespace A3D

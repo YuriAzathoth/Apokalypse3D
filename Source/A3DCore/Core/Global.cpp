@@ -16,13 +16,12 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Core/Global.h"
-#include "Core/ILog.h"
+#include "Global.h"
 
-static struct LogDisable
+namespace A3D
 {
-	LogDisable()
-	{
-		A3D::GetGlobal()->log->SetLogLevel(A3D::ILog::Level::ERROR);
-	}
-} _;
+static Global* s_global = nullptr;
+
+void SetGlobal(Global* global) { s_global = global; }
+Global* GetGlobal() { return s_global; }
+} // namespace A3D

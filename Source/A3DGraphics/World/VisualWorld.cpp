@@ -18,7 +18,8 @@
 
 #include <cglm/cam.h>
 #include <cglm/quat.h>
-#include "IO/Log.h"
+#include "Core/Global.h"
+#include "Core/ILog.h"
 #include "System/Renderer.h"
 #include "VisualWorld.h"
 

@@ -17,9 +17,9 @@
 */
 
 #define RAPIDXML_NO_EXCEPTIONS
-#include <IO/Log.h>
 #include <rapidxml/rapidxml.hpp>
 #include "A3DCoreAPI.h"
+#include "Core/EngineLog.h"
 
 A3DCOREAPI_EXPORT void rapidxml::parse_error_handler(const char *what, void *where)
 {
