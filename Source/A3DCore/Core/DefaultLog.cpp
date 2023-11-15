@@ -29,32 +29,15 @@ namespace A3D
 {
 std::mutex DefaultLog::s_con_mutex;
 
+DefaultLog::DefaultLog(const char* filepath, const char* filename)
+{
+	Initialize(filepath, filename);
+}
+
 DefaultLog::DefaultLog(Level level, const char* filepath, const char* filename) :
 	ILog(level)
 {
-	if (filename == nullptr)
-	{
-		filename_[0] = '\0';
-		return;
-	}
-
-	const char* date = GetDate();
-	const size_t filepath_size = strlen(filename) + strlen(date) + 2;
-	sprintf_s(filename_, A3DCORE_LOG_FILENAME_LENGTH, "%s/%s/%s", filepath, date, filename);
-
-	filename_[filepath_size] = '\0';
-	Mkdir(filename_);
-	filename_[filepath_size] = '/';
-
-	FILE* file = fopen(filename_, "w");
-	if (file != nullptr)
-		fclose(file);
-	else
-	{
-		fprintf(stderr, "ERROR: Could not create log file \"%s\".", filename);
-		GetGlobal()->alloc->Deallocate(filename_);
-		filename_[0] = '\0';
-	}
+	Initialize(filepath, filename);
 }
 
 void DefaultLog::Write(const char* message, Level level)
@@ -84,5 +67,32 @@ void DefaultLog::Write(const char* message, Level level)
 #else // NDEBUG
 		std::terminate();
 #endif // NDEBUG
+}
+
+void DefaultLog::Initialize(const char* filepath, const char* filename)
+{
+	if (filename == nullptr)
+	{
+		filename_[0] = '\0';
+		return;
+	}
+
+	const char* date = GetDate();
+	const size_t filepath_size = strlen(filename) + strlen(date) + 2;
+	sprintf_s(filename_, A3DCORE_LOG_FILENAME_LENGTH, "%s/%s/%s", filepath, date, filename);
+
+	filename_[filepath_size] = '\0';
+	Mkdir(filename_);
+	filename_[filepath_size] = '/';
+
+	FILE* file = fopen(filename_, "w");
+	if (file != nullptr)
+		fclose(file);
+	else
+	{
+		fprintf(stderr, "ERROR: Could not create log file \"%s\".", filename);
+		GetGlobal()->alloc->Deallocate(filename_);
+		filename_[0] = '\0';
+	}
 }
 } // namespace A3D

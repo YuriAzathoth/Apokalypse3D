@@ -21,8 +21,9 @@
 #include <cglm/mat4.h>
 #include <SDL_events.h>
 #include "Common/Material.h"
+#include "Core/DefaultAllocator.h"
+#include "Core/DefaultLog.h"
 #include "Core/Global.h"
-#include "Core/ILog.h"
 #include "Input/SystemEvent.h"
 #include "Resource/Model.h"
 #include "Resource/Shader.h"
@@ -77,6 +78,13 @@ static void OnQuit(const SDL_Event& event, void* run)
 int main()
 {
 	bool run = true;
+
+	Global global;
+	DefaultAllocator alloc;
+	DefaultLog log;
+	global.alloc = &alloc;
+	global.log = &log;
+	SetGlobal(&global);
 
 	SystemEventListener listener;
 	CreateSystemEventListener();

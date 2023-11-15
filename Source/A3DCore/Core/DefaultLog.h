@@ -30,15 +30,18 @@ namespace A3D
 {
 struct IAllocator;
 
-class DefaultLog : public ILog
+class A3DCOREAPI_EXPORT DefaultLog : public ILog
 {
 public:
+	DefaultLog(const char* filepath = nullptr, const char* filename = nullptr);
 	DefaultLog(Level level, const char* filepath = nullptr, const char* filename = nullptr);
 
 protected:
 	void Write(const char* message, Level level) override;
 
 private:
+	void Initialize(const char* filepath, const char* filename);
+
 	char filename_[A3DCORE_LOG_FILENAME_LENGTH];
 	std::mutex file_mutex_;
 

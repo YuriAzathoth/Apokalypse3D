@@ -19,11 +19,12 @@
 #ifndef CORE_DEFAULT_ALLOCATOR_H
 #define CORE_DEFAULT_ALLOCATOR_H
 
+#include "A3DCoreAPI.h"
 #include "IAllocator.h"
 
 namespace A3D
 {
-struct DefaultAllocator : public IAllocator
+struct A3DCOREAPI_EXPORT DefaultAllocator : public IAllocator
 {
 	void* Allocate(size_t size) override;
 
