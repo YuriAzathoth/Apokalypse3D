@@ -129,7 +129,7 @@ void ILog::Debug(const char* format, ...)
 #endif // APOKALYPSE_LOG_TRACE
 
 #ifdef APOKALYPSE_ASSERTIONS
-void Assert(bool condition, const char* format, ...)
+void ILog::Assert(bool condition, const char* format, ...)
 {
 	if (condition == true)
 		return;
