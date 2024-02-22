@@ -29,4 +29,4 @@ struct RendererThreadContext
 };
 } // namespace A3D
 
-#endif // SYSTEM_RENDERER_H
+#endif // COMMON_RENDERER_THREAD_CONTEXT_H
