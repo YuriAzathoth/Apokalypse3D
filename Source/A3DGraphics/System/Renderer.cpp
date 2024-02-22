@@ -33,7 +33,6 @@ namespace A3D
 static const char SUFFIX_GL[] = "../Data/Shaders/gl";
 static const char SUFFIX_GLES[] = "../Data/Shaders/gles";
 static const char SUFFIX_VK[] = "../Data/Shaders/vk";
-static const char SUFFIX_DX_9[] = "../Data/Shaders/dx9";
 static const char SUFFIX_DX_11[] = "../Data/Shaders/dx11";
 static const char SUFFIX_METAL[] = "../Data/Shaders/metal";
 
@@ -128,7 +127,6 @@ bool CreateRenderer(RendererGpu& gpu,
 	case bgfx::RendererType::OpenGL:		s_shader_suffix = SUFFIX_GL; break;
 	case bgfx::RendererType::OpenGLES:		s_shader_suffix = SUFFIX_GLES; break;
 	case bgfx::RendererType::Vulkan:		s_shader_suffix = SUFFIX_VK; break;
-	case bgfx::RendererType::Direct3D9:		s_shader_suffix = SUFFIX_DX_9; break;
 	case bgfx::RendererType::Direct3D11:
 	case bgfx::RendererType::Direct3D12:	s_shader_suffix = SUFFIX_DX_11; break;
 	case bgfx::RendererType::Metal:			s_shader_suffix = SUFFIX_METAL; break;
@@ -228,7 +226,6 @@ inline static const char* GetRendererName(RendererType type)
 	case RendererType::OpenGL:		return "OpenGL";
 	case RendererType::Vulkan:		return "Vulkan";
 #if defined(__WIN32__)
-	case RendererType::Direct3D9:	return "DirectX 9";
 	case RendererType::Direct3D11:	return "DirectX 11";
 	case RendererType::Direct3D12:	return "DirectX 12";
 #elif defined(OSX)
@@ -247,7 +244,6 @@ inline static RendererType GetRendererTypeFromBgfx(bgfx::RendererType::Enum type
 	case bgfx::RendererType::OpenGL:	return RendererType::OpenGL;
 	case bgfx::RendererType::Vulkan:	return RendererType::Vulkan;
 #if defined(__WIN32__)
-	case bgfx::RendererType::Direct3D9:	return RendererType::Direct3D9;
 	case bgfx::RendererType::Direct3D11:return RendererType::Direct3D11;
 	case bgfx::RendererType::Direct3D12:return RendererType::Direct3D12;
 #elif defined(OSX)
@@ -266,7 +262,6 @@ inline static bgfx::RendererType::Enum GetRendererTypeToBgfx(RendererType type)
 	case RendererType::OpenGL:		return bgfx::RendererType::OpenGL;
 	case RendererType::Vulkan:		return bgfx::RendererType::Vulkan;
 #if defined(__WIN32__)
-	case RendererType::Direct3D9:	return bgfx::RendererType::Direct3D9;
 	case RendererType::Direct3D11:	return bgfx::RendererType::Direct3D11;
 	case RendererType::Direct3D12:	return bgfx::RendererType::Direct3D12;
 #elif defined(OSX)
