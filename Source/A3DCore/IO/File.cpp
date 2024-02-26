@@ -20,7 +20,7 @@
 #include "Core/EngineLog.h"
 #include "IO/File.h"
 #include "IO/FileSystem.h"
-#include "System/Platform.h"
+#include "System/FileSystem.h"
 
 #define PACKAGE_EXTENSION ".pak"
 
@@ -195,7 +195,7 @@ bool OpenFileWrite(File& file, const char* filename)
 			delim_path = chr;
 
 	*delim_path = '\0';
-	if (GetFileAttribute(filepath) != FileType::DIRECTORY)
+	if (A3D_GetFileAttribute(filepath) != A3D_FileType::FILETYPE_DIRECTORY)
 	{
 		LogFatal("Could not open file \"%s\" for writing: directory \"%s\" does not exist.", filename, filepath);
 		return false;
@@ -203,7 +203,7 @@ bool OpenFileWrite(File& file, const char* filename)
 	*delim_path = '/';
 
 	file.handler = fopen(filename, "rb");
-	if (GetFileAttribute(filepath) != FileType::DIRECTORY)
+	if (A3D_GetFileAttribute(filepath) != A3D_FileType::FILETYPE_DIRECTORY)
 	{
 		LogFatal("Could not open file \"%s\" for writing: file does not exist.", filename);
 		return false;

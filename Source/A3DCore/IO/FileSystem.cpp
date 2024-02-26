@@ -18,7 +18,10 @@
 
 #include <string.h>
 #include "IO/FileSystem.h"
-#include "System/Platform.h"
+#include "System/FileSystem.h"
+
+// TODO: Implement rmrf and remove this.
+#include <filesystem>
 
 #define FILEPATH_BUFFER_SIZE 512
 
@@ -32,25 +35,26 @@ bool MakeDir(const char* path)
 		if (*chr == '/')
 		{
 			*chr = '\0';
-			Mkdir(buffer);
+			A3D_Mkdir(buffer);
 			*chr = '/';
 		}
-	Mkdir(buffer);
+	A3D_Mkdir(buffer);
 	return true;
 }
 
 bool RemoveDir(const char* path)
 {
-	return Rmrf(path);
+	// TODO: Implement without <filesystem> module.
+	return std::filesystem::remove_all(path);
 }
 
 bool IsDirExists(const char* path)
 {
-	return GetFileAttribute(path) == FileType::DIRECTORY;
+	return A3D_GetFileAttribute(path) == A3D_FileType::FILETYPE_DIRECTORY;
 }
 
 bool IsFileExists(const char* path)
 {
-	return GetFileAttribute(path) == FileType::FILE;
+	return A3D_GetFileAttribute(path) == A3D_FileType::FILETYPE_FILE;
 }
 } // namespace A3D

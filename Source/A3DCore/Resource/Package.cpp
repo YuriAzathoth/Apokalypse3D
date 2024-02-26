@@ -24,7 +24,7 @@
 #include "Container/string_hash.h"
 #include "Core/EngineLog.h"
 #include "Package.h"
-#include "System/Platform.h"
+#include "System/FileSystem.h"
 
 #define BUFFER_SIZE 256
 #define STR_TO_I32(A, B, C, D) ((uint32_t)(D) << 24U | (uint32_t)(C) << 16U | (uint32_t)(B) << 8U | (uint32_t)(A))

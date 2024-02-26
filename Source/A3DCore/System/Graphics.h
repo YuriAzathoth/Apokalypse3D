@@ -16,32 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
-
-#include <stdint.h>
-
-namespace A3D
-{
-enum class FileType : uint8_t
-{
-	NONE,
-	FILE,
-	DIRECTORY
-};
-
-void DebugBreak();
-FileType GetFileAttribute(const char* filepath);
-void Mkdir(const char* path);
-void Rmdir(const char* path);
-bool Rmrf(const char* path);
-void Sleep(int sec, int nanosec);
+#ifndef SYSTEM_GRAPHICS_H
+#define SYSTEM_GRAPHICS_H
 
 #ifdef __WIN32__
-void DisableHighDpi();
+#ifdef __cplusplus
+extern "C"
+{
+#endif // __cplusplus
+void A3D_DisableHighDpi();
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 #else // __WIN32__
-#define DisableHighDpi()
+#define A3D_DisableHighDpi()
 #endif // __WIN32__
-} // namespace A3D
 
-#endif // PLATFORM_H
+#endif // SYSTEM_GRAPHICS_H

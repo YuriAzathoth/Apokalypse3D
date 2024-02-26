@@ -21,7 +21,8 @@
 #include "Core/Global.h"
 #include "Core/IAllocator.h"
 #include "DefaultLog.h"
-#include "System/Platform.h"
+#include "System/Debug.h"
+#include "System/FileSystem.h"
 
 #define BUFFER_SIZE 1024
 
@@ -63,7 +64,7 @@ void DefaultLog::Write(const char* message, Level level)
 
 	if (level == Level::FATAL)
 #ifndef NDEBUG
-		DebugBreak();
+		A3D_DebugBreak();
 #else // NDEBUG
 		std::terminate();
 #endif // NDEBUG
@@ -82,7 +83,7 @@ void DefaultLog::Initialize(const char* filepath, const char* filename)
 	sprintf_s(filename_, A3DCORE_LOG_FILENAME_LENGTH, "%s/%s/%s", filepath, date, filename);
 
 	filename_[filepath_size] = '\0';
-	Mkdir(filename_);
+	A3D_Mkdir(filename_);
 	filename_[filepath_size] = '/';
 
 	FILE* file = fopen(filename_, "w");
