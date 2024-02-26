@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SYSTEM_RENDERER_ALLOCATOR_H
-#define SYSTEM_RENDERER_ALLOCATOR_H
+#ifndef GRAPHICS_RENDERER_ALLOCATOR_H
+#define GRAPHICS_RENDERER_ALLOCATOR_H
 
 #include <bx/allocator.h>
 
@@ -33,4 +33,4 @@ struct RendererAllocator : public bx::AllocatorI
 };
 } // namespace A3D
 
-#endif // SYSTEM_RENDERER_ALLOCATOR_H
+#endif // GRAPHICS_RENDERER_ALLOCATOR_H

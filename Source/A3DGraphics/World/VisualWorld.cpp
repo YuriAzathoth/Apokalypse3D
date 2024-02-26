@@ -20,7 +20,7 @@
 #include <cglm/quat.h>
 #include "Core/Global.h"
 #include "Core/ILog.h"
-#include "System/Renderer.h"
+#include "Graphics/Renderer.h"
 #include "VisualWorld.h"
 
 namespace A3D

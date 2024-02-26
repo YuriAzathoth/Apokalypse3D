@@ -24,12 +24,12 @@
 #include "Core/DefaultAllocator.h"
 #include "Core/DefaultLog.h"
 #include "Core/Global.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/Window.h"
 #include "Input/SystemEvent.h"
 #include "Resource/Model.h"
 #include "Resource/Shader.h"
 #include "Resource/Material.h"
-#include "System/Renderer.h"
-#include "System/Window.h"
 #include "World/VisualWorld.h"
 
 using namespace A3D;

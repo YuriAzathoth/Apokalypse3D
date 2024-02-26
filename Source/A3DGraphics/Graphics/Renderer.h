@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SYSTEM_RENDERER_H
-#define SYSTEM_RENDERER_H
+#ifndef GRAPHICS_RENDERER_H
+#define GRAPHICS_RENDERER_H
 
 #include <stdint.h>
 #include "A3DGraphicsAPI.h"
@@ -87,4 +87,4 @@ A3DGRAPHICSAPI_EXPORT void DrawMeshGroup(RendererThreadContext& context,
 										 const GlobalTransform& transform);
 } // namespace A3D
 
-#endif // SYSTEM_RENDERER_H
+#endif // GRAPHICS_RENDERER_H

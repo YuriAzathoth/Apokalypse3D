@@ -16,8 +16,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef SYSTEM_WINDOW_H
-#define SYSTEM_WINDOW_H
+#ifndef GRAPHICS_WINDOW_H
+#define GRAPHICS_WINDOW_H
 
 #include <stdint.h>
 #include "A3DGraphicsAPI.h"
@@ -58,4 +58,4 @@ A3DGRAPHICSAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, 
 A3DGRAPHICSAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);
 } // namespace A3D
 
-#endif // SYSTEM_WINDOW_H
+#endif // GRAPHICS_WINDOW_H
