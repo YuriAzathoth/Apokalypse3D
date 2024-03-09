@@ -16,14 +16,44 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_PACKAGE_H
-#define RESOURCE_PACKAGE_H
+#ifndef ENGINE_CLIENT_ENGINE_H
+#define ENGINE_CLIENT_ENGINE_H
 
 #include "EngineAPI.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/RendererAllocator.h"
+#include "Graphics/RendererCallback.h"
+#include "Graphics/SystemWindow.h"
+#include "Input/SystemEvent.h"
 
 namespace A3D
 {
-ENGINEAPI_EXPORT bool AddPackage(const char* filename);
+class GraphicsConfig;
+class IAllocator;
+class ILog;
+
+class ENGINEAPI_EXPORT ClientEngine
+{
+public:
+	ClientEngine(IAllocator* alloc, ILog* log);
+	~ClientEngine();
+
+	bool Initialize(const char* window_title, GraphicsConfig& graphics_config);
+	void Shutdown();
+
+	bool PreUpdate();
+	bool Update();
+	bool PostUpdate();
+
+private:
+	RendererAllocator ralloc_;
+	RendererCallback rcallback_;
+	Renderer renderer_;
+	SystemWindow window_;
+	SystemEventListener system_event_;
+	IAllocator* alloc_;
+	ILog* log_;
+};
 } // namespace A3D
 
-#endif // RESOURCE_PACKAGE_H
+#endif // ENGINE_CLIENT_ENGINE_H

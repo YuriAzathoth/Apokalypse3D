@@ -23,13 +23,20 @@
 
 namespace A3D
 {
-struct RendererAllocator : public bx::AllocatorI
+class IAllocator;
+
+class RendererAllocator : public bx::AllocatorI
 {
+public:
+	explicit RendererAllocator(IAllocator* alloc) : alloc_(alloc) {}
+
 	void* realloc(void* _ptr,
 				  size_t _size,
 				  size_t _align,
 				  const char* _file,
 				  uint32_t _line) override;
+protected:
+	IAllocator* alloc_;
 };
 } // namespace A3D
 

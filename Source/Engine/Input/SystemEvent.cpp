@@ -17,51 +17,51 @@
 */
 
 #include <SDL.h>
-#include "Core/EngineLog.h"
+#include "Core/ILog.h"
 #include "SystemEvent.h"
 
 namespace A3D
 {
-bool CreateSystemEventListener()
+SystemEventListener::SystemEventListener(ILog* log) :
+	log_(log),
+	initialized_(false)
 {
-	LogDebug("Initializing SDL events...");
+}
+
+SystemEventListener::~SystemEventListener()
+{
+	if (initialized_)
+		Shutdown();
+}
+
+bool SystemEventListener::Initialize()
+{
+	log_->Debug("Initializing SDL events...");
 	if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0)
 	{
-		LogFatal("Failed to initialize SDL Video: %s.", SDL_GetError());
+		log_->Fatal("Failed to initialize SDL Video: %s.", SDL_GetError());
 		return false;
 	}
-	LogInfo("SDL events initialized.");
+	initialized_ = true;
+	log_->Info("SDL events initialized.");
 	return true;
 }
 
-void DestroySystemEventListener()
+void SystemEventListener::Shutdown()
 {
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
-	LogInfo("SDL events destroyed.");
+	initialized_ = false;
+	log_->Info("SDL events destroyed.");
 }
 
-void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data)
+bool SystemEventListener::PollEvents()
 {
-	listener.callbacks.emplace(event, SystemEventCallback{cb, data});
-}
-
-uint32_t PollSystemEvents(const SystemEventListener& listener)
-{
-	LogTrace("SDL events processing begin...");
-
-	decltype(listener.callbacks)::const_iterator begin, end;
 	SDL_Event event;
-	uint32_t count = 0;
 	while (SDL_PollEvent(&event))
 	{
-		auto[begin, end] = listener.callbacks.equal_range(event.type);
-		for (; begin != end; ++begin)
-			begin->second.func(event, begin->second.data);
-		++count;
+		if (event.type == SDL_QUIT)
+			return false;
 	}
-
-	LogTrace("SDL events processing end...");
-
-	return count;
+	return true;
 }
 } // namespace A3D

@@ -18,8 +18,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "Core/Global.h"
-#include "Core/IAllocator.h"
 #include "DefaultLog.h"
 #include "System/Debug.h"
 #include "System/FileSystem.h"
@@ -63,11 +61,12 @@ void DefaultLog::Write(const char* message, Level level)
 	}
 
 	if (level == Level::FATAL)
+	{
 #ifndef NDEBUG
 		A3D_DebugBreak();
-#else // NDEBUG
-		std::terminate();
 #endif // NDEBUG
+		SetFatal();
+	}
 }
 
 void DefaultLog::Initialize(const char* filepath, const char* filename)
@@ -92,7 +91,6 @@ void DefaultLog::Initialize(const char* filepath, const char* filename)
 	else
 	{
 		fprintf(stderr, "ERROR: Could not create log file \"%s\".", filename);
-		GetGlobal()->alloc->Deallocate(filename_);
 		filename_[0] = '\0';
 	}
 }

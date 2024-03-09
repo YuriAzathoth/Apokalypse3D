@@ -16,16 +16,33 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_TEXTURE_H
-#define RESOURCE_TEXTURE_H
+#ifndef ENGINE_SERVER_ENGINE_H
+#define ENGINE_SERVER_ENGINE_H
 
 #include "EngineAPI.h"
-#include "Common/Texture.h"
 
 namespace A3D
 {
-ENGINEAPI_EXPORT bool LoadTextureFromFile(Texture& texture, const char* filename);
-ENGINEAPI_EXPORT void DestroyTexture(Texture& texture);
+class IAllocator;
+class ILog;
+
+class ENGINEAPI_EXPORT ServerEngine
+{
+public:
+	ServerEngine(IAllocator* alloc, ILog* log);
+	~ServerEngine();
+
+	bool Initialize();
+	void Shutdown();
+
+	bool PreUpdate();
+	bool Update();
+	bool PostUpdate();
+
+private:
+	IAllocator* alloc_;
+	ILog* log_;
+};
 } // namespace A3D
 
-#endif // RESOURCE_TEXTURE_H
+#endif // ENGINE_SERVER_ENGINE_H

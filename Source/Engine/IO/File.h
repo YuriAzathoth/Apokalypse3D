@@ -25,21 +25,54 @@
 
 namespace A3D
 {
-struct File
+class ILog;
+
+class ENGINEAPI_EXPORT File
 {
-	FILE* handler;
-	uint32_t offset;
-	uint32_t size;
+public:
+	enum class Mode : uint8_t
+	{
+		READ,
+		WRITE
+	};
+
+	enum class Type : uint8_t
+	{
+		BINARY,
+		TEXT
+	};
+
+	explicit File(ILog* log);
+	~File();
+
+	bool Open(const char* filename, Mode mode, Type type);
+	bool OpenSubfileRead(const char* filename, Type type, uint32_t size, uint32_t offset);
+	void Close();
+
+	bool ReadData(void* dst, uint32_t size);
+	bool WriteData(const void* dst, uint32_t size);
+
+	template <typename T>
+	bool Read(T& dst)
+	{
+		return ReadData(&dst, sizeof(T));
+	}
+
+	template <typename T>
+	bool Write(const T& dst)
+	{
+		return WriteData(&dst, sizeof(T));
+	}
+
+	uint32_t GetSize() const { return size_; }
+	uint32_t GetOffset() const { return offset_; }
+
+private:
+	FILE* handler_;
+	ILog* log_;
+	uint32_t offset_;
+	uint32_t size_;
 };
-
-ENGINEAPI_EXPORT bool OpenFileRead(File& file, const char* filename);
-ENGINEAPI_EXPORT bool OpenFileWrite(File& file, const char* filename);
-ENGINEAPI_EXPORT void CloseFile(File& file);
-ENGINEAPI_EXPORT bool ReadFileData(File& file, void* buffer, uint32_t size);
-ENGINEAPI_EXPORT bool WriteFileData(File& file, const void* buffer, uint32_t size);
-
-inline static void FileRewind(File& file) { fseek(file.handler, (long)file.offset, SEEK_SET); }
-inline static bool ReadFileData(File& file, void* buffer) { return ReadFileData(file, buffer, file.size); }
 } // namespace A3D
 
 #endif // IO_FILE_H

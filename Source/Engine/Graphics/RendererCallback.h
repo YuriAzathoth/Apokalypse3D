@@ -23,8 +23,13 @@
 
 namespace A3D
 {
-struct RendererCallback : public bgfx::CallbackI
+class ILog;
+
+class RendererCallback : public bgfx::CallbackI
 {
+public:
+	explicit RendererCallback(ILog* log) : log_(log) {}
+
 	void fatal(const char* _filePath,
 			   uint16_t _line,
 			   bgfx::Fatal::Enum _code,
@@ -59,6 +64,9 @@ struct RendererCallback : public bgfx::CallbackI
 					  bool _yflip) override;
 	void captureEnd() override;
 	void captureFrame(const void* _data, uint32_t _size) override;
+
+private:
+	ILog* log_;
 };
 } // namespace A3D
 

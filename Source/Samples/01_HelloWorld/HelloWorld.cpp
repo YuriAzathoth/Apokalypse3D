@@ -19,27 +19,22 @@
 #include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
-#include <SDL_events.h>
-#include "Common/Material.h"
-#include "Core/DefaultAllocator.h"
-#include "Core/DefaultLog.h"
-#include "Core/Global.h"
-#include "Graphics/Renderer.h"
-#include "Graphics/Window.h"
-#include "Input/SystemEvent.h"
+//#include <SDL_events.h>
+#include "Engine/IPlugin.h"
+/*#include "Common/Material.h"
 #include "Resource/Model.h"
 #include "Resource/Shader.h"
 #include "Resource/Material.h"
-#include "World/VisualWorld.h"
+#include "World/VisualWorld.h"*/
 
 using namespace A3D;
 
-static void OnQuit(const SDL_Event& event, void* run)
+/*static void OnQuit(const SDL_Event& event, void* run)
 {
 	*reinterpret_cast<bool*>(run) = false;
 }
 
-/*static void LoadModel(MeshGroup& mesh, const char* filename)
+static void LoadModel(MeshGroup& mesh, const char* filename)
 {
 	MeshFileReader file;
 	if (!OpenMeshFile(file, filename))
@@ -75,7 +70,60 @@ static void OnQuit(const SDL_Event& event, void* run)
 	while (chunk != MeshFileChunk::END_OF_FILE);
 }*/
 
-int main()
+class HelloWorld : public IPlugin
+{
+public:
+	bool Initialize() override final;
+	void Shutdown() override final {}
+	bool PreUpdate(float time_elapsed) override final { return true; }
+	bool Update(float time_elapsed) override final { return true; }
+	bool PostUpdate(float time_elapsed) override final { return true; }
+};
+
+DECLARE_PLUGIN(HelloWorld)
+
+bool HelloWorld::Initialize()
+{
+	/*VisualWorld vw;
+	CreateVisualWorld(vw);
+
+	vec3 camera_pos {0.0f, 0.0f, 400.0f};
+	vec3 camera_target {0.0f, 0.0f, 0.0f};
+	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 512.0f);
+	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
+
+	Model model;
+	GetModel(model, "../Data/Models/Box.mdl");
+
+	GlobalTransform transform{ GLM_MAT4_IDENTITY };
+
+	static constexpr const char* MATERIAL_NAMES[] =
+	{
+		"../Data/Materials/WhiteUnlit.xml",
+		"../Data/Materials/RedUnlit.xml",
+		"../Data/Materials/GreenUnlit.xml",
+		"../Data/Materials/BlueUnlit.xml"
+	};
+
+	VisualHandle cubes[4096];
+	Material material;
+	vec3 pos{};
+	for (int i = 0; i < 4096; ++i)
+	{
+		if (!GetMaterial(material, MATERIAL_NAMES[i % 4]))
+			return false;
+
+		glm_mat4_identity(transform.transform);
+		pos[0] = (float)(i % 64 * 4 - 128);
+		pos[1] = (float)(i / 64 * 4 - 128);
+		glm_translate(transform.transform, pos);
+		cubes[i] = AddModel(vw, model.groups[0], material, transform);
+	}*/
+
+	return true;
+}
+
+/*int main()
 {
 	bool run = true;
 
@@ -105,42 +153,6 @@ int main()
 
 	const uint8_t threads_count = 2;
 	RendererThreadContext* contexts = CreateRendererThreadContexts(threads_count);
-
-	VisualWorld vw;
-	CreateVisualWorld(vw);
-
-	vec3 camera_pos {0.0f, 0.0f, 400.0f};
-	vec3 camera_target {0.0f, 0.0f, 0.0f};
-	SetCameraPerspective(vw, MAIN_VIEWPORT, glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 512.0f);
-	SetCameraLookAt(vw, MAIN_VIEWPORT, camera_pos, camera_target);
-
-	Model model;
-	GetModel(model, "../Data/Models/Box.mdl");
-
-	GlobalTransform transform{ GLM_MAT4_IDENTITY };
-
-	static constexpr const char* MATERIAL_NAMES[] =
-	{
-		"../Data/Materials/WhiteUnlit.xml",
-		"../Data/Materials/RedUnlit.xml",
-		"../Data/Materials/GreenUnlit.xml",
-		"../Data/Materials/BlueUnlit.xml"
-	};
-
-	VisualHandle cubes[4096];
-	Material material;
-	vec3 pos{};
-	for (int i = 0; i < 4096; ++i)
-	{
-		if (!GetMaterial(material, MATERIAL_NAMES[i % 4]))
-			return 1;
-
-		glm_mat4_identity(transform.transform);
-		pos[0] = (float)(i % 64 * 4 - 128);
-		pos[1] = (float)(i / 64 * 4 - 128);
-		glm_translate(transform.transform, pos);
-		cubes[i] = AddModel(vw, model.groups[0], material, transform);
-	}
 
 	vec3 rotate_axis[5] =
 	{
@@ -177,4 +189,4 @@ int main()
 	DestroySystemEventListener();
 
 	return 0;
-}
+}*/

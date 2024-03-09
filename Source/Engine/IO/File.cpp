@@ -16,9 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
-#include "Core/EngineLog.h"
+#include "Core/ILog.h"
 #include "IO/File.h"
+
+/*#include <string.h>
 #include "IO/FileSystem.h"
 #include "System/FileSystem.h"
 
@@ -45,11 +46,114 @@ struct file_body_meta_t
 {
 	uint32_t size;
 	uint32_t offset;
-};
+};*/
 
 namespace A3D
 {
-bool OpenFileRead(File& file, const char* filename)
+static const char MODE_CHAR[] = { 'r', 'w' };
+static const char TYPE_CHAR[] = { 'a', 'b' };
+
+File::File(ILog* log) :
+	handler_(nullptr),
+	log_(log),
+	size_(0),
+	offset_(0)
+{
+}
+
+File::~File()
+{
+	if (handler_ != nullptr)
+		fclose(handler_);
+}
+
+bool File::Open(const char* filename, Mode mode, Type type)
+{
+	char flags[3];
+	flags[0] = MODE_CHAR[static_cast<uint8_t>(mode)];
+	flags[1] = TYPE_CHAR[static_cast<uint8_t>(type)];
+	flags[2] = '\0';
+
+	handler_ = fopen(filename, flags);
+	if (handler_ == nullptr)
+	{
+		log_->Error("Could not open file \"%s\": file does not exist or access denied.", filename);
+		return false;
+	}
+
+	if (mode == Mode::READ)
+	{
+		fseek(handler_, 0, SEEK_END);
+		size_ = (uint32_t)ftell(handler_);
+		offset_ = 0;
+		rewind(handler_);
+	}
+	else
+	{
+		size_ = 0;
+		offset_ = 0;
+	}
+
+	return true;
+}
+
+bool File::OpenSubfileRead(const char* filename, Type type, uint32_t size, uint32_t offset)
+{
+	char flags[3];
+	flags[0] = 'a';
+	flags[1] = TYPE_CHAR[static_cast<uint8_t>(type)];
+	flags[2] = '\0';
+
+	handler_ = fopen(filename, flags);
+	if (handler_ == nullptr)
+	{
+		log_->Error("Could not open file \"%s\": file does not exist or access denied.", filename);
+		return false;
+	}
+
+	if (offset != 0)
+		fseek(handler_, offset, SEEK_SET);
+
+	size_ = size;
+	offset_ = offset;
+
+	return true;
+}
+
+void File::Close()
+{
+	if (handler_ != nullptr)
+	{
+		fclose(handler_);
+		handler_ = nullptr;
+		size_ = 0;
+		offset_ = 0;
+	}
+}
+
+bool File::ReadData(void* dst, uint32_t size)
+{
+	if (fread(dst, size, 1, handler_) == 1)
+		return true;
+	else
+	{
+		log_->Error("Could not read \"%u\" bytes from file.", size);
+		return false;
+	}
+}
+
+bool File::WriteData(const void* dst, uint32_t size)
+{
+	if (fwrite(dst, size, 1, handler_) == 1)
+		return true;
+	else
+	{
+		log_->Error("Could not write \"%u\" bytes to file.", size);
+		return false;
+	}
+}
+
+/*bool OpenFileRead(File& file, const char* filename)
 {
 	if (IsFileExists(filename))
 	{
@@ -245,5 +349,5 @@ bool WriteFileData(File& file, const void* buffer, uint32_t size)
 		LogFatal("Failed to write \"%u\" bytes to file.", file.size);
 		return false;
 	}
-}
+}*/
 } // namespace A3D

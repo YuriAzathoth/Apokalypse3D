@@ -17,12 +17,11 @@
 */
 
 #define RAPIDXML_NO_EXCEPTIONS
+#include <stdio.h>
 #include <rapidxml/rapidxml.hpp>
 #include "EngineAPI.h"
-#include "Core/EngineLog.h"
 
 ENGINEAPI_EXPORT void rapidxml::parse_error_handler(const char *what, void *where)
 {
-	using namespace A3D;
-	LogInfo("XML parsing error: %s.", what);
+	printf("XML parsing error: %s.", what);
 }

@@ -28,29 +28,24 @@ union SDL_Event;
 
 namespace A3D
 {
-using SystemEventCallbackFunction = void(const SDL_Event&, void*);
+class ILog;
 
-struct SystemEventCallback
+class ENGINEAPI_EXPORT SystemEventListener
 {
-	SystemEventCallbackFunction* func;
-	void* data;
-};
+public:
+	explicit SystemEventListener(ILog* log);
+	~SystemEventListener();
 
-struct SystemEventListener
-{
-	std::unordered_multimap<
-		uint32_t,
-		SystemEventCallback,
-		std::hash<uint32_t>,
-		std::equal_to<uint32_t>,
-		A3D::noexcept_allocator<std::pair<const uint32_t, SystemEventCallback>>
-	> callbacks;
-};
+	bool Initialize();
+	void Shutdown();
+	bool PollEvents();
 
-ENGINEAPI_EXPORT bool CreateSystemEventListener();
-ENGINEAPI_EXPORT void DestroySystemEventListener();
-ENGINEAPI_EXPORT void BindSystemEvent(SystemEventListener& listener, uint32_t event, void(*cb)(const SDL_Event&, void*), void* data);
-ENGINEAPI_EXPORT uint32_t PollSystemEvents(const SystemEventListener& listener);
+	bool IsInitialized() const { return initialized_; }
+
+private:
+	ILog* log_;
+	bool initialized_;
+};
 } // namespace A3D
 
 #endif // INPUT_SYSTEM_EVENT_H

@@ -16,6 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Core/IAllocator.h"
 #include "RendererAllocator.h"
 
 #ifndef BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
@@ -36,7 +37,7 @@ void* RendererAllocator::realloc(void* _ptr,
 		{
 			if (BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT >= _align)
 			{
-				::free(_ptr);
+				alloc_->Deallocate(_ptr);
 				return NULL;
 			}
 
@@ -53,7 +54,7 @@ void* RendererAllocator::realloc(void* _ptr,
 	else if (NULL == _ptr)
 	{
 		if (BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT >= _align)
-			return ::malloc(_size);
+			return alloc_->Allocate(_size);
 
 #if BX_COMPILER_MSVC
 		BX_UNUSED(_file, _line);

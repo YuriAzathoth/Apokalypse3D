@@ -16,17 +16,41 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef COMMON_RENDERER_THREAD_CONTEXT_H
-#define COMMON_RENDERER_THREAD_CONTEXT_H
-
-namespace bgfx { struct Encoder; }
+#include "ServerEngine.h"
 
 namespace A3D
 {
-struct RendererThreadContext
+ServerEngine::ServerEngine(IAllocator* alloc, ILog* log) :
+	alloc_(alloc),
+	log_(log)
 {
-	bgfx::Encoder* queue;
-};
-} // namespace A3D
+}
 
-#endif // COMMON_RENDERER_THREAD_CONTEXT_H
+ServerEngine::~ServerEngine()
+{
+}
+
+bool ServerEngine::Initialize()
+{
+	return true;
+}
+
+void ServerEngine::Shutdown()
+{
+}
+
+bool ServerEngine::PreUpdate()
+{
+	return true;
+}
+
+bool ServerEngine::Update()
+{
+	return true;
+}
+
+bool ServerEngine::PostUpdate()
+{
+	return true;
+}
+} // namespace A3D

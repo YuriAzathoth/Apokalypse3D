@@ -20,30 +20,47 @@
 #define ENGINE_PLUGIN_STORAGE_H
 
 #include <memory>
-#include <string>
 #include <unordered_map>
+#include "Container/dense_map.h"
+#include "Container/sparse_map.h"
+#include "Container/string.h"
 #include "EngineAPI.h"
 #include "IPlugin.h"
 
 namespace A3D
 {
+class IAllocator;
+class ILog;
+
+using PluginHandle = uint16_t;
+using PluginIndex = uint16_t;
+
 class ENGINEAPI_EXPORT PluginStorage
 {
 public:
-	PluginStorage();
+	PluginStorage(IAllocator* alloc, ILog* log);
 	~PluginStorage();
 
-	bool LoadPlugin(const char* filename);
-	void ReleasePlugin(const char* filename);
+	bool Load(const char* filename);
+	void Release(const char* filename);
+	bool ReloadAll();
+
+	bool PreUpdate(float elapsed_time);
+	bool Update(float elapsed_time);
+	bool PostUpdate(float elapsed_time);
 
 private:
-	struct PluginRecord
-	{
-		std::unique_ptr<IPlugin> plugin;
-		void* library;
-	};
+	bool LoadAndCreate(void** library, std::unique_ptr<IPlugin>& plugin, const char* filename);
 
-	std::unordered_map<std::string, PluginRecord> plugins_;
+	std::unordered_map<string, PluginHandle> by_name_;
+	sparse_map<PluginHandle, PluginIndex> indices_;
+	dense_map<PluginIndex, std::unique_ptr<IPlugin>> plugins_;
+	dense_map<PluginIndex, void*> libraries_;
+	dense_map<PluginIndex, string> filenames_;
+	dense_map<PluginIndex, PluginHandle> handles_;
+
+	IAllocator* alloc_;
+	ILog* log_;
 };
 } // namespace A3D
 

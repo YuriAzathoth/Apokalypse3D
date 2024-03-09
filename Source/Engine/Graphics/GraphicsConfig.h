@@ -16,25 +16,65 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef CORE_GLOBAL_H
-#define CORE_GLOBAL_H
+#ifndef GRAPHICS_GRAPHICS_CONFIG_H
+#define GRAPHICS_GRAPHICS_CONFIG_H
 
-#include "EngineAPI.h"
-#include "EngineConfig.h"
+#include <stdint.h>
 
 namespace A3D
 {
-struct IAllocator;
-struct ILog;
-
-struct Global
+enum class RendererType : uint8_t
 {
-	IAllocator* alloc;
-	ILog* log;
+	Auto,
+	OpenGL,
+	Vulkan,
+#if defined(__WIN32__)
+	Direct3D11,
+	Direct3D12,
+#elif defined(OSX)
+	Metal,
+#endif // defined
+	None
 };
 
-ENGINEAPI_EXPORT void SetGlobal(Global* global);
-ENGINEAPI_EXPORT Global* GetGlobal();
+enum class WindowMode : uint8_t
+{
+	FULLSCREEN,
+	WINDOWED,
+	BORDERLESS
+};
+
+struct ScreenResolution
+{
+	uint16_t width;
+	uint16_t height;
+	uint8_t refresh_rate;
+};
+
+struct Gpu
+{
+	uint16_t device;
+	uint16_t vendor;
+};
+
+struct GraphicsConfig
+{
+	ScreenResolution resolution;
+	Gpu gpu;
+	RendererType renderer;
+	WindowMode window_mode;
+	uint8_t anisotropy;
+	uint8_t msaa;
+	uint8_t threads;
+	bool fullscreen;
+	bool vsync;
+};
+
+struct WindowPlatformData
+{
+	void* window;
+	void* display;
+};
 } // namespace A3D
 
-#endif // CORE_GLOBAL_H
+#endif // GRAPHICS_GRAPHICS_CONFIG_H

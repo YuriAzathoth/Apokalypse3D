@@ -28,7 +28,8 @@
 namespace A3D
 {
 ILog::ILog() :
-	level_(Level::APOKALYPSE_LOG_LEVEL)
+	level_(Level::APOKALYPSE_LOG_LEVEL),
+	fatal_(false)
 {
 }
 

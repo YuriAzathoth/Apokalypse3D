@@ -72,11 +72,16 @@ public:
 	void SetLogLevel(Level level) { level_ = level; }
 	Level SetLogLevel() const { return level_; }
 
+	bool IsFatal() const { return fatal_; }
+
 protected:
 	virtual void Write(const char* message, Level level) = 0;
 
+	void SetFatal() { fatal_ = true; }
+
 private:
 	Level level_;
+	bool fatal_;
 
 protected:
 	static const char* GetDate();

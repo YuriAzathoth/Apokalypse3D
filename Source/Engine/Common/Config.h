@@ -16,17 +16,13 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef RESOURCE_MODEL_H
-#define RESOURCE_MODEL_H
+#ifndef COMMON_CONFIG_H
+#define COMMON_CONFIG_H
 
-#include "EngineAPI.h"
-#include "Common/Geometry.h"
-#include "Common/Model.h"
+#include <stdint.h>
 
 namespace A3D
 {
-ENGINEAPI_EXPORT bool GetModel(Model& model, const char* filename);
-ENGINEAPI_EXPORT void ReleaseModel(const char* filename);
 } // namespace A3D
 
-#endif // RESOURCE_MODEL_H
+#endif // COMMON_CONFIG_H

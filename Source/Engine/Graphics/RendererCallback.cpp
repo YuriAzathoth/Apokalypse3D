@@ -17,7 +17,7 @@
 */
 
 #include <stdio.h>
-#include "Core/EngineLog.h"
+#include "Core/ILog.h"
 #include "RendererCallback.h"
 
 #ifndef BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
@@ -31,7 +31,7 @@ void RendererCallback::fatal(const char* _filePath,
 							 bgfx::Fatal::Enum _code,
 							 const char* _str)
 {
-	LogFatal("Renderer error: %s", _str);
+	log_->Fatal("Renderer error: %s", _str);
 }
 
 void RendererCallback::traceVargs(const char* _filePath,
@@ -41,7 +41,7 @@ void RendererCallback::traceVargs(const char* _filePath,
 {
 	char message[512];
 	vsprintf(message, _format, _argList);
-	LogTrace(message);
+	log_->Trace(message);
 }
 
 void RendererCallback::profilerBegin(const char* _name,

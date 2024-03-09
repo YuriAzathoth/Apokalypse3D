@@ -20,71 +20,53 @@
 #define GRAPHICS_RENDERER_H
 
 #include <stdint.h>
+#include "Common/Config.h"
+#include "Container/vector.h"
 #include "EngineAPI.h"
-#include "Common/RendererThreadContext.h"
+#include "GraphicsConfig.h"
+
+namespace bx { struct AllocatorI; }
+
+namespace bgfx
+{
+struct CallbackI;
+struct Encoder;
+}
 
 namespace A3D
 {
-struct Camera;
-struct GlobalTransform;
-struct Material;
-struct MeshGroup;
+class ILog;
 
-struct RendererGpu
+class ENGINEAPI_EXPORT Renderer
 {
-	uint16_t device;
-	uint16_t vendor;
+public:
+	Renderer(ILog* log, bx::AllocatorI* alloc, bgfx::CallbackI* callback);
+	~Renderer();
+
+	bool Initialize(GraphicsConfig& config, WindowPlatformData& wpd);
+	void Shutdown();
+
+	void BeginFrame();
+	void EndFrame();
+
+	const char* GetShaderPrefix() const { return shader_prefix_; }
+
+private:
+	bool SelectBestGpu(GraphicsConfig& config);
+
+	vector<uint8_t, bgfx::Encoder*> thread_encoders_;
+	ScreenResolution resolution_;
+	const char* shader_prefix_;
+	ILog* log_;
+	bx::AllocatorI* alloc_;
+	bgfx::CallbackI* callback_;
+
+public:
+	static bool IsInitialized() { return s_initialized; }
+
+private:
+	static bool s_initialized;
 };
-
-struct RendererResolution
-{
-	uint16_t width;
-	uint16_t height;
-};
-
-enum class RendererType : unsigned
-{
-	Auto,
-	OpenGL,
-	Vulkan,
-#if defined(__WIN32__)
-	Direct3D9,
-	Direct3D11,
-	Direct3D12,
-#elif defined(OSX)
-	Metal,
-#endif // defined
-	None
-};
-
-ENGINEAPI_EXPORT bool CreateRenderer(RendererGpu& gpu,
-										   void* window,
-										   void* display,
-										   const RendererResolution& resolution,
-										   RendererType type,
-										   uint8_t anisotropy,
-										   uint8_t msaa,
-										   bool fullscreen,
-										   bool vsync);
-
-ENGINEAPI_EXPORT void DestroyRenderer();
-
-ENGINEAPI_EXPORT void BeginRendererFrame();
-ENGINEAPI_EXPORT void EndRendererFrame();
-
-ENGINEAPI_EXPORT RendererThreadContext* CreateRendererThreadContexts(uint8_t count);
-ENGINEAPI_EXPORT void DestroyRendererThreadContexts(RendererThreadContext* contexts);
-ENGINEAPI_EXPORT void BeginRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
-ENGINEAPI_EXPORT void EndRendererThreadContextsFrame(RendererThreadContext* contexts, uint8_t count);
-
-ENGINEAPI_EXPORT void SetCameraTransforms(const Camera* cameras, uint16_t count);
-
-ENGINEAPI_EXPORT void DrawMeshGroup(const MeshGroup& mesh, const Material& material, const GlobalTransform& transform);
-
-ENGINEAPI_EXPORT void DrawMeshGroup(RendererThreadContext& context,
-										 const MeshGroup& mesh,
-										 const Material& material,
-										 const GlobalTransform& transform);
 } // namespace A3D
 
 #endif // GRAPHICS_RENDERER_H

@@ -16,15 +16,48 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef GRAPHICS_WINDOW_H
-#define GRAPHICS_WINDOW_H
+#ifndef GRAPHICS_SYSTEM_WINDOW_H
+#define GRAPHICS_SYSTEM_WINDOW_H
 
 #include <stdint.h>
+#include "Common/Config.h"
 #include "EngineAPI.h"
+#include "GraphicsConfig.h"
+
+struct SDL_Window;
 
 namespace A3D
 {
-enum WindowMode : uint8_t
+class ILog;
+
+class ENGINEAPI_EXPORT SystemWindow
+{
+public:
+	explicit SystemWindow(ILog* log);
+	~SystemWindow();
+
+	bool InitializeVideo();
+	void ShutdownVideo();
+
+	bool Create(const char* title, const ScreenResolution& resolution, WindowMode mode);
+	void Destroy();
+
+	bool GetMaxResolution(ScreenResolution& resolution, uint8_t display_id);
+
+	bool GetPlatformData(WindowPlatformData& wpd);
+
+private:
+	ILog* log_;
+	SDL_Window* window_;
+
+public:
+	static bool IsVideoInitialized() { return s_video_initialized; }
+
+private:
+	static bool s_video_initialized;
+};
+
+/*enum WindowMode : uint8_t
 {
 	FULLSCREEN,
 	BORDERLESS,
@@ -55,7 +88,7 @@ ENGINEAPI_EXPORT bool CreateWindow(const char* title,
 ENGINEAPI_EXPORT void DestroyWindow();
 
 ENGINEAPI_EXPORT bool GetMaxWindowResolution(WindowResolution& resolution, uint8_t display_id);
-ENGINEAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);
+ENGINEAPI_EXPORT bool GetWindowPlatformData(WindowPlatformData& pd);*/
 } // namespace A3D
 
-#endif // GRAPHICS_WINDOW_H
+#endif // GRAPHICS_SYSTEM_WINDOW_H

@@ -16,37 +16,51 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef ENGINE_IPLUGIN_H
-#define ENGINE_IPLUGIN_H
+#ifndef ENGINE_APPLICATION_H
+#define ENGINE_APPLICATION_H
 
-#include <memory>
+#include "Core/DefaultAllocator.h"
+#include "Core/DefaultLog.h"
 #include "EngineAPI.h"
-
-#define DECLARE_PLUGIN(CLASS) \
-extern "C" std::unique_ptr<IPlugin> CreatePlugin() { return std::make_unique<CLASS>(); }
+#include "PluginStorage.h"
 
 namespace A3D
 {
-class IPlugin;
+class ClientEngine;
+class ServerEngine;
 
-using CreatePluginFN = std::unique_ptr<IPlugin>();
-
-class ENGINEAPI_EXPORT IPlugin
+class ENGINEAPI_EXPORT Application
 {
 public:
-	IPlugin() {}
-	virtual ~IPlugin() {}
+	Application();
+	~Application();
 
-	virtual bool Initialize() = 0;
-	virtual void Shutdown() = 0;
-	virtual bool PreUpdate(float time_elapsed) = 0;
-	virtual bool Update(float time_elapsed) = 0;
-	virtual bool PostUpdate(float time_elapsed) = 0;
+	int Run(const char* window_title, int argc, char** argv);
+
+	bool LoadMainPlugin(const char* filename);
 
 private:
-	IPlugin(const IPlugin&) = delete;
-	void operator=(const IPlugin&) = delete;
+	enum StartupFlags : uint8_t
+	{
+		FLAG_HEADLESS = 0x1
+	};
+
+	struct StartupOptions
+	{
+		uint8_t flags;
+	};
+
+	bool ParseArgs(StartupOptions& options, int argc, char** argv);
+	bool Initialize(const char* window_title, const StartupOptions& options);
+	void Shutdown();
+	bool MainLoop();
+
+	DefaultAllocator alloc_;
+	DefaultLog log_;
+	PluginStorage plugins_;
+	ServerEngine* server_;
+	ClientEngine* client_;
 };
 } // namespace A3D
 
-#endif // ENGINE_IPLUGIN_H
+#endif // ENGINE_APPLICATION_H
