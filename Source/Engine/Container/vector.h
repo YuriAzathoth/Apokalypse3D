@@ -203,11 +203,11 @@ public:
 				memcpy(new_data, data_, capacity_ * sizeof(value_type));
 			else
 			{
-				const_iterator src_it = begin();
+				iterator src_it = begin();
 				const const_iterator src_end = end();
-				pointer dst_ptr = new_data;
-				for (; src_it != src_end; ++src_it, ++dst_ptr)
-					std::construct_at(dst_ptr, std::move(*src_it));
+				iterator dst_it = new_data;
+				for (; src_it != src_end; ++src_it, ++dst_it)
+					std::construct_at((pointer)dst_it, std::move(*src_it));
 			}
 
 			if constexpr (!std::is_trivial<value_type>::value)
