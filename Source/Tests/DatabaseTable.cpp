@@ -54,10 +54,9 @@ TEST_SUITE("Database Table")
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
 		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
 		table_t table;
-		const size_t size = table_t::memory_size(ITEMS_COUNT);
-		uint8_t* mem = (uint8_t*)malloc(size);
+		constexpr size_t size = table_t::memory_size(ITEMS_COUNT);
+		uint8_t mem[size]; // Allocation in stack.
 		table.allocate(mem, ITEMS_COUNT);
-		free(mem);
 	}
 
 	TEST_CASE("Front")

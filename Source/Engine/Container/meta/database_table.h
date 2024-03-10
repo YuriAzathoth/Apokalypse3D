@@ -78,7 +78,7 @@ struct copy_value
 struct move_value
 {
 	template <typename T>
-	void operator()(T* dst, const T* src)
+	void operator()(T* dst, T* src)
 	{
 		A3D::move_assign(dst, src);
 	}
@@ -295,6 +295,13 @@ public:
 		return *meta::get_tag<Tag, tags_types_iter>(ptr_);
 	}
 
+	template <typename Tag>
+	const typename meta::type_by_tag<Tag, tags_types_iter, data_types_iter>::type&
+	get() const noexcept
+	{
+		return *meta::get_tag<Tag, tags_types_iter>(ptr_);
+	}
+
 	pointer_iter& ptr() noexcept { return ptr_; }
 	const pointer_iter& ptr() const noexcept { return ptr_; }
 
@@ -384,7 +391,7 @@ public:
 	template <typename TableTags>
 	void move(iterator<TableTags, TableTags> dst, iterator<TableTags, TableTags> src)
 	{
-		meta::foreach(dst, src, move_value{});
+		meta::foreach(dst.ptr(), src.ptr(), move_value{});
 	}
 
 	void create_n(size_type size) { meta::foreach(data_, construct_data{size}); }

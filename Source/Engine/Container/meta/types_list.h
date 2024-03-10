@@ -215,19 +215,23 @@ template <typename List, typename UnaryOp>
 constexpr void foreach(List& list, UnaryOp&& op)
 {
 	if constexpr (!std::is_same<typename List::value_type, empty_type>::value)
+	{
 		op(list.value);
-	if constexpr (std::is_same<typename List::is_last, false_type>::value)
-		foreach(list.next, op);
+		if constexpr (std::is_same<typename List::is_last, false_type>::value)
+			foreach(list.next, op);
+	}
 }
 
 template <typename List1, typename List2, typename BinaryOp>
 constexpr void foreach(List1& list1, List2& list2, BinaryOp&& op)
 {
 	if constexpr (!std::is_same<typename List1::value_type, empty_type>::value &&
-				   !std::is_same<typename List2::value_type, empty_type>::value)
+				  !std::is_same<typename List2::value_type, empty_type>::value)
+	{
 		op(list1.value, list2.value);
-	if constexpr (std::is_same<typename List1::is_last, false_type>::value)
-		foreach(list1.next, list2.next, op);
+		if constexpr (std::is_same<typename List1::is_last, false_type>::value)
+			foreach(list1.next, list2.next, op);
+	}
 }
 
 template <typename List1, typename List2, typename List3, typename TernaryOp>
