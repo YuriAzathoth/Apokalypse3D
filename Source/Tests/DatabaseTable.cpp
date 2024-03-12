@@ -26,25 +26,25 @@ TEST_SUITE("Database Table")
 {
 	TEST_CASE("Idle empty columns")
 	{
-		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<>::type, uint32_t>;
+		using table_t = A3D::db::database_table<A3D::meta::types_list_builder<>::type, uint32_t>;
 		table_t table;
 	}
 
 	TEST_CASE("Idle non-empty columns")
 	{
-		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
+		using table_t = A3D::db::database_table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
 		table_t table;
 	}
 
 	TEST_CASE("Table memory size by rows count empty columns")
 	{
-		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<>::type, uint32_t>;
+		using table_t = A3D::db::database_table<A3D::meta::types_list_builder<>::type, uint32_t>;
 		static_assert(table_t::row_sizeof == 0);
 	}
 
 	TEST_CASE("Table memory size by rows count non-empty columns")
 	{
-		using table_t = A3D::db::data_table::table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
+		using table_t = A3D::db::database_table<A3D::meta::types_list_builder<int, float>::type, uint32_t>;
 		static_assert(table_t::row_sizeof == sizeof(int) + sizeof(float));
 	}
 
@@ -52,7 +52,7 @@ TEST_SUITE("Database Table")
 	{
 		static constexpr size_t ITEMS_COUNT = 1;
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
-		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		using table_t = A3D::db::database_table<types_t, uint32_t>;
 		table_t table;
 		constexpr size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t mem[size]; // Allocation in stack.
@@ -63,7 +63,7 @@ TEST_SUITE("Database Table")
 	{
 		static constexpr size_t ITEMS_COUNT = 1;
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
-		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		using table_t = A3D::db::database_table<types_t, uint32_t>;
 		table_t table;
 		const size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t* mem = (uint8_t*)malloc(size);
@@ -81,7 +81,7 @@ TEST_SUITE("Database Table")
 	{
 		static constexpr size_t ITEMS_COUNT = 2;
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
-		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		using table_t = A3D::db::database_table<types_t, uint32_t>;
 		table_t table;
 		const size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t* mem = (uint8_t*)malloc(size);
@@ -105,7 +105,7 @@ TEST_SUITE("Database Table")
 	{
 		static constexpr size_t ITEMS_COUNT = 10;
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
-		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		using table_t = A3D::db::database_table<types_t, uint32_t>;
 		table_t table;
 		const size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t* mem = (uint8_t*)malloc(size);
@@ -133,7 +133,7 @@ TEST_SUITE("Database Table")
 	{
 		static constexpr size_t ITEMS_COUNT = 2;
 		using types_t = A3D::meta::types_list_builder<int, float>::type;
-		using table_t = A3D::db::data_table::table<types_t, uint32_t>;
+		using table_t = A3D::db::database_table<types_t, uint32_t>;
 		table_t table;
 		const size_t size = table_t::memory_size(ITEMS_COUNT);
 		uint8_t* mem = (uint8_t*)malloc(size);

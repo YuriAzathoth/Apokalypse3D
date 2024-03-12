@@ -27,8 +27,6 @@ namespace A3D
 {
 namespace db
 {
-namespace data_table
-{
 class distribute_memory
 {
 public:
@@ -201,7 +199,7 @@ template <template <typename> typename Modifier,
 		  typename Table,
 		  typename TableTagsList,
 		  typename IteratorTagsList>
-class iterator_base
+class database_table_iterator
 {
 public:
 	using data_types_table = Table;
@@ -224,24 +222,24 @@ public:
 		data_types_iter
 	>::type;
 
-	iterator_base() noexcept { meta::foreach(ptr_, reset_pointer{}); }
-	iterator_base(const iterator_base& other) noexcept { meta::foreach(ptr_, other.ptr_, set_pointer{}); }
-	iterator_base(pointer_iter& ptr) noexcept { meta::foreach(ptr_, ptr, set_pointer{}); }
-	iterator_base(pointer_iter& ptr, ptrdiff_t bias) noexcept { meta::foreach(ptr_, ptr, set_pointer_bias{bias}); }
+	database_table_iterator() noexcept { meta::foreach(ptr_, reset_pointer{}); }
+	database_table_iterator(const database_table_iterator& other) noexcept { meta::foreach(ptr_, other.ptr_, set_pointer{}); }
+	database_table_iterator(pointer_iter& ptr) noexcept { meta::foreach(ptr_, ptr, set_pointer{}); }
+	database_table_iterator(pointer_iter& ptr, ptrdiff_t bias) noexcept { meta::foreach(ptr_, ptr, set_pointer_bias{bias}); }
 
 	template <typename DataList>
-	iterator_base(DataList& ptr) noexcept
+	database_table_iterator(DataList& ptr) noexcept
 	{
 		meta::foreach_tags<tags_types_iter, tags_types_table>(ptr_, ptr, set_pointer{});
 	}
 
 	template <typename DataList>
-	iterator_base(DataList& ptr, ptrdiff_t bias) noexcept
+	database_table_iterator(DataList& ptr, ptrdiff_t bias) noexcept
 	{
 		meta::foreach_tags<tags_types_iter, tags_types_table>(ptr_, ptr, set_pointer_bias{bias});
 	}
 
-	void operator=(const iterator_base& other) noexcept
+	void operator=(const database_table_iterator& other) noexcept
 	{
 		meta::foreach(ptr_, other.ptr_, set_pointer{});
 	}
@@ -259,22 +257,22 @@ public:
 	void operator+=(ptrdiff_t delta) noexcept { meta::foreach(ptr_, set_pointer_bias{delta}); }
 	void operator-=(ptrdiff_t delta) noexcept { meta::foreach(ptr_, set_pointer_bias{-delta}); }
 
-	iterator_base operator+(ptrdiff_t delta) noexcept
+	database_table_iterator operator+(ptrdiff_t delta) noexcept
 	{
-		iterator_base ret;
+		database_table_iterator ret;
 		meta::foreach(ret, ptr_, set_pointer_bias{delta});
 		return ret;
 	}
 
-	iterator_base operator-(ptrdiff_t delta) noexcept
+	database_table_iterator operator-(ptrdiff_t delta) noexcept
 	{
-		iterator_base ret;
+		database_table_iterator ret;
 		meta::foreach(ret, ptr_, set_pointer_bias{-delta});
 		return ret;
 	}
 
-	bool operator==(const iterator_base& other) const noexcept { return ptr_.value == other.ptr_.value; }
-	bool operator!=(const iterator_base& other) const noexcept { return ptr_.value != other.ptr_.value; }
+	bool operator==(const database_table_iterator& other) const noexcept { return ptr_.value == other.ptr_.value; }
+	bool operator!=(const database_table_iterator& other) const noexcept { return ptr_.value != other.ptr_.value; }
 
 	template <typename DataList>
 	bool operator==(const DataList& other) const noexcept
@@ -310,7 +308,7 @@ private:
 };
 
 template <typename TypesList, typename SizeType>
-class table
+class database_table
 {
 public:
 	using data_type = TypesList;
@@ -319,8 +317,8 @@ public:
 	using const_pointers_type = meta::list_modify<std::add_pointer, meta::data_list, const_data_type>::type;
 	using size_type = SizeType;
 
-	template <typename Tags, typename TableTags> using iterator = iterator_base<meta::bypass, data_type, TableTags, Tags>;
-	template <typename Tags, typename TableTags> using const_iterator = iterator_base<meta::bypass, data_type, TableTags, Tags>;
+	template <typename Tags, typename TableTags> using iterator = database_table_iterator<meta::bypass, data_type, TableTags, Tags>;
+	template <typename Tags, typename TableTags> using const_iterator = database_table_iterator<meta::bypass, data_type, TableTags, Tags>;
 
 	template <typename Tags, typename TableTags> iterator<Tags, TableTags> begin() noexcept { return { data_ }; }
 	template <typename Tags, typename TableTags> const_iterator<Tags, TableTags> begin() const noexcept { return { data_ }; }
@@ -396,10 +394,10 @@ public:
 
 	void create_n(size_type size) { meta::foreach(data_, construct_data{size}); }
 	void destroy_n(size_type size) noexcept { meta::foreach(data_, destroy_data{size}); }
-	void copy_n(const table& other, size_type size) noexcept { meta::foreach(data_, other.data_, copy_data{size}); }
-	void move_n(const table& other, size_type size) noexcept { meta::foreach(data_, other.data_, move_data{size}); }
+	void copy_n(const database_table& other, size_type size) noexcept { meta::foreach(data_, other.data_, copy_data{size}); }
+	void move_n(const database_table& other, size_type size) noexcept { meta::foreach(data_, other.data_, move_data{size}); }
 
-	void copy_pointer(const table& other) noexcept { meta::foreach(data_, other.data_, set_pointer{}); }
+	void copy_pointer(const database_table& other) noexcept { meta::foreach(data_, other.data_, set_pointer{}); }
 
 private:
 	pointers_type data_;
@@ -409,7 +407,6 @@ public:
 
 	static constexpr size_t row_sizeof = meta::list_sizeof<TypesList>();
 };
-} // namespace data_table
 } // namespace db
 } // namespace A3D
 

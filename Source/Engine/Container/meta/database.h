@@ -42,18 +42,18 @@ template <typename SizeType,
 class database
 {
 public:
+	using size_type = SizeType;
 	using primary_index = SizeType;
 	using internal_index = SizeType;
-	using size_type = SizeType;
 	using data_types = DataTypesList;
 	using data_types_list = meta::make_data_list<data_types>;
 	using tags_types = TagsTypesList;
-	using data_table = table::table<data_types_list>;
+	using data_table = database_table<data_types_list, size_type>;
 	using chunk_type = ChunkType;
 	using primary_indices = pkey::map<size_type, chunk_type>;
 	using allocator_type = Allocator;
 
-	enum { chunk_size = sizeof(size_type) * 8 };
+	enum { grow_factor = sizeof(size_type) * 8 };
 
 	template <typename... Tags>
 	using iterator = table::iterator<data_table, tags_types, typename meta::types_list_builder<Tags...>::type>;
@@ -183,18 +183,18 @@ private:
 		if (capacity_ > 0)
 		{
 			data_table new_data;
-			table::allocate(new_data, alloc_, capacity_ + chunk_size);
+			table::allocate(new_data, alloc_, capacity_ + grow_factor);
 			if (size_ > 0)
 				table::move_construct(new_data, data_, size_);
 			table::destruct(data_, size_);
 			table::deallocate(data_, alloc_, capacity_);
 			table::set_pointer(data_, new_data);
-			capacity_ += chunk_size;
+			capacity_ += grow_factor;
 		}
 		else
 		{
-			table::allocate(data_, alloc_, chunk_size);
-			capacity_ = chunk_size;
+			table::allocate(data_, alloc_, grow_factor);
+			capacity_ = grow_factor;
 		}
 	}
 
