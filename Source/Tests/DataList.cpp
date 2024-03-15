@@ -18,7 +18,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include "Container/meta/types_list.h"
+#include "Container/meta/data_list.h"
 
 struct test_unary
 {
@@ -43,7 +43,7 @@ struct test_ternary
 	template <typename T, typename U, typename V>
 	void operator()(T& res, const U& lhs, const V& rhs)
 	{
-		res = lhs + rhs;
+		res += lhs + rhs;
 	}
 };
 
@@ -51,539 +51,1108 @@ TEST_SUITE("Data List")
 {
 	TEST_CASE("Empty List")
 	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		static_assert(std::is_same_v<dl_t::value_type, A3D::meta::empty_type>);
-		static_assert(std::is_same_v<dl_t::next_type, A3D::meta::empty_type>);
+		using dl_t = A3D::meta::data_list<>;
+		static_assert(std::is_same_v<dl_t::value_type, void>);
+		static_assert(std::is_same_v<dl_t::types, A3D::meta::types_list<>>);
 		static_assert(sizeof(dl_t) == 1);
+		dl_t dl;
 	}
 
 	TEST_CASE("List with size 1")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
+		using dl_t = A3D::meta::data_list<int>;
 		static_assert(std::is_same_v<dl_t::value_type, int>);
-		static_assert(std::is_same_v<dl_t::next_type, A3D::meta::empty_type>);
-		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int));
-		static_assert(sizeof(dl_t) == sizeof(int));
+		dl_t dl;
 	}
 
 	TEST_CASE("List with size 2")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		static_assert(std::is_same_v<dl_t::value_type, int>);
-		static_assert(std::is_same_v<dl_t::next_type::value_type, float>);
-		static_assert(std::is_same_v<dl_t::next_type::next_type, A3D::meta::empty_type>);
-		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int) + sizeof(float));
-		static_assert(sizeof(dl_t) == sizeof(int) + sizeof(float));
+		using dl_t = A3D::meta::data_list<int, float>;
+		static_assert(std::is_same_v<dl_t::types, A3D::meta::types_list<int, float>>);
+		dl_t dl;
+	}
+
+	TEST_CASE("List with size 3")
+	{
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		static_assert(std::is_same_v<dl_t::types, A3D::meta::types_list<int, float, char>>);
+		dl_t dl;
 	}
 
 	TEST_CASE("Get from size 1")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
+		using dl_t = A3D::meta::data_list<int>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
+		A3D::meta::data_list_get<int>(dl) = 50;
+		REQUIRE(dl.value == 50);
 	}
 
 	TEST_CASE("Get from size 2")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
+		using dl_t = A3D::meta::data_list<int, float>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		A3D::meta::get<float>(dl) = 2.5f;
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
-		REQUIRE(A3D::meta::get<float>(dl) == 2.5f);
+		A3D::meta::data_list_get<int>(dl) = 50;
+		A3D::meta::data_list_get<float>(dl) = 0.8f;
+		REQUIRE(dl.value == 50);
+		REQUIRE(dl.next.value == 0.8f);
 	}
 
-	TEST_CASE("Modify empty")
+	TEST_CASE("Get from size 3")
 	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, A3D::meta::empty_type>);
-		static_assert(std::is_same_v<dlm_t::next_type, A3D::meta::empty_type>);
-		static_assert(sizeof(dlm_t) == 1);
-	}
-
-	TEST_CASE("Modify size 1")
-	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, int*>);
-		static_assert(std::is_same_v<dlm_t::next_type, A3D::meta::empty_type>);
-		static_assert(sizeof(dlm_t) == sizeof(int*));
-	}
-
-	TEST_CASE("Modify size 2")
-	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, int*>);
-		static_assert(std::is_same_v<dlm_t::next_type::value_type, float*>);
-		static_assert(std::is_same_v<dlm_t::next_type::next_type, A3D::meta::empty_type>);
-		static_assert(sizeof(dlm_t) == sizeof(int*) + sizeof(float*));
-	}
-
-	TEST_CASE("Sizeof empty")
-	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		static_assert(A3D::meta::list_sizeof<dl_t>() == 0);
-	}
-
-	TEST_CASE("Sizeof size 1")
-	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int));
-	}
-
-	TEST_CASE("Sizeof size 2")
-	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		static_assert(A3D::meta::list_sizeof<dl_t>() == sizeof(int) + sizeof(float));
-	}
-
-	TEST_CASE("Type by tag size 1")
-	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using tags_t = A3D::meta::data_list_builder<char>::type;
-		static_assert(std::is_same_v<A3D::meta::type_by_tag<char, tags_t, dl_t>::type, int>);
-	}
-
-	TEST_CASE("Type by tag size 2")
-	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using tags_t = A3D::meta::data_list_builder<char, long>::type;
-		static_assert(std::is_same_v<A3D::meta::type_by_tag<char, tags_t, dl_t>::type, int>);
-		static_assert(std::is_same_v<A3D::meta::type_by_tag<long, tags_t, dl_t>::type, float>);
-	}
-
-	TEST_CASE("Cast by tags empty")
-	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		using tags_t = A3D::meta::data_list_builder<>::type;
-		using dlm_t = A3D::meta::tags_modify<std::add_pointer, A3D::meta::data_list, dl_t, tags_t, tags_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, A3D::meta::empty_type>);
-		static_assert(std::is_same_v<dlm_t::next_type, A3D::meta::empty_type>);
-	}
-
-	TEST_CASE("Type by tag size 1")
-	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using tags_t = A3D::meta::data_list_builder<char>::type;
-		using dlm_t = A3D::meta::tags_modify<std::add_pointer, A3D::meta::data_list, dl_t, tags_t, tags_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, int*>);
-		static_assert(std::is_same_v<dlm_t::next_type, A3D::meta::empty_type>);
-	}
-
-	TEST_CASE("Type by tag size 2 ordered")
-	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using tags_t = A3D::meta::data_list_builder<char, long>::type;
-		using tagsm_t = A3D::meta::data_list_builder<char, long>::type;
-		using dlm_t = A3D::meta::tags_modify<std::add_pointer, A3D::meta::data_list, dl_t, tagsm_t, tags_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, int*>);
-		static_assert(std::is_same_v<dlm_t::next_type::value_type, float*>);
-		static_assert(std::is_same_v<dlm_t::next_type::next_type, A3D::meta::empty_type>);
-	}
-
-	TEST_CASE("Type by tag size 2 reversed")
-	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using tags_t = A3D::meta::data_list_builder<char, long>::type;
-		using tagsm_t = A3D::meta::data_list_builder<long, char>::type;
-		using dlm_t = A3D::meta::tags_modify<std::add_pointer, A3D::meta::data_list, dl_t, tagsm_t, tags_t>::type;
-		static_assert(std::is_same_v<dlm_t::value_type, float*>);
-		static_assert(std::is_same_v<dlm_t::next_type::value_type, int*>);
-		static_assert(std::is_same_v<dlm_t::next_type::next_type, A3D::meta::empty_type>);
-	}
-
-	TEST_CASE("Get from size 1")
-	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
+		using dl_t = A3D::meta::data_list<int, float, char>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
+		A3D::meta::data_list_get<int>(dl) = 50;
+		A3D::meta::data_list_get<float>(dl) = 0.8f;
+		A3D::meta::data_list_get<char>(dl) = 't';
+		REQUIRE(dl.value == 50);
+		REQUIRE(dl.next.value == 0.8f);
+		REQUIRE(dl.next.next.value == 't');
 	}
 
-	TEST_CASE("Get from size 2")
+	TEST_CASE("For each unary empty")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
+		using dl_t = A3D::meta::data_list<>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		A3D::meta::get<float>(dl) = 2.5f;
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
-		REQUIRE(A3D::meta::get<float>(dl) == 2.5f);
+		A3D::meta::data_list_foreach(dl, test_unary{});
 	}
 
-	TEST_CASE("Modify and get from size 1")
+	TEST_CASE("For each unary size 1")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
+		using dl_t = A3D::meta::data_list<int>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		dlm_t dlm;
-		A3D::meta::get<int*>(dlm) = &A3D::meta::get<int>(dl);
-		REQUIRE(*A3D::meta::get<int*>(dlm) == 50);
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_foreach(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
 	}
 
-	TEST_CASE("Modify and get from size 2")
+	TEST_CASE("For each unary size 2")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
+		using dl_t = A3D::meta::data_list<int, float>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		A3D::meta::get<float>(dl) = 2.5f;
-		dlm_t dlm;
-		A3D::meta::get<int*>(dlm) = &A3D::meta::get<int>(dl);
-		A3D::meta::get<float*>(dlm) = &A3D::meta::get<float>(dl);
-		REQUIRE(*A3D::meta::get<int*>(dlm) == 50);
-		REQUIRE(*A3D::meta::get<float*>(dlm) == 2.5f);
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
+	}
+
+	TEST_CASE("For each unary size 3")
+	{
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'b');
+	}
+
+	TEST_CASE("For each binary empty")
+	{
+		using dl1_t = A3D::meta::data_list<>;
+		using dl2_t = A3D::meta::data_list<>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_foreach(dl1, dl2, test_binary{});
+	}
+
+	TEST_CASE("For each binary size 1")
+	{
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<short>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_foreach(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+	}
+
+	TEST_CASE("For each binary size 2")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+	}
+
+	TEST_CASE("For each binary size 3")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'c');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each ternary empty")
+	{
+		using dl1_t = A3D::meta::data_list<>;
+		using dl2_t = A3D::meta::data_list<>;
+		using dl3_t = A3D::meta::data_list<>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_foreach(dl1, dl2, dl3, test_ternary{});
+	}
+
+	TEST_CASE("For each ternary size 1")
+	{
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<int>;
+		using dl3_t = A3D::meta::data_list<short>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_foreach(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+	}
+
+	TEST_CASE("For each ternary size 2")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_foreach(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+	}
+
+	TEST_CASE("For each ternary size 3")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'h');
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
 	}
 
 	TEST_CASE("Get by tag from size 1")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using tags_t = A3D::meta::types_list_builder<char>::type;
+		using dl_t = A3D::meta::data_list<int>;
+		using tags_t = A3D::meta::types_list<char>;
 		dl_t dl;
-		A3D::meta::get_tag<char, tags_t, dl_t>(dl) = 50;
-		REQUIRE(A3D::meta::get_tag<char, tags_t, dl_t>(dl) == 50);
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
+		A3D::meta::data_list_get<int>(dl) = 12;
+		auto r = A3D::meta::data_list_get_by_tag<char, tags_t>(dl);
+		static_assert(std::is_same_v<decltype(r), int>);
+		REQUIRE(r == 12);
 	}
 
 	TEST_CASE("Get by tag from size 2")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using tags_t = A3D::meta::types_list_builder<char, long>::type;
+		using dl_t = A3D::meta::data_list<int, float>;
+		using tags_t = A3D::meta::types_list<char, long>;
 		dl_t dl;
-		A3D::meta::get_tag<char, tags_t, dl_t>(dl) = 50;
-		A3D::meta::get_tag<long, tags_t, dl_t>(dl) = 2.5f;
-		REQUIRE(A3D::meta::get_tag<char, tags_t, dl_t>(dl) == 50);
-		REQUIRE(A3D::meta::get_tag<long, tags_t, dl_t>(dl) == 2.5f);
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
-		REQUIRE(A3D::meta::get<float>(dl) == 2.5f);
+		A3D::meta::data_list_get<int>(dl) = 12;
+		A3D::meta::data_list_get<float>(dl) = 0.8f;
+		auto r1 = A3D::meta::data_list_get_by_tag<char, tags_t>(dl);
+		auto r2 = A3D::meta::data_list_get_by_tag<long, tags_t>(dl);
+		static_assert(std::is_same_v<decltype(r1), int>);
+		static_assert(std::is_same_v<decltype(r2), float>);
+		REQUIRE(r1 == 12);
+		REQUIRE(r2 == 0.8f);
 	}
 
-	TEST_CASE("Modify and get by tag from size 1")
+	TEST_CASE("Get by tag from size 3")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
-		using tags_t = A3D::meta::types_list_builder<char>::type;
-		using tagsm_t = A3D::meta::types_list_builder<char>::type;
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using tags_t = A3D::meta::types_list<char, long, double>;
 		dl_t dl;
-		A3D::meta::get_tag<char, tags_t, dl_t>(dl) = 50;
-		dlm_t dlm;
-		A3D::meta::get_tag<char, tagsm_t, dlm_t>(dlm) = &A3D::meta::get_tag<char, tags_t, dl_t>(dl);
-		REQUIRE(*A3D::meta::get_tag<char, tagsm_t, dlm_t>(dlm) == 50);
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
+		A3D::meta::data_list_get<int>(dl) = 12;
+		A3D::meta::data_list_get<float>(dl) = 0.8f;
+		A3D::meta::data_list_get<char>(dl) = 'f';
+		auto r1 = A3D::meta::data_list_get_by_tag<char, tags_t>(dl);
+		auto r2 = A3D::meta::data_list_get_by_tag<long, tags_t>(dl);
+		auto r3 = A3D::meta::data_list_get_by_tag<double, tags_t>(dl);
+		static_assert(std::is_same_v<decltype(r1), int>);
+		static_assert(std::is_same_v<decltype(r2), float>);
+		static_assert(std::is_same_v<decltype(r3), char>);
+		REQUIRE(r1 == 12);
+		REQUIRE(r2 == 0.8f);
+		REQUIRE(r3 == 'f');
 	}
 
-	TEST_CASE("Modify and get by tag from size 2 ordered")
+	TEST_CASE("For each unary by tags empty")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		using dlm_t = A3D::meta::list_modify<std::add_pointer, A3D::meta::data_list, dl_t>::type;
-		using tags_t = A3D::meta::types_list_builder<char, long>::type;
-		using tagsm_t = A3D::meta::types_list_builder<char, long>::type;
+		using dl_t = A3D::meta::data_list<>;
+		using ttags_t = A3D::meta::types_list<>;
+		using stags_t = A3D::meta::types_list<>;
 		dl_t dl;
-		A3D::meta::get_tag<char, tags_t, dl_t>(dl) = 50;
-		A3D::meta::get_tag<long, tags_t, dl_t>(dl) = 2.5f;
-		dlm_t dlm;
-		A3D::meta::get_tag<char, tagsm_t, dlm_t>(dlm) = &A3D::meta::get_tag<char, tags_t, dl_t>(dl);
-		A3D::meta::get_tag<long, tagsm_t, dlm_t>(dlm) = &A3D::meta::get_tag<long, tags_t, dl_t>(dl);
-		REQUIRE(*A3D::meta::get_tag<char, tagsm_t, dlm_t>(dlm) == 50);
-		REQUIRE(*A3D::meta::get_tag<long, tagsm_t, dlm_t>(dlm) == 2.5f);
-		REQUIRE(A3D::meta::get<int>(dl) == 50);
-		REQUIRE(A3D::meta::get<float>(dl) == 2.5f);
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
 	}
 
-	TEST_CASE("Foreach unary empty")
+	TEST_CASE("For each unary by tags size 1")
 	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
+		using dl_t = A3D::meta::data_list<int>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char>;
 		dl_t dl;
-		A3D::meta::foreach(dl, test_unary{});
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
 	}
 
-	TEST_CASE("Foreach unary size 1")
+	TEST_CASE("For each unary by tags size 1 non-unique")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
+		using dl_t = A3D::meta::data_list<int>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char, char, char, char, char>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		A3D::meta::foreach(dl, test_unary{});
-		REQUIRE(A3D::meta::get<int>(dl) == 51);
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 10);
 	}
 
-	TEST_CASE("Foreach unary size 2")
+	TEST_CASE("For each unary by tags size 2 first")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
+		using dl_t = A3D::meta::data_list<int, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<char>;
 		dl_t dl;
-		A3D::meta::get<int>(dl) = 50;
-		A3D::meta::get<float>(dl) = 2.5f;
-		A3D::meta::foreach(dl, test_unary{});
-		REQUIRE(A3D::meta::get<int>(dl) == 51);
-		REQUIRE(A3D::meta::get<float>(dl) == 3.5f);
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 2.5f);
 	}
 
-	TEST_CASE("Foreach binary empty")
+	TEST_CASE("For each unary by tags size 2 last")
 	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::foreach(ldl, rdl, test_binary{});
+		using dl_t = A3D::meta::data_list<int, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<long>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 5);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
 	}
 
-	TEST_CASE("Foreach binary size 1")
+	TEST_CASE("For each unary by tags size 2 all ordered")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl_t = A3D::meta::data_list<int, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<char, long>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
 	}
 
-	TEST_CASE("Foreach binary size 2")
+	TEST_CASE("For each unary by tags size 2 all reversed")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(ldl) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl_t = A3D::meta::data_list<int, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<long, char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
 	}
 
-	TEST_CASE("Foreach ternary empty")
+	TEST_CASE("For each unary by tags size 2 non-unique")
 	{
-		using dl_t = A3D::meta::data_list_builder<>::type;
-		dl_t res;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::foreach(res, ldl, rdl, test_ternary{});
+		using dl_t = A3D::meta::data_list<int, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<char, char, char, char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 9);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 2.5f);
 	}
 
-	TEST_CASE("Foreach ternary size 1")
+	TEST_CASE("For each unary by tags size 3 first")
 	{
-		using dl_t = A3D::meta::data_list_builder<int>::type;
-		dl_t res;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 2.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'a');
 	}
 
-	TEST_CASE("Foreach ternary size 2")
+	TEST_CASE("For each unary by tags size 3 mid")
 	{
-		using dl_t = A3D::meta::data_list_builder<int, float>::type;
-		dl_t res;
-		dl_t ldl;
-		dl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(res) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(ldl) == 2.5f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<long>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 5);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'a');
 	}
 
-	TEST_CASE("Foreach binary type empty")
+	TEST_CASE("For each unary by tags size 3 last")
 	{
-		using ldl_t = A3D::meta::data_list_builder<>::type;
-		using rdl_t = A3D::meta::data_list_builder<>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::foreach_type(ldl, rdl, test_binary{});
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<double>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 5);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 2.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'b');
 	}
 
-	TEST_CASE("Foreach binary type size 1")
+	TEST_CASE("For each unary by tags size 3 all ordered")
 	{
-		using ldl_t = A3D::meta::data_list_builder<int>::type;
-		using rdl_t = A3D::meta::data_list_builder<int>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach_type(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<char, long, double>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'b');
 	}
 
-	TEST_CASE("Foreach binary type size 2")
+	TEST_CASE("For each unary by tags size 3 all reversed")
 	{
-		using ldl_t = A3D::meta::data_list_builder<int, float>::type;
-		using rdl_t = A3D::meta::data_list_builder<float, int>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach_type(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(ldl) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<double, long, char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 3.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'b');
 	}
 
-	TEST_CASE("Foreach ternary type empty")
+	TEST_CASE("For each unary by tags size 3 non-unique")
 	{
-		using res_t = A3D::meta::data_list_builder<>::type;
-		using ldl_t = A3D::meta::data_list_builder<>::type;
-		using rdl_t = A3D::meta::data_list_builder<>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::foreach_type(res, ldl, rdl, test_ternary{});
+		using dl_t = A3D::meta::data_list<int, float, char>;
+		using ttags_t = A3D::meta::types_list<char, long, double>;
+		using stags_t = A3D::meta::types_list<double, double, double, double, char, char>;
+		dl_t dl;
+		A3D::meta::data_list_get<int>(dl) = 5;
+		A3D::meta::data_list_get<float>(dl) = 2.5f;
+		A3D::meta::data_list_get<char>(dl) = 'a';
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl, test_unary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl) == 7);
+		REQUIRE(A3D::meta::data_list_get<float>(dl) == 2.5f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl) == 'e');
 	}
 
-	TEST_CASE("Foreach ternary type size 1")
+	TEST_CASE("For each binary by tags empty")
 	{
-		using res_t = A3D::meta::data_list_builder<int>::type;
-		using ldl_t = A3D::meta::data_list_builder<int>::type;
-		using rdl_t = A3D::meta::data_list_builder<int>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach_type(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl1_t = A3D::meta::data_list<>;
+		using dl2_t = A3D::meta::data_list<>;
+		using ttags_t = A3D::meta::types_list<>;
+		using stags_t = A3D::meta::types_list<>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
 	}
 
-	TEST_CASE("Foreach ternary type size 2")
+	TEST_CASE("For each binary by tags size 1")
 	{
-		using res_t = A3D::meta::data_list_builder<int, float>::type;
-		using ldl_t = A3D::meta::data_list_builder<float, int>::type;
-		using rdl_t = A3D::meta::data_list_builder<float, int>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach_type(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(res) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(ldl) == 2.5f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<short>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<short>(dl2) = 5;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 25);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 5);
 	}
 
-	TEST_CASE("Foreach binary tags empty")
+	TEST_CASE("For each binary by tags size 1 non-unique")
 	{
-		using ldl_t = A3D::meta::data_list_builder<>::type;
-		using rdl_t = A3D::meta::data_list_builder<>::type;
-		using ltags_t = A3D::meta::types_list_builder<>::type;
-		using rtags_t = A3D::meta::types_list_builder<>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::foreach_tags<ltags_t, rtags_t>(ldl, rdl, test_binary{});
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<short>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char, char, char, char, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<short>(dl2) = 5;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 45);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 5);
 	}
 
-	TEST_CASE("Foreach binary tags size 1")
+	TEST_CASE("For each binary by tags size 2 first")
 	{
-		using ldl_t = A3D::meta::data_list_builder<int>::type;
-		using rdl_t = A3D::meta::data_list_builder<int>::type;
-		using ltags_t = A3D::meta::types_list_builder<char>::type;
-		using rtags_t = A3D::meta::types_list_builder<char>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach_tags<ltags_t, rtags_t>(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, float>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 1.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
 	}
 
-	TEST_CASE("Foreach binary tags size 2")
+	TEST_CASE("For each binary by tags size 2 last")
 	{
-		using ldl_t = A3D::meta::data_list_builder<int, float>::type;
-		using rdl_t = A3D::meta::data_list_builder<float, int>::type;
-		using ltags_t = A3D::meta::types_list_builder<char, long>::type;
-		using rtags_t = A3D::meta::types_list_builder<long, char>::type;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach_tags<ltags_t, rtags_t>(ldl, rdl, test_binary{});
-		REQUIRE(A3D::meta::get<int>(ldl) == 55);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(ldl) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, float>;
+		using stags_t = A3D::meta::types_list<float>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 20);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
 	}
 
-	TEST_CASE("Foreach ternary tags empty")
+	TEST_CASE("For each binary by tags size 2 all ordered")
 	{
-		using res_t = A3D::meta::data_list_builder<>::type;
-		using ldl_t = A3D::meta::data_list_builder<>::type;
-		using rdl_t = A3D::meta::data_list_builder<>::type;
-		using restags_t = A3D::meta::types_list_builder<>::type;
-		using ltags_t = A3D::meta::types_list_builder<>::type;
-		using rtags_t = A3D::meta::types_list_builder<>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::foreach_tags<restags_t, ltags_t, rtags_t>(res, ldl, rdl, test_ternary{});
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, float>;
+		using stags_t = A3D::meta::types_list<char, float>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
 	}
 
-	TEST_CASE("Foreach ternary tags size 1")
+	TEST_CASE("For each binary by tags size 2 all reversed")
 	{
-		using res_t = A3D::meta::data_list_builder<int>::type;
-		using ldl_t = A3D::meta::data_list_builder<int>::type;
-		using rdl_t = A3D::meta::data_list_builder<int>::type;
-		using restags_t = A3D::meta::types_list_builder<char>::type;
-		using ltags_t = A3D::meta::types_list_builder<char>::type;
-		using rtags_t = A3D::meta::types_list_builder<char>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::foreach_tags<restags_t, ltags_t, rtags_t>(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, float>;
+		using stags_t = A3D::meta::types_list<float, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
 	}
 
-	TEST_CASE("Foreach ternary tags size 2")
+	TEST_CASE("For each binary by tags size 2 non-unique")
 	{
-		using res_t = A3D::meta::data_list_builder<int, float>::type;
-		using ldl_t = A3D::meta::data_list_builder<float, int>::type;
-		using rdl_t = A3D::meta::data_list_builder<float, int>::type;
-		using restags_t = A3D::meta::types_list_builder<char, long>::type;
-		using ltags_t = A3D::meta::types_list_builder<long, char>::type;
-		using rtags_t = A3D::meta::types_list_builder<long, char>::type;
-		res_t res;
-		ldl_t ldl;
-		rdl_t rdl;
-		A3D::meta::get<int>(ldl) = 50;
-		A3D::meta::get<int>(rdl) = 5;
-		A3D::meta::get<float>(ldl) = 2.5f;
-		A3D::meta::get<float>(rdl) = 3.5f;
-		A3D::meta::foreach_tags<restags_t, ltags_t, rtags_t>(res, ldl, rdl, test_ternary{});
-		REQUIRE(A3D::meta::get<int>(res) == 55);
-		REQUIRE(A3D::meta::get<int>(ldl) == 50);
-		REQUIRE(A3D::meta::get<int>(rdl) == 5);
-		REQUIRE(A3D::meta::get<float>(res) == 6.0f);
-		REQUIRE(A3D::meta::get<float>(ldl) == 2.5f);
-		REQUIRE(A3D::meta::get<float>(rdl) == 3.5f);
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, float>;
+		using stags_t = A3D::meta::types_list<char, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 36);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 1.0);
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+	}
+
+	TEST_CASE("For each binary by tags size 3 first")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 1.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'a');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each binary by tags size 3 mid")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<float>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 20);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'a');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each binary by tags size 3 last")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<unsigned>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 20);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 1.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'c');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each binary by tags size 3 all ordered")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<char, float, unsigned>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'c');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each binary by tags size 3 all reversed")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<unsigned, float, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 1.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'c');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each binary by tags size 3 non-unique")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<char, float, unsigned>;
+		using stags_t = A3D::meta::types_list<float, float, float, float, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		A3D::meta::data_list_get<int>(dl1) = 20;
+		A3D::meta::data_list_get<double>(dl1) = 2.0;
+		A3D::meta::data_list_get<char>(dl1) = 'a';
+		A3D::meta::data_list_get<short>(dl2) = 8;
+		A3D::meta::data_list_get<float>(dl2) = 4.0f;
+		A3D::meta::data_list_get<char>(dl2) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, test_binary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 28);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 18.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'a');
+		REQUIRE(A3D::meta::data_list_get<short>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags empty")
+	{
+		using dl1_t = A3D::meta::data_list<>;
+		using dl2_t = A3D::meta::data_list<>;
+		using dl3_t = A3D::meta::data_list<>;
+		using ttags_t = A3D::meta::types_list<>;
+		using stags_t = A3D::meta::types_list<>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+	}
+
+	TEST_CASE("For each ternary by tags size 1")
+	{
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<int>;
+		using dl3_t = A3D::meta::data_list<short>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+	}
+
+	TEST_CASE("For each ternary by tags size 1 non-unique")
+	{
+		using dl1_t = A3D::meta::data_list<int>;
+		using dl2_t = A3D::meta::data_list<int>;
+		using dl3_t = A3D::meta::data_list<short>;
+		using ttags_t = A3D::meta::types_list<char>;
+		using stags_t = A3D::meta::types_list<char, char, char, char, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 8;
+		A3D::meta::data_list_get<short>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 50);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 8);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 2 first")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 0.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+	}
+
+	TEST_CASE("For each ternary by tags size 2 last")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+	}
+
+	TEST_CASE("For each ternary by tags size 2 all ordered")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<char, long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+	}
+
+	TEST_CASE("For each ternary by tags size 2 all reversed")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<long, char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+	}
+
+	TEST_CASE("For each ternary by tags size 2 non-unique")
+	{
+		using dl1_t = A3D::meta::data_list<int, double>;
+		using dl2_t = A3D::meta::data_list<int, float>;
+		using dl3_t = A3D::meta::data_list<short, float>;
+		using ttags_t = A3D::meta::types_list<char, long>;
+		using stags_t = A3D::meta::types_list<long, long, long, long, long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 5.0f;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 30.0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 5.0f);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 first")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = A3D::meta::types_list<long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 0.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 mid")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = A3D::meta::types_list<double>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 last")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = A3D::meta::types_list<char>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 0);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 0.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'h');
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 all ordered")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = ttags_t;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'h');
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 all reversed")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = A3D::meta::types_list<char, double, long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 16);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 5.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'h');
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
+	}
+
+	TEST_CASE("For each ternary by tags size 3 non-unique")
+	{
+		using dl1_t = A3D::meta::data_list<int, double, char>;
+		using dl2_t = A3D::meta::data_list<int, float, char>;
+		using dl3_t = A3D::meta::data_list<short, float, char>;
+		using ttags_t = A3D::meta::types_list<long, double, char>;
+		using stags_t = A3D::meta::types_list<char, long, long, long, long>;
+		dl1_t dl1;
+		dl2_t dl2;
+		dl3_t dl3;
+		A3D::meta::data_list_get<int>(dl1) = 0;
+		A3D::meta::data_list_get<double>(dl1) = 0.0;
+		A3D::meta::data_list_get<char>(dl1) = 0;
+		A3D::meta::data_list_get<int>(dl2) = 10;
+		A3D::meta::data_list_get<float>(dl2) = 1.0f;
+		A3D::meta::data_list_get<char>(dl2) = 'f';
+		A3D::meta::data_list_get<short>(dl3) = 6;
+		A3D::meta::data_list_get<float>(dl3) = 4.0f;
+		A3D::meta::data_list_get<char>(dl3) = 2;
+		A3D::meta::data_list_foreach_by_tags<stags_t, ttags_t>(dl1, dl2, dl3, test_ternary{});
+		REQUIRE(A3D::meta::data_list_get<int>(dl1) == 64);
+		REQUIRE(A3D::meta::data_list_get<double>(dl1) == 0.0);
+		REQUIRE(A3D::meta::data_list_get<char>(dl1) == 'h');
+		REQUIRE(A3D::meta::data_list_get<int>(dl2) == 10);
+		REQUIRE(A3D::meta::data_list_get<float>(dl2) == 1.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl2) == 'f');
+		REQUIRE(A3D::meta::data_list_get<short>(dl3) == 6);
+		REQUIRE(A3D::meta::data_list_get<float>(dl3) == 4.0f);
+		REQUIRE(A3D::meta::data_list_get<char>(dl3) == 2);
 	}
 }
